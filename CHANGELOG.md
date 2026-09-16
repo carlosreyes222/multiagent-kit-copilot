@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.1
+- `kit.js`: corrige la búsqueda del plugin instalado (Claude Code lo guarda en `~/.claude/plugins/cache/<marketplace>/multiagent-kit/<versión>/`); ahora reconoce el plugin por el `name` de su manifiesto, no por el nombre de la carpeta. En proyectos ya migrados: `node kit.js update` (o copiar el `kit.js` nuevo).
+
 ## 1.1.0 — scripts en Node.js, sin PowerShell
 - **Todos los scripts del kit reescritos en Node.js** (`scripts/*.js`, `kit.js` en el proyecto). Un solo código para Windows, macOS y Linux y el sandbox del cloud agent; no hace falta PowerShell 7 ni permisos de ejecución: solo Node ≥ 18, que ya exige la propia herramienta. Comandos idénticos en todos los sistemas: `node kit.js check|staging|smoke|prod|status|state|init|update|migrate|version`.
 - **`pipeline.config.json`** sustituye a `pipeline.config.ps1` (mismas claves). `node kit.js migrate` (o `init`) convierte el archivo antiguo y lo deja como `.migrado`; mientras exista solo el `.ps1`, los scripts lo leen y avisan.

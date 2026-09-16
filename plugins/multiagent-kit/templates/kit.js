@@ -22,8 +22,12 @@ const PROJECT = __dirname;
 process.env.KIT_PROJECT_DIR = PROJECT;
 
 function isPlugin(dir) {
-  return dir && fs.existsSync(path.join(dir, "scripts", "common.js")) &&
-    (fs.existsSync(path.join(dir, "plugin.json")) || fs.existsSync(path.join(dir, ".claude-plugin", "plugin.json")));
+  if (!dir || !fs.existsSync(path.join(dir, "scripts", "common.js"))) return false;
+  for (const rel of ["plugin.json", ".claude-plugin/plugin.json"]) {
+    const m = path.join(dir, rel);
+    if (fs.existsSync(m)) { try { return JSON.parse(fs.readFileSync(m, "utf8")).name === "multiagent-kit"; } catch { return false; } }
+  }
+  return false;
 }
 function* walk(dir, depth) {
   if (depth < 0 || !fs.existsSync(dir)) return;
@@ -32,7 +36,8 @@ function* walk(dir, depth) {
   for (const e of entries) {
     if (!e.isDirectory()) continue;
     const p = path.join(dir, e.name);
-    if (e.name === "multiagent-kit" && isPlugin(p)) yield p;
+    // Claude Code instala en ~/.claude/plugins/cache/<marketplace>/<plugin>/<versión>/; Copilot en installed-plugins/<marketplace>/<plugin>/
+    if (isPlugin(p)) yield p;
     else yield* walk(p, depth - 1);
   }
 }
