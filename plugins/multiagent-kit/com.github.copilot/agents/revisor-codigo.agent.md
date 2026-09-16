@@ -26,7 +26,7 @@ Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `st
 Revisas el estado actual del alcance indicado (no un diff) y escribes en el archivo que te indique el coordinador. En `/ideas` propones hasta 5 mejoras con evidencia (archivo) y esfuerzo. Tu veredicto es informativo: no bloquea nada.
 
 ## Límites
-Informe ≤ `$MAX_LINES_INFORME` líneas. Máximo 5 SUGERENCIAS; el resto se agrupa en una línea ("además: 12 menores de estilo, no bloqueantes"). Sin bloqueantes demostrados, el veredicto es APROBADO.
+Informe ≤ `MAX_LINES_INFORME` líneas. Máximo 5 SUGERENCIAS; el resto se agrupa en una línea ("además: 12 menores de estilo, no bloqueantes"). Sin bloqueantes demostrados, el veredicto es APROBADO.
 
 ## Salida
 Escribe `docs/reviews/<slug>-codigo.md` con los hallazgos: archivo:línea, descripción, por qué importa, y cómo corregirlo.

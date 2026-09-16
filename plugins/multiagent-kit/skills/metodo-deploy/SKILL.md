@@ -1,6 +1,6 @@
 ---
 name: metodo-deploy
-description: Método de despliegue seguro — lista de verificación antes de staging y antes de producción, manejo de migraciones y feature flags, smoke tests, criterios y plan de rollback, y qué debe comprobar a mano la persona que aprueba. Lo usa el release-manager en la Etapa 6 y la persona que ejecuta kit.ps1 prod.
+description: Método de despliegue seguro — lista de verificación antes de staging y antes de producción, manejo de migraciones y feature flags, smoke tests, criterios y plan de rollback, y qué debe comprobar a mano la persona que aprueba. Lo usa el release-manager en la Etapa 6 y la persona que ejecuta kit.js prod.
 ---
 
 Aplica este método en cada despliegue. Regla de oro: **producción la promueve siempre una persona**; los agentes preparan, verifican y documentan.
@@ -20,12 +20,12 @@ Aplica este método en cada despliegue. Regla de oro: **producción la promueve 
 - [ ] Migraciones: presentes, reversibles, probadas contra una copia de datos; clasificadas como seguras en línea o con ventana (ver `stack-db`).
 - [ ] Variables de entorno nuevas documentadas en `staging/.env.staging` y en el informe (nombre y propósito; nunca el valor de producción).
 - [ ] Dependencias nuevas con versión fijada y auditadas.
-- [ ] `.\kit.ps1 staging -Feature <slug>` termina en verde; `.\kit.ps1 smoke` pasa.
+- [ ] `node kit.js staging --feature <slug>` termina en verde; `node kit.js smoke` pasa.
 - [ ] Logs de staging sin errores ni advertencias nuevas en los primeros minutos.
 
 ## 3. Smoke tests: qué comprobar
 
-Mínimo: salud del servicio, versión desplegada correcta, un flujo principal de punta a punta (login o equivalente), la funcionalidad de la feature con datos reales de staging, y que lo que no debía cambiar sigue igual (una petición de regresión por módulo tocado). Añade las URLs o pasos específicos en `smoke-test.ps1` (sección *PRUEBAS DEL PROYECTO*) o en `AGENTS.md`.
+Mínimo: salud del servicio, versión desplegada correcta, un flujo principal de punta a punta (login o equivalente), la funcionalidad de la feature con datos reales de staging, y que lo que no debía cambiar sigue igual (una petición de regresión por módulo tocado). Añade las URLs o pasos específicos en `scripts/smoke.js` (sección *PRUEBAS DEL PROYECTO*) o en `AGENTS.md`.
 
 ## 4. Informe de release (`docs/reviews/<slug>-release.md`)
 
@@ -36,7 +36,7 @@ Mínimo: salud del servicio, versión desplegada correcta, un flujo principal de
 5. **Procedimiento de rollback:** comando exacto (revertir despliegue, apagar flag, restaurar migración) y qué NO se puede revertir (datos ya escritos).
 6. Riesgos residuales y a quién avisar.
 
-## 5. Antes de producción (persona que ejecuta `.\kit.ps1 prod`)
+## 5. Antes de producción (persona que ejecuta `node kit.js prod`)
 
 - [ ] Leí el informe de release y ejecuté la lista de comprobación manual en staging.
 - [ ] Sé cuál es el criterio y el comando de rollback.
@@ -47,7 +47,7 @@ Mínimo: salud del servicio, versión desplegada correcta, un flujo principal de
 Tras promover: observar la ventana definida, ejecutar el smoke test contra producción si existe, y anotar en el informe la hora y el resultado.
 
 ## 5b. Backends en Supabase
-Staging = proyecto Supabase separado; despliegue solo con la CLI desde el repositorio (`kit.ps1 staging` hace `db push` + `functions deploy`). Nunca aplicar SQL en el SQL Editor ni desplegar funciones desde el panel o automatizando el navegador: no queda en git ni es repetible. Ajustes de Auth/Storage/secretos que la CLI no cubra van a la lista de comprobación manual del informe. Ver `docs/10-supabase.md` del kit.
+Staging = proyecto Supabase separado; despliegue solo con la CLI desde el repositorio (`node kit.js staging` hace `db push` + `functions deploy`). Nunca aplicar SQL en el SQL Editor ni desplegar funciones desde el panel o automatizando el navegador: no queda en git ni es repetible. Ajustes de Auth/Storage/secretos que la CLI no cubra van a la lista de comprobación manual del informe. Ver `docs/10-supabase.md` del kit.
 
 ## 6. Prohibido
 

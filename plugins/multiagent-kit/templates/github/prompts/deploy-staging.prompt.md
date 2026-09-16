@@ -1,6 +1,6 @@
 ---
 name: deploy-staging
-description: "Despliega la rama actual a staging con el proveedor de pipeline.config.ps1 y corre los smoke tests."
+description: "Despliega la rama actual a staging con el proveedor de pipeline.config.json y corre los smoke tests."
 agent: director
 argument-hint: "[slug]"
 ---

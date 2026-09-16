@@ -1,0 +1,56 @@
+{
+  "_comentarios": {
+    "_": "ÚNICO archivo que debes rellenar por proyecto. Lo leen node kit.js (staging/smoke/prod/status) y los hooks. Deja \"\" si no aplica. Esta sección se ignora.",
+    "comandos": "INSTALL/BUILD/TEST/LINT: Node → npm ci / npm run build / npm test / npm run lint · Android → ./gradlew assembleDebug / ./gradlew test · .NET → dotnet restore / build / test. Escríbelos como los ejecutarías en la terminal del sistema donde corre el proyecto; para que valgan en Windows y Mac prefiere npm run … o gradlew sin prefijo de ruta.",
+    "TEST_DB_CMD": "Comando opcional para levantar dependencias de prueba (p. ej. un Postgres efímero). Vacío = el tester NO levanta infraestructura propia.",
+    "STAGING_PROVIDER": "docker (el kit construye staging/Dockerfile.staging y levanta staging/docker-compose.staging.yml) · compose (tu propio compose; el kit hace up/down) · supabase (proyecto Supabase de staging; db push + functions deploy) · comando (STAGING_DEPLOY_CMD y comprobación de STAGING_URL) · ninguno (sin staging automatizable; verificación manual documentada).",
+    "STAGING_URL": "Base que debe responder; en supabase: https://<ref-staging>.supabase.co. Con docker/compose y vacío se usa http://localhost:<STAGING_PORT>.",
+    "HEALTH_PATH": "Relativo a STAGING_URL; en supabase p. ej. /functions/v1/config.",
+    "SMOKE_CMD": "Comando propio de smoke tests (falla ≠ 0), recibe STAGING_URL como variable de entorno. Ej: npm run smoke · maestro test .maestro/smoke.yaml",
+    "STAGING_ENV_FILE": "Variables para docker/compose; debe existir antes de up/down (sin secretos de producción).",
+    "solo_docker": "STAGING_PORT, BASE_IMAGE, CONTAINER_CMD.",
+    "solo_compose": "STAGING_COMPOSE_FILE.",
+    "solo_supabase": "SUPABASE_STAGING_REF / SUPABASE_PROD_REF (Settings → General → Reference ID; nunca iguales), SUPABASE_DIR (carpeta que contiene supabase/), SUPABASE_FUNCTIONS ([] = todas), SUPABASE_NO_VERIFY_JWT. Ver docs/10-supabase.md.",
+    "solo_comando": "STAGING_DEPLOY_CMD, p. ej. vercel deploy --prebuilt · adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
+    "PROD_DEPLOY_CMD": "Solo lo ejecuta node kit.js prod, solo con staging + smoke + seguridad APROBADO, y solo una persona. Con supabase y vacío, el kit hace db push + functions deploy contra SUPABASE_PROD_REF.",
+    "SUB_REPOS": "Sub-repositorios con su propio .git dentro del proyecto, p. ej. [\"oanig-backend\"].",
+    "compuertas": "GATE_TESTS_ON_COMMIT: lint + tests antes de cada commit del agente. MAX_LINES_*: límites de tamaño de documentos; node kit.js status avisa si se superan."
+  },
+
+  "INSTALL_CMD": "",
+  "BUILD_CMD": "",
+  "TEST_CMD": "",
+  "LINT_CMD": "",
+  "TEST_DB_CMD": "",
+
+  "STAGING_PROVIDER": "docker",
+  "APP_NAME": "mi-app",
+  "STAGING_URL": "http://localhost:8080",
+  "HEALTH_PATH": "/health",
+  "SMOKE_CMD": "",
+  "STAGING_ENV_FILE": "staging/.env.staging",
+
+  "STAGING_PORT": 8080,
+  "BASE_IMAGE": "alpine:3.20",
+  "CONTAINER_CMD": "sh -c 'echo listo && sleep infinity'",
+
+  "STAGING_COMPOSE_FILE": "staging/docker-compose.staging.yml",
+
+  "SUPABASE_STAGING_REF": "",
+  "SUPABASE_PROD_REF": "",
+  "SUPABASE_DIR": ".",
+  "SUPABASE_FUNCTIONS": [],
+  "SUPABASE_NO_VERIFY_JWT": true,
+
+  "STAGING_DEPLOY_CMD": "",
+
+  "PROD_DEPLOY_CMD": "",
+
+  "SUB_REPOS": [],
+  "PROTECTED_BRANCHES": ["main", "master", "produccion", "release"],
+
+  "GATE_TESTS_ON_COMMIT": true,
+  "MAX_LINES_ARQUITECTURA": 300,
+  "MAX_LINES_INFORME": 100,
+  "MAX_LINES_ADR": 150
+}

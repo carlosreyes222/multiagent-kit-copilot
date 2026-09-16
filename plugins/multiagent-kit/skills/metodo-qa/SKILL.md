@@ -20,7 +20,7 @@ Aplica este método siempre que escribas, ejecutes o evalúes pruebas. Las prueb
 2. Por cada criterio de aceptación escribe la prueba del camino feliz tal como lo describe la spec.
 3. Añade bordes con esta lista: vacío / nulo / cadena en blanco; mínimo y máximo; uno más que el máximo; duplicado; caracteres especiales y Unicode; sin permisos; sin red o tiempo de espera agotado; respuesta con error del servidor; dos operaciones concurrentes; repetir la misma acción dos veces (idempotencia).
 4. Añade pruebas de regresión para cada bug encontrado en esta feature.
-5. Ejecuta con el `TEST_CMD` de `pipeline.config.ps1`. Ejecuta dos veces: una prueba que pasa y luego falla es un bug de la prueba y se reporta.
+5. Ejecuta con el `TEST_CMD` de `pipeline.config.json`. Ejecuta dos veces: una prueba que pasa y luego falla es un bug de la prueba y se reporta.
 6. Escribe el informe (§5). Si algo falla, reporta el bug con el formato de §4; no lo arregles tú.
 
 ## 3. Prueba roja (reproducir un bug antes de corregirlo)

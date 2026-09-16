@@ -11,7 +11,7 @@ Cada etapa la hace un **agente personalizado del kit** (`product-owner`, `arquit
 
 ## Paso 0 — Encuadre
 1. Detecta modificadores al inicio de `**la petición del usuario** (el texto que acompaña a la invocación de la skill)`: `--solo-diagnostico` (termina tras el Paso 1), `--urgente` (hotfix: ver "Modo urgente"). Quítalos del texto.
-2. Deriva un slug (`login-null-token`), registra con el script: `pwsh -NoProfile -File kit.ps1 state feature=fix-<slug> type=bugfix stage=reproducir`.
+2. Deriva un slug (`login-null-token`), registra con el script: `node kit.js state feature=fix-<slug> type=bugfix stage=reproducir`.
 3. Si el usuario pegó una traza o log, consérvalo íntegro en `docs/reviews/fix-<slug>-qa.md` (sección "Evidencia original").
 4. Si `AGENTS.md` lista skills de stack, indícalo a cada agente.
 
@@ -31,15 +31,15 @@ El tester ejecuta la prueba roja (debe pasar ahora), toda la suite, y añade pru
 **revisor-codigo** y **revisor-seguridad** sobre `fix/<slug>`. El revisor de código comprueba además que el cambio es mínimo y no introduce comportamiento nuevo. Ambos APROBADOS o vuelve al Paso 2.
 
 ## Paso 5 — Staging
-**release-manager**: `kit.ps1 staging -Feature fix-<slug>` + `kit.ps1 smoke`, y un smoke específico que ejercite el escenario del bug.
+**release-manager**: `kit.js staging --feature fix-<slug>` + `node kit.js smoke`, y un smoke específico que ejercite el escenario del bug.
 
 ## Paso 6 — Entrega y aprendizaje
-1. Resumen: causa raíz en una frase, archivos tocados, prueba de regresión, URL de staging, comando `.\kit.ps1 prod`.
+1. Resumen: causa raíz en una frase, archivos tocados, prueba de regresión, URL de staging, comando `node kit.js prod`.
 2. Añade una entrada en `docs/RETRO.md` (créalo si no existe): fecha, bug, causa raíz, cómo se detectó, qué lo habría evitado (una regla concreta). Si esa regla es general, propón al usuario añadirla a `AGENTS.md` o a la skill de stack.
 3. Si la causa raíz revela un problema de diseño, propón `/analisis "<módulo>"`.
 
 ## Modo urgente (`--urgente`)
-Para hotfixes en producción. Se mantienen: reproducir (Paso 1, aunque sea manual y documentado), corrección mínima, revisor de seguridad, smoke test en staging. Se pueden omitir: revisor de código y pruebas de variantes, **solo si el usuario lo confirma explícitamente** cuando se lo preguntes. Todo lo omitido se registra en `docs/reviews/fix-<slug>-release.md` bajo "Compuertas omitidas por urgencia" con la fecha, y se crea una entrada en `docs/RETRO.md` con la deuda de completarlas. La promoción sigue siendo humana (`.\kit.ps1 prod`).
+Para hotfixes en producción. Se mantienen: reproducir (Paso 1, aunque sea manual y documentado), corrección mínima, revisor de seguridad, smoke test en staging. Se pueden omitir: revisor de código y pruebas de variantes, **solo si el usuario lo confirma explícitamente** cuando se lo preguntes. Todo lo omitido se registra en `docs/reviews/fix-<slug>-release.md` bajo "Compuertas omitidas por urgencia" con la fecha, y se crea una entrada en `docs/RETRO.md` con la deuda de completarlas. La promoción sigue siendo humana (`node kit.js prod`).
 
 ## Reglas
 - Nunca "arreglar" un bug cambiando o desactivando la prueba que lo demuestra.

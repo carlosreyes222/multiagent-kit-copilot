@@ -1,5 +1,5 @@
-# Ambiente de pruebas local (staging). Lo levanta scripts/deploy-staging.ps1,
-# que exporta APP_NAME, STAGING_PORT, BASE_IMAGE y CONTAINER_CMD desde pipeline.config.ps1.
+# Ambiente de pruebas local (staging). Lo levanta scripts/scripts/staging.js,
+# que exporta APP_NAME, STAGING_PORT, BASE_IMAGE y CONTAINER_CMD desde pipeline.config.json.
 #
 # Si tu proyecto ya tiene su propio Dockerfile, cambia `build.dockerfile`
 # para apuntar a él (p. ej. ../Dockerfile) y borra los `args`.

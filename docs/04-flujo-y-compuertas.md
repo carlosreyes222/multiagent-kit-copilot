@@ -16,7 +16,7 @@
                                                                               arquitecto (MODO: DOCUMENTAR)
                                                                               actualiza docs/ARQUITECTURA.md
                                                                                           │
-                                                                              TÚ: .\kit.ps1 prod
+                                                                              TÚ: node kit.js prod
                                                                                           │
                                                                                      PRODUCCIÓN
 ```
@@ -30,7 +30,7 @@
 | 5 Revisiones (paralelo) | `revisor-codigo`, `revisor-seguridad` | `<slug>-codigo.md`, `<slug>-seguridad.md` | Ambos APROBADOS o vuelve a 3 |
 | 6 Staging | `release-manager` | `<slug>-release.md`, contenedor Docker | Smoke tests |
 | 7 Documentación | `arquitecto` | `docs/ARQUITECTURA.md` actualizado | Obligatoria |
-| 8 Entrega | `director` (orquestador) | resumen + URL de staging | **Humana**: `.\kit.ps1 prod` |
+| 8 Entrega | `director` (orquestador) | resumen + URL de staging | **Humana**: `node kit.js prod` |
 
 ## 4.1b Los otros tres flujos
 
@@ -54,24 +54,24 @@
 | `release-manager` | Despliega a staging, smoke tests, prepara la entrega; nunca a producción | no |
 | `investigador` | Benchmark externo (web, repos, tiendas, reseñas) de productos similares; propone funcionalidades adaptadas con fuente | no |
 
-Cada agente lee al empezar su skill de método (`metodo-spec`, `metodo-adr`, `metodo-code-review`, `metodo-qa`, `metodo-deploy`), que fija procedimiento, severidades y formato de los informes; y las skills de stack que `AGENTS.md` liste. Los agentes viven en el plugin (`plugins/multiagent-kit/com.github.copilot/agents/`) y `kit.ps1 init` los copia a `.github/agents/` del proyecto. No fijan modelo: heredan el de la sesión (puedes añadir `model:` en el frontmatter, p. ej. `claude-sonnet-4.6` o `gpt-5.4`, y publicar una versión nueva). Ver [08-superficies-copilot.md](08-superficies-copilot.md) para cómo se delegan en cada superficie.
+Cada agente lee al empezar su skill de método (`metodo-spec`, `metodo-adr`, `metodo-code-review`, `metodo-qa`, `metodo-deploy`), que fija procedimiento, severidades y formato de los informes; y las skills de stack que `AGENTS.md` liste. Los agentes viven en el plugin (`plugins/multiagent-kit/com.github.copilot/agents/`) y `node kit.js init` los copia a `.github/agents/` del proyecto. No fijan modelo: heredan el de la sesión (puedes añadir `model:` en el frontmatter, p. ej. `claude-sonnet-4.6` o `gpt-5.4`, y publicar una versión nueva). Ver [08-superficies-copilot.md](08-superficies-copilot.md) para cómo se delegan en cada superficie.
 
 ## 4.3 Las compuertas, en detalle
 
 1. **Humana, tras la spec.** Nada se construye sin que apruebes qué se va a construir.
 2. **Humana, al elegir stack** (solo proyecto vacío). Es la decisión más cara de deshacer.
-3. **Commit.** El hook `commit-gate` (`.github/hooks/kit.json` → `kit.ps1 hook commit-gate`) ejecuta `LINT_CMD` y `TEST_CMD` antes de cada `git commit`; si fallan, el commit se bloquea y el agente recibe el error para corregirlo. Se desactiva con `$GATE_TESTS_ON_COMMIT = $false` en `pipeline.config.ps1`.
-4. **Ramas protegidas y secretos.** El hook `protect-main` bloquea comandos destructivos (`git push --force`, `git reset --hard`, `rm -rf`, `docker volume rm`…), la lectura o edición de `.env*`, keystores y `google-services.json`, y bloquea `git commit` y `git push` en `main`/`master`/`produccion`/`release` (lista en `$PROTECTED_BRANCHES`) y bloquea `git merge` a ellas si `docs/reviews/<slug>-seguridad.md` no dice `VEREDICTO: APROBADO`.
+3. **Commit.** El hook `commit-gate` (`.github/hooks/kit.json` → `node kit.js hook commit-gate`) ejecuta `LINT_CMD` y `TEST_CMD` antes de cada `git commit`; si fallan, el commit se bloquea y el agente recibe el error para corregirlo. Se desactiva con `GATE_TESTS_ON_COMMIT = false` en `pipeline.config.json`.
+4. **Ramas protegidas y secretos.** El hook `protect-main` bloquea comandos destructivos (`git push --force`, `git reset --hard`, `rm -rf`, `docker volume rm`…), la lectura o edición de `.env*`, keystores y `google-services.json`, y bloquea `git commit` y `git push` en `main`/`master`/`produccion`/`release` (lista en `PROTECTED_BRANCHES`) y bloquea `git merge` a ellas si `docs/reviews/<slug>-seguridad.md` no dice `VEREDICTO: APROBADO`.
 5. **Revisiones.** QA, código y seguridad deben estar APROBADOS para que el release-manager despliegue a staging.
-6. **Producción.** `.\kit.ps1 prod` exige staging OK + smoke tests OK + seguridad APROBADO (lee `.pipeline/state.json` y el informe de seguridad) y que escribas `PRODUCCION`. El hook `protect-main` deniega `kit.ps1 prod`, `promote-prod.ps1` y `supabase db push/functions deploy` a cualquier agente, y `.github/instructions/kit.instructions.md` se lo recuerda en cada sesión.
+6. **Producción.** `node kit.js prod` exige staging OK + smoke tests OK + seguridad APROBADO (lee `.pipeline/state.json` y el informe de seguridad) y que escribas `PRODUCCION`. El hook `protect-main` deniega `node kit.js prod`, `scripts/prod.js` y `supabase db push/functions deploy` a cualquier agente, y `.github/instructions/kit.instructions.md` se lo recuerda en cada sesión.
 
-Los hooks solo actúan en proyectos que tienen `pipeline.config.ps1`; en tus otros proyectos no interfieren. En el cloud agent corren igual (`bash` → `pwsh`, preinstalado en Ubuntu); además, protege `main` con un ruleset del repositorio, que es la barrera que ningún agente puede saltar (ver [09](09-cloud-agent-y-github.md)).
+Los hooks solo actúan en proyectos que tienen `pipeline.config.json`; en tus otros proyectos no interfieren. En el cloud agent corren igual (Node viene preinstalado en Ubuntu); además, protege `main` con un ruleset del repositorio, que es la barrera que ningún agente puede saltar (ver [09](09-cloud-agent-y-github.md)).
 
-El estado del pipeline (`.pipeline/state.json`, esquema v2) lo escriben solo los scripts: los agentes usan `kit.ps1 state clave=valor` y tú lo consultas con `kit.ps1 status`.
+El estado del pipeline (`.pipeline/state.json`, esquema v2) lo escriben solo los scripts: los agentes usan `node kit.js state clave=valor` y tú lo consultas con `node kit.js status`.
 
 ## 4.4 El ambiente de pruebas (staging)
 
-El staging depende de `STAGING_PROVIDER` (ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md)). Con `docker`, `.\kit.ps1 staging` compila, corre las pruebas, construye la imagen con `staging/Dockerfile.staging` y levanta `staging/docker-compose.staging.yml` en `http://localhost:<STAGING_PORT>`. Espera hasta 60 s a que `HEALTH_PATH` responda 200. `.\kit.ps1 smoke` comprueba salud y reinicios del contenedor; añade tus propias URLs en la sección *PRUEBAS DEL PROYECTO* de `smoke-test.ps1` (en el plugin) o en `AGENTS.md` para que el release-manager las pruebe.
+El staging depende de `STAGING_PROVIDER` (ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md)). Con `docker`, `node kit.js staging` compila, corre las pruebas, construye la imagen con `staging/Dockerfile.staging` y levanta `staging/docker-compose.staging.yml` en `http://localhost:<STAGING_PORT>`. Espera hasta 60 s a que `HEALTH_PATH` responda 200. `node kit.js smoke` comprueba salud y reinicios del contenedor; añade tus propias URLs en la sección *PRUEBAS DEL PROYECTO* de `scripts/smoke.js` (en el plugin) o en `AGENTS.md` para que el release-manager las pruebe.
 
 Si tu proyecto ya tiene Dockerfile, apunta `build.dockerfile` del compose a él. Si necesitas base de datos en staging, descomenta el servicio `db` de ejemplo.
 

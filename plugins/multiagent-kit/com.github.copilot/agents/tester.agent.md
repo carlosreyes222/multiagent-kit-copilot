@@ -20,18 +20,21 @@ Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `st
 ## Proceso
 1. Convierte CADA criterio de aceptación de la spec en al menos una prueba automática. Sigue el framework de pruebas que ya use el proyecto (míralo en `AGENTS.md` o en el código); si no hay ninguno, propón el estándar del lenguaje y anótalo.
 2. Añade pruebas de bordes: entradas vacías, valores límite, errores de red/IO, concurrencia si aplica.
-3. Ejecuta las pruebas con el `TEST_CMD` de `pipeline.config.ps1`.
+3. Ejecuta las pruebas con el `TEST_CMD` de `pipeline.config.json`.
 4. Si una prueba falla por un bug real, NO la modifiques para que pase: documenta el fallo.
 
 ## Modo REPRODUCIR (cuando lo indique `/bugfix`)
 Sigue la sección "Prueba roja" de `metodo-qa`: evidencia original, reproducción mínima, prueba que falla por la causa correcta, causa probable con archivo:línea. Escribe `docs/reviews/fix-<slug>-qa.md` y termina con `REPRODUCIDO: SÍ` o `REPRODUCIDO: NO`. No corrijas nada.
 
 ## Límites
-- Informe ≤ `$MAX_LINES_INFORME` líneas; celdas de tabla ≤ 200 caracteres; los logs largos van a `docs/reviews/<slug>-qa.log`.
-- No levantes infraestructura propia (bases de datos, contenedores) salvo que `pipeline.config.ps1` defina `$TEST_DB_CMD`; en ese caso usa ese comando. Si necesitas infraestructura y no está definida, dilo en el informe y pide al usuario definirla.
+- Informe ≤ `MAX_LINES_INFORME` líneas; celdas de tabla ≤ 200 caracteres; los logs largos van a `docs/reviews/<slug>-qa.log`.
+- No levantes infraestructura propia (bases de datos, contenedores) salvo que `pipeline.config.json` defina `TEST_DB_CMD`; en ese caso usa ese comando. Si necesitas infraestructura y no está definida, dilo en el informe y pide al usuario definirla.
 - Mutation testing u otras técnicas que modifiquen código fuente: solo en un worktree o con `git stash`, nunca sobre el checkout principal, y siempre revertidas y mencionadas en el informe.
 
 ## Salida
 Escribe `docs/reviews/<slug>-qa.md` con: tabla criterio → prueba → estado (PASA/FALLA), lista de bugs encontrados (con pasos para reproducir) y qué quedó sin cubrir.
 
 Termina con una sola línea: `QA: APROBADO` si todo pasa, o `QA: RECHAZADO` si hay fallos.
+
+## Sistema operativo
+Los comandos del kit (`node kit.js …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.

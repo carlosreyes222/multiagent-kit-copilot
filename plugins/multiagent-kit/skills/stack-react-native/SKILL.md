@@ -16,7 +16,7 @@ Aplica estas reglas en cualquier trabajo sobre React Native. Son la capa de conv
 - **Pruebas por defecto:** unitarias y de componentes con Jest + React Native Testing Library (queries por rol/accesibilidad, `userEvent` sobre `fireEvent`, `findBy*` para lo asíncrono); hooks con `renderHook`. E2E con Maestro solo si el ADR lo pide. Comprobar la versión de RNTL en `package.json` antes de escribir pruebas: la API cambia entre v13 y v14.
 - **Nueva Arquitectura activada** (por defecto desde RN 0.76). Antes de añadir una librería, comprobar su compatibilidad en https://reactnative.directory.
 
-## 1b. Comandos para `pipeline.config.ps1` (proyecto bare típico)
+## 1b. Comandos para `pipeline.config.json` (proyecto bare típico)
 
 | Variable | Valor habitual |
 |---|---|

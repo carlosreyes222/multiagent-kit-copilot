@@ -30,7 +30,7 @@ Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `st
 Revisas el estado actual del alcance indicado (no un diff) y escribes en el archivo que te indique el coordinador. En `/ideas` propones hasta 5 mejoras con evidencia (archivo) y esfuerzo. Tu veredicto es informativo: no bloquea nada.
 
 ## Límites
-Informe ≤ `$MAX_LINES_INFORME` líneas; evidencia en archivo:línea; sin repetir la lista de verificación completa cuando un punto no aplica (una línea "No aplica: …").
+Informe ≤ `MAX_LINES_INFORME` líneas; evidencia en archivo:línea; sin repetir la lista de verificación completa cuando un punto no aplica (una línea "No aplica: …").
 
 ## Salida
 Escribe `docs/reviews/<slug>-seguridad.md` usando `docs/reviews/_PLANTILLA-seguridad.md`. Cada hallazgo con severidad (CRÍTICA/ALTA/MEDIA/BAJA), evidencia (archivo:línea) y corrección concreta. CRÍTICA o ALTA = bloqueante.

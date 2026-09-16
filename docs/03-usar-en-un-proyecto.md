@@ -15,7 +15,7 @@ Dentro de Copilot:
 /kit-init
 ```
 
-(En VS Code: abre el chat en modo agente y ejecuta el prompt `/kit-init`, o en el terminal integrado `pwsh -File <ruta del plugin>\scripts\init-proyecto.ps1`.)
+(En VS Code: abre el chat en modo agente y ejecuta el prompt `/kit-init`, o en el terminal integrado `node <ruta del plugin>/scripts/cli.js init`.)
 
 Crea dos tipos de archivo:
 
@@ -23,15 +23,15 @@ Crea dos tipos de archivo:
 
 | Archivo | Para qué |
 |---|---|
-| `pipeline.config.ps1` | Comandos de instalar/build/test/lint, **proveedor de staging**, smoke, sub-repos, límites de tamaño. Lo único que rellenas. Ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md). |
+| `pipeline.config.json` | Comandos de instalar/build/test/lint, **proveedor de staging**, smoke, sub-repos, límites de tamaño. Lo único que rellenas. Ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md). |
 | `AGENTS.md` | Contexto del proyecto. Lo leen Copilot (CLI, VS Code, cloud agent) y todos los agentes. ≤ 40 líneas. |
 | `.github/copilot-instructions.md` | Instrucciones cortas de Copilot para el repositorio (apuntan a `AGENTS.md` y a las compuertas). |
 | `.github/copilot/settings.json` | Marketplace y plugin habilitados para este repositorio (la CLI y el cloud agent instalan el plugin solos). |
-| `.github/workflows/copilot-setup-steps.yml` | Entorno del cloud agent (dependencias, `pwsh`). Ver [09](09-cloud-agent-y-github.md). |
+| `.github/workflows/copilot-setup-steps.yml` | Entorno del cloud agent (dependencias, Node). Ver [09](09-cloud-agent-y-github.md). |
 | `staging/`, `docs/` | Compose y Dockerfile de staging; plantillas de spec, ADR, revisión de seguridad y arquitectura. |
 | `.gitignore`, `.dockerignore` | Se fusionan: solo se añaden las líneas que falten. |
 
-**Gestionados por el kit** (copias de lo que hay en el plugin, para que VS Code y el cloud agent las vean; se refrescan con `kit.ps1 update` mientras no los edites):
+**Gestionados por el kit** (copias de lo que hay en el plugin, para que VS Code y el cloud agent las vean; se refrescan con `node kit.js update` mientras no los edites):
 
 | Archivo | Para qué |
 |---|---|
@@ -41,15 +41,15 @@ Crea dos tipos de archivo:
 | `.github/hooks/kit.json` | Hooks: ramas protegidas, secretos, compuerta de commit, contexto al iniciar sesión. |
 | `.github/instructions/kit.instructions.md` | Reglas del kit aplicadas a todo archivo. |
 | `.github/kit-manifest.json` | Versión y hashes de los archivos gestionados (para `update`). |
-| `kit.ps1` | Lanzador de los scripts del plugin. |
+| `kit.js` | Lanzador de los scripts del plugin. |
 
-Haz **commit de todo `.github/` y `kit.ps1`**: así el equipo y el cloud agent usan exactamente lo mismo.
+Haz **commit de todo `.github/` y `kit.js`**: así el equipo y el cloud agent usan exactamente lo mismo.
 
 ## 3.2 Proyecto con código existente
 
-1. Rellena `pipeline.config.ps1`. `/kit-init` mira tu código (`package.json`, `build.gradle.kts`, `pyproject.toml`…) y te propone los valores; confirma y los aplica.
+1. Rellena `pipeline.config.json`. `/kit-init` mira tu código (`package.json`, `build.gradle.kts`, `pyproject.toml`…) y te propone los valores; confirma y los aplica.
 2. Completa `AGENTS.md` con la descripción y convenciones del proyecto.
-3. Verifica: `.\kit.ps1 check`.
+3. Verifica: `node kit.js check`.
 4. Lanza tu primera feature:
 
 ```
@@ -70,7 +70,7 @@ copilot
 /pipeline "Una app para registrar los gastos del hogar con categorías y resumen mensual"
 ```
 
-No hace falta rellenar `pipeline.config.ps1`. El pipeline detecta que no hay código y: el product-owner escribe la spec y tú la apruebas; el arquitecto propone **dos stacks** en `docs/adr/0000-stack.md` y **tú eliges**; el implementador hace el bootstrap y rellena `pipeline.config.ps1` y `AGENTS.md`; y sigue como en cualquier proyecto.
+No hace falta rellenar `pipeline.config.json`. El pipeline detecta que no hay código y: el product-owner escribe la spec y tú la apruebas; el arquitecto propone **dos stacks** en `docs/adr/0000-stack.md` y **tú eliges**; el implementador hace el bootstrap y rellena `pipeline.config.json` y `AGENTS.md`; y sigue como en cualquier proyecto.
 
 ## 3.4 Comandos dentro de Copilot
 
@@ -106,19 +106,20 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 
 `/analisis` e `/ideas` nunca tocan código: escriben en `docs/analisis/` y `docs/ideas/`. Los bugs corregidos dejan su causa raíz en `docs/RETRO.md`, que `/ideas` lee para proponer mejoras que ataquen causas recurrentes.
 
-## 3.6 Comandos en PowerShell (fuera de Copilot)
+## 3.6 Comandos en la terminal (fuera de Copilot; iguales en Windows y macOS)
 
 | Comando | Qué hace |
 |---|---|
-| `.\kit.ps1 check` | Verifica Git, Node, Copilot CLI, PowerShell 7, Docker/Supabase según proveedor, y la configuración |
-| `.\kit.ps1 staging -Feature <slug>` | Build + tests + desplegar a staging con el proveedor configurado |
-| `.\kit.ps1 smoke` | Smoke tests contra staging |
-| `.\kit.ps1 prod` | Promover a producción (pide escribir `PRODUCCION`) |
-| `.\kit.ps1 init` | Re-ejecutar la inicialización (sin sobrescribir lo tuyo) |
-| `.\kit.ps1 update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
-| `.\kit.ps1 version` | Versión del plugin y de los archivos del proyecto |
-| `.\kit.ps1 status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
-| `.\kit.ps1 state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
+| `node kit.js check` | Verifica Node ≥ 18, Git, Copilot CLI, Docker/Supabase según proveedor, y la configuración |
+| `node kit.js staging --feature <slug>` | Build + tests + desplegar a staging con el proveedor configurado |
+| `node kit.js smoke` | Smoke tests contra staging |
+| `node kit.js prod` | Promover a producción (pide escribir `PRODUCCION`) |
+| `node kit.js init` | Re-ejecutar la inicialización (sin sobrescribir lo tuyo) |
+| `node kit.js update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
+| `node kit.js migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
+| `node kit.js version` | Versión del plugin y de los archivos del proyecto |
+| `node kit.js status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
+| `node kit.js state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
 
 ---
 Anterior: [02-publicar-en-github.md](02-publicar-en-github.md) · Siguiente: [04-flujo-y-compuertas.md](04-flujo-y-compuertas.md) · [Índice](../README.md)
