@@ -1,0 +1,11 @@
+{
+  "extraKnownMarketplaces": {
+    "carlos-kits-copilot": {
+      "source": { "source": "github", "repo": "carlosreyes222/multiagent-kit-copilot" }
+    }
+  },
+  "enabledPlugins": {
+    "multiagent-kit@carlos-kits-copilot": true
+  },
+  "includeCoAuthoredBy": true
+}

@@ -1,0 +1,37 @@
+# Entorno del cloud agent de GitHub Copilot (github.com → asignar un issue/HU a Copilot).
+# El job DEBE llamarse copilot-setup-steps. Copilot lo ejecuta antes de empezar a trabajar para
+# que las dependencias, PowerShell 7 y los hooks del kit estén disponibles en el sandbox.
+# Ajusta los pasos de instalación a tu stack (Node, JDK/Android, .NET…).
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/copilot-setup-steps.yml"]
+  pull_request:
+    paths: [".github/workflows/copilot-setup-steps.yml"]
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # PowerShell 7 viene preinstalado en ubuntu-latest (pwsh); este paso solo lo comprueba.
+      - name: Comprobar pwsh (hooks del kit)
+        run: pwsh -NoProfile -Command '$PSVersionTable.PSVersion'
+
+      # --- Dependencias del proyecto: descomenta / adapta ---
+      # - uses: actions/setup-node@v4
+      #   with: { node-version: "22", cache: "npm" }
+      # - run: npm ci
+      # - uses: actions/setup-java@v4
+      #   with: { distribution: "temurin", java-version: "17" }
+      # - uses: android-actions/setup-android@v3
+
+      - name: Verificar archivos del kit
+        run: |
+          test -f pipeline.config.ps1 && test -f kit.ps1 && test -f .github/hooks/kit.json && echo "kit ok"

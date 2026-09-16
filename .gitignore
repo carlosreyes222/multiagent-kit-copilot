@@ -1,0 +1,7 @@
+# Instalaciones locales de skills de terceros (no se versionan aquí)
+.agents/
+.claude/
+skills-lock.json
+# Pruebas locales
+.pipeline/
+*.log

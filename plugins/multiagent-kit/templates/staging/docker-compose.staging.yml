@@ -1,0 +1,30 @@
+# Ambiente de pruebas local (staging). Lo levanta scripts/deploy-staging.ps1,
+# que exporta APP_NAME, STAGING_PORT, BASE_IMAGE y CONTAINER_CMD desde pipeline.config.ps1.
+#
+# Si tu proyecto ya tiene su propio Dockerfile, cambia `build.dockerfile`
+# para apuntar a él (p. ej. ../Dockerfile) y borra los `args`.
+services:
+  app:
+    container_name: ${APP_NAME:-mi-app}-staging
+    build:
+      context: ..
+      dockerfile: staging/Dockerfile.staging
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-alpine:3.20}
+    command: ${CONTAINER_CMD:-sh -c "echo listo && sleep infinity"}
+    ports:
+      - "${STAGING_PORT:-8080}:${STAGING_PORT:-8080}"
+    env_file:
+      - .env.staging
+    environment:
+      - APP_ENV=staging
+      - PORT=${STAGING_PORT:-8080}
+    restart: "no"
+
+  # Descomenta si tu app necesita base de datos en staging:
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_PASSWORD: staging
+  #     POSTGRES_DB: app
+  #   ports: ["5433:5432"]

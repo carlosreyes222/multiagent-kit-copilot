@@ -1,0 +1,13 @@
+# Estado del pipeline: local, nunca al repo
+.pipeline/
+.github/copilot/settings.local.json
+.github/hooks/logs/
+
+# Secretos
+.env
+.env.local
+.env.production
+*.jks
+*.keystore
+
+# Añade aquí lo propio de tu lenguaje (node_modules/, bin/, obj/, dist/, __pycache__/ ...)

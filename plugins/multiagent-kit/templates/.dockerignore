@@ -1,0 +1,26 @@
+.git
+.github/copilot/settings.local.json
+.pipeline
+node_modules
+bin
+obj
+dist
+build
+.next
+.turbo
+.godot
+builds
+*.log
+# Secretos y material de firma: NUNCA dentro de una imagen
+.env
+.env.*
+!staging/.env.staging
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+google-services.json
+GoogleService-Info.plist
+*.aab
+*.apk

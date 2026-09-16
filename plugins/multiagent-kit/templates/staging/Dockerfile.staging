@@ -1,0 +1,12 @@
+# Dockerfile genérico de staging. Recibe la imagen base desde pipeline.config.ps1.
+# Copia todo el proyecto (excepto lo listado en .dockerignore) y arranca con CONTAINER_CMD.
+#
+# Si necesitas compilar dentro del contenedor, añade los pasos aquí. Ejemplos:
+#   Node : RUN npm ci && npm run build
+#   .NET : RUN dotnet publish -c Release -o /app/out
+ARG BASE_IMAGE=alpine:3.20
+FROM ${BASE_IMAGE}
+WORKDIR /app
+COPY . .
+# RUN <pasos de build dentro del contenedor, si aplican>
+# El comando de arranque lo pone docker-compose (CONTAINER_CMD).

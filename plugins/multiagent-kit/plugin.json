@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "multiagent-kit",
+  "version": "1.0.1",
+  "description": "Kit multiagente para GitHub Copilot (CLI, VS Code y cloud agent): pipeline ideación → spec → arquitectura → implementación → QA → revisión de código y seguridad → staging → producción aprobada por humanos. Incluye /pipeline, /analisis, /bugfix, /ideas, skills de método y de stack, hooks de ramas protegidas y compuerta de commit.",
+  "author": { "name": "Carlos Reyes", "url": "https://github.com/carlosreyes222" },
+  "homepage": "https://github.com/carlosreyes222/multiagent-kit-copilot",
+  "repository": "https://github.com/carlosreyes222/multiagent-kit-copilot",
+  "license": "MIT",
+  "keywords": ["multiagent", "pipeline", "copilot", "android", "react-native", "nestjs", "ktor", "staging", "security-review"]
+}
