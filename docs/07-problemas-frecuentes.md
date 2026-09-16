@@ -23,6 +23,8 @@
 | El investigador dice que no tiene búsqueda web | Tools `web` no disponibles (cloud agent no los tiene; red corporativa) | Usa `/ideas --mercado` desde la CLI o VS Code; el informe queda marcado "sin verificar" |
 | Actualicé el plugin y no cambia nada en VS Code | Los archivos del proyecto son copias | `node kit.js update` y commit (ver [06](06-actualizar-el-kit.md)) |
 | `update` no toca un archivo y deja un `.kit` | Lo habías modificado | Fusiona a mano o borra tu copia y repite `update` |
+| `sdk pack` no encuentra la dependencia en el padre | El paquete no está en `package.json` / `libs.versions.toml` / `Podfile`, o está en otra carpeta | Añade la dependencia una vez a mano (cualquier versión) o indica `destino` en la entrada de `SDKS`; repite `sdk pack` |
+| `sdk sync` dice que el clon tiene cambios sin commit | Una feature en curso en `.pipeline/sdks/<nombre>` | Es lo esperado: termina o commitea esa feature; el kit no cambia de rama ni hace pull con cambios pendientes |
 
 ---
 Anterior: [06-actualizar-el-kit.md](06-actualizar-el-kit.md) · Siguiente: [08-superficies-copilot.md](08-superficies-copilot.md) · [Índice](../README.md)

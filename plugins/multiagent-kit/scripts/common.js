@@ -70,6 +70,7 @@ const DEFAULTS = {
   SUPABASE_STAGING_REF: "", SUPABASE_PROD_REF: "", SUPABASE_DIR: ".", SUPABASE_FUNCTIONS: [], SUPABASE_NO_VERIFY_JWT: true,
   STAGING_DEPLOY_CMD: "", PROD_DEPLOY_CMD: "", SUB_REPOS: [], PROTECTED_BRANCHES: ["main", "master", "produccion", "release"],
   GATE_TESTS_ON_COMMIT: true, MAX_LINES_ARQUITECTURA: 300, MAX_LINES_INFORME: 100, MAX_LINES_ADR: 150,
+  SDKS: [],
 };
 
 // Lee un pipeline.config.ps1 antiguo (solo asignaciones simples) para migrar o para compatibilidad.
@@ -116,7 +117,7 @@ function loadConfig(root) {
 }
 
 // --- Estado del pipeline (.pipeline/state.json), esquema v2 ------------------------------------
-const STATE_KEYS = ["feature", "type", "mode", "stage", "qa", "codigo", "seguridad", "qa_iter", "codigo_iter", "staging_ok", "smoke_ok", "staging_at", "promoted_at", "promoted_tag", "started_at"];
+const STATE_KEYS = ["feature", "type", "mode", "stage", "qa", "codigo", "seguridad", "qa_iter", "codigo_iter", "staging_ok", "smoke_ok", "staging_at", "promoted_at", "promoted_tag", "started_at", "sdk", "sdk_version"];
 function stateFile(root) { return path.join(root, ".pipeline", "state.json"); }
 function getState(root) {
   const f = stateFile(root);

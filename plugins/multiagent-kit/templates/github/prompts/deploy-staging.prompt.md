@@ -6,4 +6,4 @@ argument-hint: "[slug]"
 ---
 Ejecuta el comando `deploy-staging` del kit para la feature: ${input:slug:Slug de la feature (vacío = rama actual)}
 
-Sigue la skill `.github/skills/deploy-staging/SKILL.md`.
+Sigue la skill `deploy-staging` (en `.github/skills/` del proyecto o en `~/.copilot/skills/`).

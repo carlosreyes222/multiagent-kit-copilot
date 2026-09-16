@@ -2,7 +2,7 @@
 
 Un equipo de agentes de GitHub Copilot que lleva una idea desde la especificación hasta un ambiente de pruebas, con compuertas de calidad y seguridad, y deja la promoción a producción en manos de una persona. Es el equivalente para Copilot del kit [`multiagent-kit`](https://github.com/carlosreyes222/multiagent-kit) de Claude Code: mismos agentes, mismas skills de método y de stack, mismos scripts de staging, mismas compuertas.
 
-Funciona en las tres superficies de Copilot: **Copilot CLI** (terminal), **VS Code** (agent mode, `@agentes`, `/prompts`) y el **cloud agent de github.com** (asignar un issue a Copilot). Se distribuye como **plugin de Copilot** con marketplace propio; `node kit.js init` deja en cada proyecto la copia de `.github/` que VS Code y el cloud agent necesitan, y `node kit.js update` la refresca.
+Funciona en las tres superficies de Copilot: **Copilot CLI** (terminal), **VS Code** (agent mode, `@agentes`, `/prompts`) y el **cloud agent de github.com** (asignar un issue a Copilot). Se distribuye como **plugin de Copilot** con marketplace propio; `node kit.js init` deja en cada proyecto la copia de `.github/` que VS Code y el cloud agent necesitan, y `node kit.js update` la refresca. En repositorios ajenos, `--modo usuario` instala todo en tu perfil y no deja nada en git.
 
 ```
 idea ──► product-owner ──► arquitecto ──► implementador ──► tester ──► revisor-codigo ┐
@@ -27,6 +27,7 @@ idea ──► product-owner ──► arquitecto ──► implementador ──
 | 11 | [Staging por proveedor](docs/11-staging-por-proveedor.md) | `docker`, `compose`, `supabase`, `comando`, `ninguno` |
 | 12 | [Skills de stack y skills externas](docs/12-skills-y-plugins-externos.md) | Android, React Native, NestJS, Ktor, bases de datos; skills de terceros |
 | 13 | [Diferencias con el kit de Claude Code](docs/13-diferencias-con-claude.md) | Qué cambia y por qué; cómo mantener los dos kits |
+| 14 | [SDKs del equipo y flujo end-to-end](docs/14-sdks-y-end-to-end.md) | SDK propio (npm, Android/Maven, iOS) como contexto y `/pipeline --sdk` de extremo a extremo con versión de trabajo local |
 
 ## Resumen en cinco comandos
 

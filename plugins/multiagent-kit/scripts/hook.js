@@ -33,6 +33,26 @@ function deny(reason) {
   process.exit(2);
 }
 
+// Carpeta sobre la que actúa un comando git: `git -C <dir> …` o `cd <dir> && …` (los agentes trabajan así en los SDKs).
+function gitTargetDir(a, root) {
+  const base = a.cwd && fs.existsSync(a.cwd) ? a.cwd : root;
+  const cmd = a.command || "";
+  const m = /git\s+-C\s+("([^"]+)"|'([^']+)'|(\S+))/.exec(cmd) || /(?:^|&&|;|\|\|)\s*(?:cd|Set-Location|pushd)\s+("([^"]+)"|'([^']+)'|(\S+))\s*(?:&&|;)/.exec(cmd);
+  const dir = m ? path.resolve(base, m[2] || m[3] || m[4]) : base;
+  return fs.existsSync(dir) ? dir : base;
+}
+function sdkFor(root, cfg, dir) {
+  try {
+    const S = require("./sdk");
+    for (const s of S.declared(cfg)) {
+      if (S.validate(s).length) continue;
+      let d; try { d = S.resolveDir(root, s).dir; } catch { continue; }
+      if (path.resolve(dir).toLowerCase().startsWith(path.resolve(d).toLowerCase())) return Object.assign({ dir: d }, s);
+    }
+  } catch { /* sin SDKs */ }
+  return null;
+}
+
 function protectMain(a, root, cfg) {
   const protectedRe = (cfg.PROTECTED_BRANCHES || []).map((b) => b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
   if (["read", "edit"].includes(a.tool) && a.file) {
@@ -44,7 +64,8 @@ function protectMain(a, root, cfg) {
   }
   if (a.tool !== "bash" || !a.command) return;
   const cmd = a.command;
-  const branch = C.currentBranch(root);
+  const target = gitTargetDir(a, root);
+  const branch = C.currentBranch(target); // rama del repo sobre el que actúa el comando (padre o SDK)
   if (/kit\.(js|ps1)\s+prod\b/.test(cmd) || /promote-prod\.(js|ps1)/.test(cmd) || /scripts[\\/]prod\.js/.test(cmd))
     deny("la promoción a producción ('node kit.js prod') solo la ejecuta una persona desde su terminal.");
   if (/supabase\s+(db\s+push|functions\s+deploy|db\s+reset)\b/.test(cmd))
@@ -65,10 +86,19 @@ function protectMain(a, root, cfg) {
 function commitGate(a, root, cfg) {
   if (a.tool !== "bash" || !/git\s+commit\b/.test(a.command)) return;
   if (cfg.GATE_TESTS_ON_COMMIT === false || process.env.PIPELINE_SKIP_GATE === "1") return;
+  // Commit dentro de un SDK declarado: se usan los comandos lint/test del SDK (si los declaró), no los del padre.
+  const target = gitTargetDir(a, root);
+  let cwd = root, gates = [["Lint", cfg.LINT_CMD], ["Tests", cfg.TEST_CMD]];
+  if (path.resolve(target) !== path.resolve(root)) {
+    const s = sdkFor(root, cfg, target);
+    if (!s) return; // otro repositorio ajeno al kit
+    cwd = s.dir; gates = [["Lint (SDK)", s.lint], ["Tests (SDK)", s.test]];
+    if (!gates.some(([, c]) => c && String(c).trim())) { process.stdout.write(`{"type": "progress", "message": "Kit: commit en el SDK ${s.nombre} sin lint/test declarados en SDKS; compuerta omitida."}\n`); return; }
+  }
   process.stdout.write('{"type": "progress", "message": "Kit: compuerta de commit (lint + tests)..."}\n');
-  for (const [label, cmd] of [["Lint", cfg.LINT_CMD], ["Tests", cfg.TEST_CMD]]) {
+  for (const [label, cmd] of gates) {
     if (!cmd || !String(cmd).trim()) continue;
-    const r = C.run(cmd, { cwd: root, ignoreFailure: true, quiet: true });
+    const r = C.run(cmd, { cwd, ignoreFailure: true, quiet: true });
     if (r.code !== 0) {
       const tail = r.out.split(/\r?\n/).filter(Boolean).slice(-40).join("\n");
       deny(`COMMIT BLOQUEADO: ${label} falló (${cmd}). Últimas líneas:\n${tail}`);
@@ -86,9 +116,9 @@ function sessionStart(root) {
     C.writeJson(kitJson, { pluginRoot: C.PLUGIN_ROOT, version: C.VERSION, projectFilesVersion: prev.projectFilesVersion || "", updatedAt: C.nowIso() });
     const cfg = C.loadConfig(root);
     msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} activo. Staging: ${cfg.STAGING_PROVIDER}. Comandos del kit: node kit.js <check|staging|smoke|status|state|update> (iguales en Windows, macOS y Linux). Flujos: /pipeline, /analisis, /bugfix, /ideas, /deploy-staging, /promote-prod.`;
+    if (Array.isArray(cfg.SDKS) && cfg.SDKS.length) msg += ` SDKs declarados: ${cfg.SDKS.map((s) => s && s.nombre).filter(Boolean).join(", ")} (node kit.js sdk list; flujo end-to-end: /pipeline --sdk <nombre> "idea").`;
     if (cfg._source === "ps1") msg += " AVISO: pipeline.config.ps1 es el formato antiguo; ejecuta 'node kit.js migrate'.";
-    const mf = C.FLAVOR === "copilot" ? path.join(root, ".github", "kit-manifest.json") : path.join(root, ".pipeline", "kit-manifest.json");
-    const m = C.readJson(mf, null);
+    const m = C.readJson(path.join(root, ".github", "kit-manifest.json"), null) || C.readJson(path.join(root, ".pipeline", "kit-manifest.json"), null);
     if (m && m.version && m.version !== C.VERSION) msg += ` AVISO: los archivos del proyecto son de la versión ${m.version}; ejecuta 'node kit.js update'.`;
     if (!fs.existsSync(path.join(root, "kit.js"))) msg += " AVISO: falta kit.js (proyecto de una versión anterior); ejecuta la inicialización del kit.";
   }

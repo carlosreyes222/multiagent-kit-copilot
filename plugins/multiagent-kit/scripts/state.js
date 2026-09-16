@@ -5,6 +5,7 @@
 //   feature (slug) · type (feature|bugfix) · mode (nuevo|existente) · stage (spec|arquitectura|implementacion|qa|revisiones|staging|documentacion|entrega|reproducir|corregir)
 //   qa / codigo / seguridad (PENDIENTE|APROBADO|RECHAZADO) · qa_iter / codigo_iter (entero)
 //   staging_ok / smoke_ok (true|false) · staging_at · promoted_at · promoted_tag · started_at
+//   sdk (nombre del SDK en flujo end-to-end, ver SDKS) · sdk_version (versión de trabajo enlazada en el padre)
 "use strict";
 const C = require("./common");
 

@@ -43,7 +43,7 @@ Crea dos tipos de archivo:
 | `.github/kit-manifest.json` | Versión y hashes de los archivos gestionados (para `update`). |
 | `kit.js` | Lanzador de los scripts del plugin. |
 
-Haz **commit de todo `.github/` y `kit.js`**: así el equipo y el cloud agent usan exactamente lo mismo.
+Haz **commit de todo `.github/` y `kit.js`**: así el equipo y el cloud agent usan exactamente lo mismo. Si no puedes o no quieres versionar nada del kit, usa los modos `local` o `usuario` (§3.7).
 
 ## 3.2 Proyecto con código existente
 
@@ -80,6 +80,7 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 |---|---|
 | `/pipeline "idea"` | Flujo completo (ver [04-flujo-y-compuertas.md](04-flujo-y-compuertas.md)) |
 | `/pipeline continuar <slug>` | Retoma un pipeline interrumpido |
+| `/pipeline --sdk <nombre> "idea"` | Feature que nace en un SDK del equipo y termina integrada en este proyecto ([14](14-sdks-y-end-to-end.md)) |
 | `/analisis "alcance o pregunta"` | Análisis de solo lectura (arquitectura, calidad, seguridad) con hallazgos priorizados en `docs/analisis/` |
 | `/bugfix "descripción o traza"` | Reproducir → prueba roja → corregir en `fix/*` → QA → revisiones → staging. `--solo-diagnostico` para solo investigar; `--urgente` para hotfix con compuertas reducidas y registradas |
 | `/ideas ["dirección"]` | Ideas equilibradas (producto + mercado + técnicas) priorizadas. `--producto`, `--mercado` (benchmark web con el investigador) o `--tecnico` |
@@ -118,8 +119,23 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | `node kit.js update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
 | `node kit.js migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
 | `node kit.js version` | Versión del plugin y de los archivos del proyecto |
+| `node kit.js sdk list\|sync\|pack\|status` | SDKs del equipo declarados en `SDKS`: sincronizar (ruta local o clon por rama), empaquetar versión de trabajo y enlazarla en el padre (ver [14](14-sdks-y-end-to-end.md)) |
 | `node kit.js status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
 | `node kit.js state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
+
+## 3.7 Modos de instalación: repo, local o usuario
+
+`node kit.js init` acepta `--modo repo|local|usuario` (`/kit-init` te lo pregunta). Elige según de quién sea el repositorio:
+
+| Modo | Qué queda en el proyecto | Qué ve git | Quién lo ve | Cuándo |
+|---|---|---|---|---|
+| `repo` (por defecto) | Todo: `.github/` (agentes, skills, prompts, hooks) + config | Todo, se commitea | Todo el equipo, VS Code, CLI y el **cloud agent** | Repositorio propio o del equipo que adopta el kit |
+| `local` | Lo mismo que `repo` | **Nada**: cada archivo va a `.git/info/exclude` (privado de tu clon, no se sube nunca) | Solo tú, en este clon | Quieres probar el kit en un repo sin ensuciar `git status` |
+| `usuario` | Solo `pipeline.config.json`, `kit.js`, `AGENTS.md`, `.pipeline/` y las plantillas de `docs/`, todos en `.git/info/exclude` | **Nada** | Solo tú, en **todos** tus repos: agentes, skills y hooks viven en `~/.copilot/{agents,skills,hooks}` y los prompts/agentes en el perfil de usuario de VS Code | Repositorios ajenos o del trabajo donde no puedes añadir archivos |
+
+En modo `usuario` el kit se instala una vez por PC (la primera vez que lo ejecutas) y `node kit.js update` refresca tanto el perfil como el proyecto; el hook de usuario solo actúa en carpetas que tengan `pipeline.config.json`, así que no interfiere en otros repos. Limitaciones: el cloud agent de github.com no ve los agentes (necesita los archivos en el repo), y los prompts de VS Code se copian a la carpeta `User/prompts` de tu perfil (si VS Code está en otra ruta, define `KIT_VSCODE_PROMPTS_DIR`). `.github/copilot-instructions.md` y `copilot-setup-steps.yml` no se crean en este modo.
+
+Cambiar de modo: `node kit.js init --modo repo` vuelve a copiar los archivos; borra a mano las líneas del bloque `multiagent-kit` en `.git/info/exclude` si quieres versionarlos.
 
 ---
 Anterior: [02-publicar-en-github.md](02-publicar-en-github.md) · Siguiente: [04-flujo-y-compuertas.md](04-flujo-y-compuertas.md) · [Índice](../README.md)

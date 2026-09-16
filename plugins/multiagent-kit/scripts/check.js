@@ -48,19 +48,28 @@ module.exports = async function check() {
     else if (cfg.SUPABASE_STAGING_REF === cfg.SUPABASE_PROD_REF) { C.log.fail("Staging y producción apuntan al mismo proyecto Supabase"); ok = false; }
   }
 
-  if (C.FLAVOR === "copilot") {
-    C.log.step("Archivos del proyecto");
-    const mf = path.join(root, ".github", "kit-manifest.json");
-    const m = C.readJson(mf, null);
-    if (!m) C.log.warn("Falta .github/kit-manifest.json: ejecuta node kit.js init");
-    else if (m.version === C.VERSION) C.log.ok(`Plugin v${C.VERSION} y archivos del proyecto v${m.version}`);
-    else C.log.warn(`Plugin v${C.VERSION} pero archivos del proyecto v${m.version}: ejecuta node kit.js update`);
-    for (const f of [".github/hooks/kit.json", ".github/agents/director.agent.md", ".github/skills/pipeline/SKILL.md", "AGENTS.md"])
-      if (fs.existsSync(path.join(root, f))) C.log.ok(f); else C.log.warn(`Falta ${f} (node kit.js init)`);
-  } else {
-    C.log.step("Archivos del proyecto");
-    for (const f of ["CLAUDE.md", ".claude/settings.json", "kit.js"])
-      if (fs.existsSync(path.join(root, f))) C.log.ok(f); else C.log.warn(`Falta ${f} (node kit.js init)`);
+  C.log.step("Archivos del proyecto");
+  const mf = C.readJson(path.join(root, ".github", "kit-manifest.json"), null) || C.readJson(path.join(root, ".pipeline", "kit-manifest.json"), null);
+  const kitMode = (mf && mf.mode) || "repo";
+  if (!mf) C.log.warn("Falta el manifiesto del kit: ejecuta node kit.js init");
+  else if (mf.version === C.VERSION) C.log.ok(`Plugin v${C.VERSION} y archivos del proyecto v${mf.version} (modo ${kitMode})`);
+  else C.log.warn(`Plugin v${C.VERSION} pero archivos del proyecto v${mf.version}: ejecuta node kit.js update`);
+  const must = [C.CONTEXT_FILE, "kit.js"];
+  if (C.FLAVOR === "copilot" && kitMode !== "usuario") must.push(".github/hooks/kit.json", ".github/agents/director.agent.md", ".github/skills/pipeline/SKILL.md");
+  if (C.FLAVOR === "claude") must.push(".claude/settings.json");
+  for (const f of must) if (fs.existsSync(path.join(root, f))) C.log.ok(f); else C.log.warn(`Falta ${f} (node kit.js init)`);
+  if (C.FLAVOR === "copilot" && kitMode === "usuario") {
+    const U = require("./user-install");
+    const home = U.copilotHome();
+    for (const f of ["agents/director.agent.md", "skills/pipeline/SKILL.md", "hooks/multiagent-kit.json", "multiagent-kit-hook.js"])
+      if (fs.existsSync(path.join(home, f))) C.log.ok(`~/.copilot/${f}`); else C.log.warn(`Falta ~/.copilot/${f} (node kit.js update)`);
+    const vs = U.vscodePromptsDir();
+    if (fs.existsSync(path.join(vs, "pipeline.prompt.md"))) C.log.ok(`VS Code: ${vs}`); else C.log.warn(`VS Code: no hay prompts del kit en ${vs} (solo importa si usas VS Code)`);
+  }
+  if (kitMode !== "repo") {
+    const ex = path.join(root, ".git", "info", "exclude");
+    if (fs.existsSync(ex) && /multiagent-kit/.test(fs.readFileSync(ex, "utf8"))) C.log.ok(".git/info/exclude contiene los archivos del kit (nada del kit va a git)");
+    else C.log.warn("No encuentro las exclusiones del kit en .git/info/exclude: ejecuta node kit.js update");
   }
 
   C.log.step("Configuración del proyecto");
@@ -69,6 +78,21 @@ module.exports = async function check() {
   if (!String(cfg.SMOKE_CMD || "").trim()) C.log.warn("SMOKE_CMD está vacío — el smoke solo probará la salud; define un comando de smoke del proyecto.");
   const over = C.docLimits(root, cfg);
   if (over.length) { C.log.warn("Documentos por encima del límite:"); over.forEach((o) => C.log.warn("  " + o)); }
+
+  const S = require("./sdk");
+  const sdks = S.declared(cfg);
+  if (sdks.length) {
+    C.log.step(`SDKs declarados (${sdks.length})`);
+    for (const s of sdks) {
+      const errs = S.validate(s);
+      if (errs.length) { C.log.fail(`${s.nombre || "(sin nombre)"}: ${errs.join("; ")}`); ok = false; continue; }
+      const local = s.ruta && fs.existsSync(path.resolve(root, s.ruta));
+      if (!local && !s.repo) { C.log.fail(`${s.nombre}: la ruta ${s.ruta} no existe y no hay repo`); ok = false; }
+      else C.log.ok(`${s.nombre} (${s.tipo}) · ${local ? "ruta " + s.ruta : "se clonará de " + s.repo + " (rama " + (s.rama || "main") + ")"}`);
+      if (s.tipo === "android" && !fs.existsSync(path.join(root, "gradle", "libs.versions.toml")) && !fs.existsSync(path.join(root, "build.gradle.kts")) && !fs.existsSync(path.join(root, "build.gradle"))) C.log.warn(`${s.nombre}: el padre no parece un proyecto Gradle (sin build.gradle ni libs.versions.toml)`);
+      if (s.tipo === "ios" && process.platform === "darwin" && !C.which("pod")) C.log.warn(`${s.nombre}: CocoaPods no instalado (brew install cocoapods); solo importa si usas Podfile`);
+    }
+  }
 
   if (ok) { C.log.green(`\nTodo listo. Abre '${C.FLAVOR === "claude" ? "claude" : "copilot"}' en la raíz del proyecto y ejecuta /pipeline "tu idea".`); return 0; }
   C.log.red("\nFaltan herramientas. Revisa los mensajes [XX] arriba."); return 1;

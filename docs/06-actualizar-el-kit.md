@@ -41,7 +41,7 @@ node kit.js update
 git add .github kit.js ; git commit -m "kit: actualizar a 1.1.0"
 ```
 
-`update` sobrescribe un archivo gestionado **solo si no lo has modificado** desde la última copia (lo comprueba con los hashes de `.github/kit-manifest.json`). Si lo tocaste, deja la versión nueva al lado como `.kit` y te lo dice. Al abrir `copilot`, el hook de inicio avisa cuando los archivos del proyecto son de una versión anterior al plugin; `node kit.js version` lo muestra también.
+En modo `usuario`, `update` refresca también los archivos del perfil (`~/.copilot/…` y prompts de VS Code). `update` sobrescribe un archivo gestionado **solo si no lo has modificado** desde la última copia (lo comprueba con los hashes de `.github/kit-manifest.json`). Si lo tocaste, deja la versión nueva al lado como `.kit` y te lo dice. Al abrir `copilot`, el hook de inicio avisa cuando los archivos del proyecto son de una versión anterior al plugin; `node kit.js version` lo muestra también.
 
 ## 6.4 Personalizar sin perder las actualizaciones
 

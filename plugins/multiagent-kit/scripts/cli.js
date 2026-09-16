@@ -15,16 +15,16 @@ async function main(cmd, argv) {
     case "init": return require("./init")(opts, { mode: "init" });
     case "update": return require("./init")(opts, { mode: "update" });
     case "migrate": return require("./init")(opts, { mode: "migrate" });
+    case "sdk": return require("./sdk")(opts);
     case "version": {
       const root = C.findProjectRoot();
-      const mf = root && (C.FLAVOR === "copilot" ? path.join(root, ".github", "kit-manifest.json") : path.join(root, ".pipeline", "kit-manifest.json"));
-      const m = mf ? C.readJson(mf, null) : null;
-      console.log(`Plugin (${C.FLAVOR}): ${C.VERSION}  ·  Archivos del proyecto: ${m ? m.version : "(sin inicializar)"}  ·  ${C.PLUGIN_ROOT}`);
+      const m = root ? (C.readJson(path.join(root, ".github", "kit-manifest.json"), null) || C.readJson(path.join(root, ".pipeline", "kit-manifest.json"), null)) : null;
+      console.log(`Plugin (${C.FLAVOR}): ${C.VERSION}  ·  Archivos del proyecto: ${m ? m.version + " (modo " + (m.mode || "repo") + ")" : "(sin inicializar)"}  ·  ${C.PLUGIN_ROOT}`);
       if (m && m.version !== C.VERSION) C.log.yellow("Ejecuta node kit.js update para refrescar los archivos gestionados.");
       return 0;
     }
     default:
-      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | version`);
+      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | version`);
       return 1;
   }
 }

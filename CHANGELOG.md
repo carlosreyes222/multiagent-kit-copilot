@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0 — SDKs del equipo y flujo end-to-end
+- Nueva sección `SDKS` en `pipeline.config.json`: librerías propias que el proyecto consume (`npm`, `android`, `ios` o `comando`), por ruta local y/o repo git con rama (`main` por defecto; el clon va a `.pipeline/sdks/<nombre>`, fuera de git).
+- `node kit.js sdk list|sync|pack|status`: sincroniza el SDK, genera una versión de trabajo `X.Y.Z-local.N` sin tocar el repo del SDK ni registros remotos, la publica en local (npm: tgz versionado en `vendor/sdks/` + `file:` en `package.json` + install; Android: `publishToMavenLocal` + versión en `libs.versions.toml`/gradle + `mavenLocal()`; iOS: `:path` en Podfile o `.package(path:)`) y actualiza la dependencia del padre.
+- `/pipeline --sdk <nombre> "idea"`: la feature nace en el SDK (rama `feature/*`, commits sin push), se empaqueta y se integra en el padre en el mismo pipeline; spec y ADR separan SDK y padre; tester y revisores cubren ambos repos; la entrega recuerda los pasos humanos (PR del SDK, versión real, sustituir `-local.N`).
+- Sin `--sdk`, los SDKs declarados son contexto de solo lectura para el arquitecto.
+- Hooks: `protect-main` y `commit-gate` reconocen `git -C <dir>` y `cd <dir> && git …`, así que vigilan también el repo del SDK (compuerta con `test`/`lint` de la entrada del SDK). `check` valida `SDKS`; `session-start` los anuncia; estado con claves `sdk` y `sdk_version`.
+- Prompt `/pipeline` de VS Code acepta `--sdk <nombre> idea`; el agente `director` sincroniza los SDKs al empezar.
+## 1.2.0 — modos de instalación
+- `node kit.js init --modo repo|local|usuario` (`/kit-init` lo pregunta). `local`: los archivos del kit van a `.git/info/exclude` (nada en git, solo este clon). `usuario`: nada del kit en el repositorio; agentes, skills, hooks y prompts se instalan en `~/.copilot/{agents,skills,hooks}` y en la carpeta de prompts de usuario de VS Code, válidos para todos los proyectos; en el proyecto solo quedan config, `kit.js`, `AGENTS.md`, `.pipeline/` y plantillas, excluidos de git. Hook de usuario con lanzador `~/.copilot/multiagent-kit-hook.js` que no interfiere en repos sin kit. `update` recuerda el modo y refresca el perfil. `check` verifica el perfil y el exclude.
+- Agentes, prompts y director aceptan las skills desde `.github/skills/`, `~/.copilot/skills/` o el plugin.
+
 ## 1.1.1
 - `kit.js`: corrige la búsqueda del plugin instalado (Claude Code lo guarda en `~/.claude/plugins/cache/<marketplace>/multiagent-kit/<versión>/`); ahora reconoce el plugin por el `name` de su manifiesto, no por el nombre de la carpeta. En proyectos ya migrados: `node kit.js update` (o copiar el `kit.js` nuevo).
 

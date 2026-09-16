@@ -14,6 +14,7 @@
     "solo_comando": "STAGING_DEPLOY_CMD, p. ej. vercel deploy --prebuilt · adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
     "PROD_DEPLOY_CMD": "Solo lo ejecuta node kit.js prod, solo con staging + smoke + seguridad APROBADO, y solo una persona. Con supabase y vacío, el kit hace db push + functions deploy contra SUPABASE_PROD_REF.",
     "SUB_REPOS": "Sub-repositorios con su propio .git dentro del proyecto, p. ej. [\"oanig-backend\"].",
+    "SDKS": "SDKs del equipo que este proyecto consume (ver docs de SDKs). Cada entrada: nombre · tipo (npm|android|ios|comando) · paquete (npm: @org/x; android: grupo:artefacto; ios: pod o paquete Swift) · ruta (carpeta local, relativa al proyecto) y/o repo (URL git; se clona en .pipeline/sdks/<nombre>) · rama (main por defecto) · build (opcional) · publicar / enlazar (solo tipo comando o para sustituir el paso por defecto) · destino (package.json o Podfile concreto, opcional). Ej: {\"nombre\":\"core\",\"tipo\":\"npm\",\"paquete\":\"@bcp/core-sdk\",\"ruta\":\"../core-sdk\",\"repo\":\"https://github.com/bcp/core-sdk.git\",\"rama\":\"main\"}",
     "compuertas": "GATE_TESTS_ON_COMMIT: lint + tests antes de cada commit del agente. MAX_LINES_*: límites de tamaño de documentos; node kit.js status avisa si se superan."
   },
 
@@ -47,6 +48,7 @@
   "PROD_DEPLOY_CMD": "",
 
   "SUB_REPOS": [],
+  "SDKS": [],
   "PROTECTED_BRANCHES": ["main", "master", "produccion", "release"],
 
   "GATE_TESTS_ON_COMMIT": true,

@@ -28,4 +28,4 @@ Cuando cambies algo en uno, pásalo al otro con estas equivalencias:
 - Sube la versión en los dos manifiestos de cada kit y anótalo en ambos `CHANGELOG.md`.
 
 ---
-Anterior: [12-skills-y-plugins-externos.md](12-skills-y-plugins-externos.md) · [Índice](../README.md)
+Anterior: [12-skills-y-plugins-externos.md](12-skills-y-plugins-externos.md) · Siguiente: [14-sdks-y-end-to-end.md](14-sdks-y-end-to-end.md) · [Índice](../README.md)

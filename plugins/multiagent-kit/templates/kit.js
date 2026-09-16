@@ -10,6 +10,7 @@
 //   node kit.js init                        -> (re)inicializa archivos del proyecto sin sobrescribir los tuyos
 //   node kit.js update                      -> refresca los archivos gestionados por el kit
 //   node kit.js migrate                     -> convierte pipeline.config.ps1 (antiguo) en pipeline.config.json
+//   node kit.js sdk <list|sync|pack|status>  -> SDKs del equipo declarados en SDKS: sincronizar, empaquetar y enlazar en el padre
 //   node kit.js hook <nombre>               -> (lo usan los hooks) reenvía el evento al script del plugin
 //   node kit.js version                     -> versión del plugin y de los archivos del proyecto
 "use strict";
@@ -72,7 +73,7 @@ if (cmd === "hook") {
   process.exit(r.status == null ? 0 : r.status);
 }
 if (cmd === "help" || cmd === "--help" || cmd === "-h") {
-  const lines = fs.readFileSync(__filename, "utf8").split("\n").slice(1, 14).map((l) => l.replace(/^\/\/ ?/, ""));
+  const lines = fs.readFileSync(__filename, "utf8").split("\n").slice(1, 15).map((l) => l.replace(/^\/\/ ?/, ""));
   console.log(lines.join("\n"));
   process.exit(0);
 }
