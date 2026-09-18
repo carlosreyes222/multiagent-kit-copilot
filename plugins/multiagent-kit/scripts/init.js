@@ -39,20 +39,25 @@ module.exports = async function init(opts, { mode }) {
   C.log.cyan(`${mode === "update" ? "Actualizando" : "Inicializando"} kit multiagente (${C.FLAVOR}) v${C.VERSION} en ${dest} — modo ${kitMode}`);
 
   const creados = [], conservados = [], fusionados = [], actualizados = [], modificados = [], excluidos = [];
-  const manifest = C.readJson(manifestPath, { version: "", files: {} });
+  const manifest = C.readJson(manifestPath, { version: "", files: {}, templates: {} });
   if (!manifest.files) manifest.files = {};
+  if (!manifest.templates) manifest.templates = {};
   const excludeList = new Set();
 
   const copySafe = (rel, destRel = rel) => {
     const src = path.join(tpl, rel), dst = path.join(dest, destRel);
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     excludeList.add(destRel);
+    const key = destRel.replace(/\\/g, "/"), srcHash = C.sha256(src);
     if (fs.existsSync(dst)) {
-      if (C.sha256(src) === C.sha256(dst)) return;
-      fs.copyFileSync(src, dst + ".kit");
-      excludeList.add(destRel + ".kit");
-      conservados.push(`${destRel}  (nueva versión en ${destRel}.kit)`);
+      // Archivo tuyo: solo dejamos una copia .kit si la plantilla cambió desde la última vez que la viste
+      if (srcHash !== C.sha256(dst) && manifest.templates[key] !== srcHash) {
+        fs.copyFileSync(src, dst + ".kit");
+        excludeList.add(destRel + ".kit");
+        conservados.push(`${destRel}  (nueva versión en ${destRel}.kit)`);
+      }
     } else { fs.copyFileSync(src, dst); creados.push(destRel); }
+    manifest.templates[key] = srcHash;
   };
   const mergeLines = (rel) => {
     const src = path.join(tpl, rel), dst = path.join(dest, rel);
@@ -125,7 +130,9 @@ module.exports = async function init(opts, { mode }) {
   // Manifiesto y registro local
   const files = {};
   for (const k of Object.keys(manifest.files).sort()) files[k] = manifest.files[k];
-  C.writeJson(manifestPath, { version: C.VERSION, mode: kitMode, updatedAt: C.nowIso(), files });
+  const templates = {};
+  for (const k of Object.keys(manifest.templates).sort()) templates[k] = manifest.templates[k];
+  C.writeJson(manifestPath, { version: C.VERSION, mode: kitMode, updatedAt: C.nowIso(), files, templates });
   C.writeJson(kitJsonPath, { pluginRoot: C.PLUGIN_ROOT, version: C.VERSION, projectFilesVersion: C.VERSION, mode: kitMode, initializedAt: prevKit.initializedAt || C.nowIso(), updatedAt: C.nowIso() });
   excludeList.add(".pipeline/");
 

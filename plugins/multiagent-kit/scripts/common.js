@@ -236,7 +236,12 @@ function supabaseDeploy(root, cfg, projectRef, label) {
 }
 
 // --- Utilidades ------------------------------------------------------------------------------------
-function sha256(file) { return require("crypto").createHash("sha256").update(fs.readFileSync(file)).digest("hex"); }
+// Hash de un archivo. Los de texto se normalizan a LF: git en Windows (autocrlf) convierte a CRLF y no debe contar como "modificado".
+function sha256(file) {
+  let buf = fs.readFileSync(file);
+  if (!buf.includes(0)) buf = Buffer.from(buf.toString("utf8").replace(/\r\n/g, "\n"), "utf8");
+  return require("crypto").createHash("sha256").update(buf).digest("hex");
+}
 function readJson(p, fallback) { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return fallback; } }
 function writeJson(p, data) { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(data, null, 2) + "\n", "utf8"); }
 function parseArgs(argv) {

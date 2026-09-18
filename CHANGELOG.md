@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1
+- `update`/`init`: los hashes de archivos gestionados ignoran CRLF/LF, así que git en Windows (`autocrlf`) ya no hace que `kit.js` aparezca como "modificado por ti" y se quede sin actualizar.
+- Los archivos tuyos (`pipeline.config.json`, `CLAUDE.md`/`AGENTS.md`, plantillas de `docs/`, `staging/`) solo generan una copia `.kit` cuando la plantilla del kit cambió desde tu último `update` (antes se regeneraban en cada ejecución). Borra los `.kit` antiguos que ya revisaste.
+
 ## 1.3.0 — SDKs del equipo y flujo end-to-end
 - Nueva sección `SDKS` en `pipeline.config.json`: librerías propias que el proyecto consume (`npm`, `android`, `ios` o `comando`), por ruta local y/o repo git con rama (`main` por defecto; el clon va a `.pipeline/sdks/<nombre>`, fuera de git).
 - `node kit.js sdk list|sync|pack|status`: sincroniza el SDK, genera una versión de trabajo `X.Y.Z-local.N` sin tocar el repo del SDK ni registros remotos, la publica en local (npm: tgz versionado en `vendor/sdks/` + `file:` en `package.json` + install; Android: `publishToMavenLocal` + versión en `libs.versions.toml`/gradle + `mavenLocal()`; iOS: `:path` en Podfile o `.package(path:)`) y actualiza la dependencia del padre.
