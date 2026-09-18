@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.2
+- `init --modo usuario` en un proyecto que ya estaba en modo `repo`/`local` retira de `.github/` (y `.gitignore`/`.dockerignore`) lo que el kit había copiado, siempre que siga idéntico a lo copiado; lo que editaste se conserva y se avisa. Así cambiar de modo no deja archivos del kit en el repositorio.
+
 ## 1.3.1
 - `update`/`init`: los hashes de archivos gestionados ignoran CRLF/LF, así que git en Windows (`autocrlf`) ya no hace que `kit.js` aparezca como "modificado por ti" y se quede sin actualizar.
 - Los archivos tuyos (`pipeline.config.json`, `CLAUDE.md`/`AGENTS.md`, plantillas de `docs/`, `staging/`) solo generan una copia `.kit` cuando la plantilla del kit cambió desde tu último `update` (antes se regeneraban en cada ejecución). Borra los `.kit` antiguos que ya revisaste.

@@ -38,7 +38,32 @@ module.exports = async function init(opts, { mode }) {
   if (!fs.existsSync(path.join(dest, ".git"))) C.log.yellow(`AVISO: '${dest}' no es un repositorio git. Los hooks de ramas protegidas necesitan git.`);
   C.log.cyan(`${mode === "update" ? "Actualizando" : "Inicializando"} kit multiagente (${C.FLAVOR}) v${C.VERSION} en ${dest} — modo ${kitMode}`);
 
-  const creados = [], conservados = [], fusionados = [], actualizados = [], modificados = [], excluidos = [];
+  const creados = [], conservados = [], fusionados = [], actualizados = [], modificados = [], excluidos = [], retirados = [];
+  // Cambio a modo usuario desde repo/local: retira de .github/ lo que el kit copió antes (solo si sigue idéntico a lo copiado)
+  const oldGithubManifest = path.join(dest, ".github", "kit-manifest.json");
+  if (kitMode === "usuario" && isCopilot && fs.existsSync(oldGithubManifest)) {
+    const old = C.readJson(oldGithubManifest, { files: {}, templates: {} });
+    const rmIfSame = (rel, hash) => {
+      const f = path.join(dest, rel);
+      if (!rel.startsWith(".github/") || !fs.existsSync(f)) return;
+      if (C.sha256(f) !== hash) { modificados.push(`${rel}  (lo modificaste; no lo retiro al cambiar a modo usuario)`); return; }
+      fs.unlinkSync(f); retirados.push(rel);
+      let d = path.dirname(f);
+      while (d.startsWith(path.join(dest, ".github")) && fs.existsSync(d) && fs.readdirSync(d).length === 0) { fs.rmdirSync(d); d = path.dirname(d); }
+    };
+    for (const [rel, hash] of Object.entries(old.files || {})) rmIfSame(rel, hash);
+    for (const [rel, hash] of Object.entries(old.templates || {})) rmIfSame(rel, hash);
+    for (const rel of [".github/copilot-instructions.md", ".github/copilot/settings.json", ".github/workflows/copilot-setup-steps.yml"]) {
+      const t = path.join(tpl, "github", rel.replace(/^\.github\//, ""));
+      if (fs.existsSync(t) && !(old.templates || {})[rel]) rmIfSame(rel, C.sha256(t));
+    }
+    for (const rel of [".gitignore", ".dockerignore"]) { // solo si los creó el kit y nadie los tocó
+      const f = path.join(dest, rel), t = path.join(tpl, rel);
+      if (fs.existsSync(f) && fs.existsSync(t) && C.sha256(f) === C.sha256(t)) { fs.unlinkSync(f); retirados.push(rel); }
+    }
+    fs.unlinkSync(oldGithubManifest); retirados.push(".github/kit-manifest.json");
+    const gh = path.join(dest, ".github"); if (fs.existsSync(gh) && fs.readdirSync(gh).length === 0) fs.rmdirSync(gh);
+  }
   const manifest = C.readJson(manifestPath, { version: "", files: {}, templates: {} });
   if (!manifest.files) manifest.files = {};
   if (!manifest.templates) manifest.templates = {};
@@ -153,6 +178,7 @@ module.exports = async function init(opts, { mode }) {
 
   const show = (title, list, color, mark) => { if (list.length) { C.log[color]("\n" + title); list.forEach((x) => console.log(`  ${mark} ${x}`)); } };
   show("Creados:", creados, "green", "+");
+  show("Retirados del proyecto (ahora viven en tu perfil de usuario):", retirados, "cyan", "x");
   show("Actualizados (gestionados por el kit):", actualizados, "green", "^");
   show("Fusionados:", fusionados, "green", "~");
   show("Ya existían (NO se tocaron; revisa el .kit y fusiona a mano):", conservados, "yellow", "=");
@@ -163,7 +189,7 @@ module.exports = async function init(opts, { mode }) {
     show("En tu perfil, modificados por ti (NO se tocaron):", userResult.modificados, "yellow", "!");
     if (userResult.avisos.length) userResult.avisos.forEach((a) => C.log.warn(a));
   }
-  if (![creados, actualizados, fusionados, conservados, modificados, excluidos].some((l) => l.length) && !(userResult && (userResult.creados.length || userResult.actualizados.length))) C.log.green(`\nTodo al día (v${C.VERSION}).`);
+  if (![creados, actualizados, fusionados, conservados, modificados, excluidos, retirados].some((l) => l.length) && !(userResult && (userResult.creados.length || userResult.actualizados.length))) C.log.green(`\nTodo al día (v${C.VERSION}).`);
 
   if (mode !== "update") {
     C.log.cyan("\nSiguiente:");

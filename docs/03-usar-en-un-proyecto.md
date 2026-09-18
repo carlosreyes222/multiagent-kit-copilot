@@ -135,7 +135,7 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 
 En modo `usuario` el kit se instala una vez por PC (la primera vez que lo ejecutas) y `node kit.js update` refresca tanto el perfil como el proyecto; el hook de usuario solo actúa en carpetas que tengan `pipeline.config.json`, así que no interfiere en otros repos. Limitaciones: el cloud agent de github.com no ve los agentes (necesita los archivos en el repo), y los prompts de VS Code se copian a la carpeta `User/prompts` de tu perfil (si VS Code está en otra ruta, define `KIT_VSCODE_PROMPTS_DIR`). `.github/copilot-instructions.md` y `copilot-setup-steps.yml` no se crean en este modo.
 
-Cambiar de modo: `node kit.js init --modo repo` vuelve a copiar los archivos; borra a mano las líneas del bloque `multiagent-kit` en `.git/info/exclude` si quieres versionarlos.
+Cambiar de modo: `node kit.js init --modo usuario` retira de `.github/` lo que el kit copió en modo `repo` (si no lo editaste); `node kit.js init --modo repo` vuelve a copiar los archivos; borra a mano las líneas del bloque `multiagent-kit` en `.git/info/exclude` si quieres versionarlos.
 
 ---
 Anterior: [02-publicar-en-github.md](02-publicar-en-github.md) · Siguiente: [04-flujo-y-compuertas.md](04-flujo-y-compuertas.md) · [Índice](../README.md)
