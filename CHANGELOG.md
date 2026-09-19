@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0 — nada del kit en los proyectos: comando global `kit`
+- **Modo `usuario` por defecto**: `init` deja en el proyecto solo `pipeline.config.json`, `AGENTS.md` y `.pipeline/` (en `.git/info/exclude`). Las plantillas de documentos se leen del plugin (`kit plantilla <spec|adr|seguridad|arquitectura>`; una copia en `docs/` del proyecto tiene prioridad), `staging/` se crea solo al usar `kit staging` con `docker`.
+- **Comando global `kit`** en `~/.multiagent-kit/bin` (se añade al PATH del usuario en Windows, macOS y Linux): `kit check`, `kit status`, `kit epica status`… desde cualquier proyecto, sin `kit.js`. `node kit.js` sigue funcionando en los modos `repo`/`local`.
+- **Migración de proyectos existentes**: `kit doctor` detecta las copias del kit en modo `repo`/`local` y `kit doctor --fix --usuario` (o `kit init --modo usuario`) las retira si siguen idénticas a lo copiado, dejando los archivos versionados como borrados para que hagas commit.
+- Agentes y skills actualizados a `kit …` y a la plantilla resuelta por `kit plantilla`. El hook bloquea `kit prod` y `kit sdk publish` igual que las variantes `node kit.js`.
+
 ## 1.5.0 — épicas
 - **Épicas**: una idea grande se parte en HU (`docs/epicas/<nombre>.md`); el product-owner la propone (`MODO: EPICA`, o `/pipeline --epica`), tú la apruebas y el pipeline encadena las HU preguntando entre una y otra. `node kit.js epica list|status|next|add|set` recalcula el estado de cada HU desde disco (spec, ADR, rama, informes, merge, estado vivo) y dice cómo retomar; `/pipeline continuar <epica>` retoma la siguiente HU. `node kit.js status` muestra las épicas. Clave de estado nueva: `epica`.
 

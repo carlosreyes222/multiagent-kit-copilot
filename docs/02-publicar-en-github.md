@@ -45,7 +45,7 @@ Copilot busca `marketplace.json` en la raíz del repositorio (también aceptarí
 
 ## 2.5 Para la organización (opcional)
 
-Si el equipo debe recibir el plugin sin instalarlo a mano, cada repositorio de proyecto lleva `.github/copilot/settings.json` con `extraKnownMarketplaces` y `enabledPlugins` (lo copia `node kit.js init`): la CLI y el cloud agent instalan el plugin automáticamente al abrir ese repositorio. Para los agentes en VS Code a nivel de organización, se pueden publicar también en el repositorio `.github` de la organización, carpeta `agents/` (ver [09-cloud-agent-y-github.md](09-cloud-agent-y-github.md)).
+Si el equipo debe recibir el plugin sin instalarlo a mano, cada repositorio de proyecto lleva `.github/copilot/settings.json` con `extraKnownMarketplaces` y `enabledPlugins` (lo copia `kit init`): la CLI y el cloud agent instalan el plugin automáticamente al abrir ese repositorio. Para los agentes en VS Code a nivel de organización, se pueden publicar también en el repositorio `.github` de la organización, carpeta `agents/` (ver [09-cloud-agent-y-github.md](09-cloud-agent-y-github.md)).
 
 ---
 Anterior: [01-instalacion-windows.md](01-instalacion-windows.md) · Siguiente: [03-usar-en-un-proyecto.md](03-usar-en-un-proyecto.md) · [Índice](../README.md)

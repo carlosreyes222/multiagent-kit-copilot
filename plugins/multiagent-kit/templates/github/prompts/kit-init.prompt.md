@@ -6,4 +6,4 @@ argument-hint: "repo | local | usuario"
 ---
 Modo elegido: ${input:modo:repo (versionado), local (solo este clon) o usuario (perfil, nada en el repo)}
 
-Ejecuta el comando `kit-init` del kit siguiendo la skill `kit-init` (en `.github/skills/` del proyecto o en `~/.copilot/skills/`). Si `kit.js` ya existe, usa `node kit.js update`.
+Ejecuta el comando `kit-init` del kit siguiendo la skill `kit-init` (en `.github/skills/` del proyecto o en `~/.copilot/skills/`). Si `kit.js` ya existe, usa `kit update`.

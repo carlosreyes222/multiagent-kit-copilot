@@ -54,9 +54,17 @@ module.exports = async function check() {
   if (!mf) C.log.warn("Falta el manifiesto del kit: ejecuta node kit.js init");
   else if (mf.version === C.VERSION) C.log.ok(`Plugin v${C.VERSION} y archivos del proyecto v${mf.version} (modo ${kitMode})`);
   else C.log.warn(`Plugin v${C.VERSION} pero archivos del proyecto v${mf.version}: ejecuta node kit.js update`);
-  const must = [C.CONTEXT_FILE, "kit.js"];
+  const must = [C.CONTEXT_FILE];
+  if (kitMode !== "usuario") must.push("kit.js");
   if (C.FLAVOR === "copilot" && kitMode !== "usuario") must.push(".github/hooks/kit.json", ".github/agents/director.agent.md", ".github/skills/pipeline/SKILL.md");
-  if (C.FLAVOR === "claude") must.push(".claude/settings.json");
+  if (C.FLAVOR === "claude" && kitMode !== "usuario") must.push(".claude/settings.json");
+  {
+    const G = require("./global-install");
+    const bin = G.binDir();
+    if (fs.existsSync(path.join(bin, "kit-launcher.js"))) C.log.ok(`comando global 'kit' en ${bin}${G.onPath(bin) ? "" : "  (no está en el PATH de esta terminal: abre una nueva o usa node kit.js)"}`);
+    else C.log.warn(`Falta el comando global 'kit' (${bin}): ejecuta node kit.js update`);
+    if (C.FLAVOR === "claude") { const miss = G.claudeSettingsMissing(); if (miss.length) C.log.warn(`Faltan ${miss.length} permisos del kit en ${G.claudeSettingsPath()}: kit update los añade`); else C.log.ok(`permisos del kit en ${G.claudeSettingsPath()}`); }
+  }
   for (const f of must) if (fs.existsSync(path.join(root, f))) C.log.ok(f); else C.log.warn(`Falta ${f} (node kit.js init)`);
   if (C.FLAVOR === "copilot" && kitMode === "usuario") {
     const U = require("./user-install");

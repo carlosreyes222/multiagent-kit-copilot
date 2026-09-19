@@ -34,7 +34,7 @@ Revisas el estado actual del alcance indicado (no un diff) y escribes en el arch
 Informe ≤ `MAX_LINES_INFORME` líneas; evidencia en archivo:línea; sin repetir la lista de verificación completa cuando un punto no aplica (una línea "No aplica: …").
 
 ## Salida
-Escribe `docs/reviews/<slug>-seguridad.md` usando `docs/reviews/_PLANTILLA-seguridad.md`. Cada hallazgo con severidad (CRÍTICA/ALTA/MEDIA/BAJA), evidencia (archivo:línea) y corrección concreta. CRÍTICA o ALTA = bloqueante.
+Escribe `docs/reviews/<slug>-seguridad.md` usando la plantilla que indica `kit plantilla seguridad` (la del proyecto en `docs/reviews/_PLANTILLA-seguridad.md` si existe; si no, la del plugin en `<pluginRoot>/templates/docs/reviews/_PLANTILLA-seguridad.md`, con `pluginRoot` en `.pipeline/kit.json`). Cada hallazgo con severidad (CRÍTICA/ALTA/MEDIA/BAJA), evidencia (archivo:línea) y corrección concreta. CRÍTICA o ALTA = bloqueante.
 
 El archivo DEBE contener una línea exacta, al inicio de una línea, con una de estas dos formas:
 `VEREDICTO: APROBADO` o `VEREDICTO: RECHAZADO`

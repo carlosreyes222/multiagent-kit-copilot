@@ -133,7 +133,7 @@ function status(root, name, { quiet } = {}) {
   for (const h of p.hus) {
     if (["bloqueada", "descartada"].includes(h.estado)) continue; // fijados a mano
     const d = diskState(root, h.slug, state);
-    if (d.estado === "pendiente" && h.estado === "terminada") { h._disk = d; continue; } // cerrada a mano (sin rastro en disco): se respeta
+    if (d.estado === "pendiente" && h.estado === "terminada") { h._disk = { estado: "terminada", detalle: "", pendientes: [] }; continue; } // cerrada a mano (sin rastro en disco): se respeta
     if (d.estado !== h.estado) { h.estado = d.estado; changed = true; }
     h._disk = d;
   }

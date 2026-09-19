@@ -2,7 +2,7 @@
 
 ## 6.1 Qué vive dónde
 
-| En el plugin (fuente de verdad) | Copia gestionada en cada proyecto (`node kit.js update`) | Tuyo en cada proyecto (nunca se sobrescribe) |
+| En el plugin (fuente de verdad) | Copia gestionada en cada proyecto (`kit update`) | Tuyo en cada proyecto (nunca se sobrescribe) |
 |---|---|---|
 | `com.github.copilot/agents/` — director + 8 agentes | `.github/agents/` | `pipeline.config.json` |
 | `skills/` — comandos, `metodo-*`, `stack-*` | `.github/skills/` | `AGENTS.md`, `.github/copilot-instructions.md` |
@@ -20,7 +20,7 @@ A diferencia del kit de Claude Code, aquí **sí** hay copias en el proyecto, po
 2. Sube la versión en **dos** sitios, con la misma cifra (p. ej. `1.1.0`):
    - `plugins/multiagent-kit/plugin.json` → `"version"`
    - `marketplace.json` (raíz del repositorio) → `"version"` de la entrada del plugin
-3. Anota el cambio en `CHANGELOG.md` e indica si hace falta `node kit.js update` en los proyectos.
+3. Anota el cambio en `CHANGELOG.md` e indica si hace falta `kit update` en los proyectos.
 4. `git add . ; git commit -m "multiagent-kit 1.1.0" ; git push`
 
 ## 6.3 Recibir una versión nueva
@@ -37,11 +37,11 @@ o dentro de `copilot`: `/plugin` marca los plugins con versión nueva y ofrece *
 En cada proyecto:
 
 ```powershell
-node kit.js update
+kit update
 git add .github kit.js ; git commit -m "kit: actualizar a 1.1.0"
 ```
 
-En modo `usuario`, `update` refresca también los archivos del perfil (`~/.copilot/…` y prompts de VS Code). `update` sobrescribe un archivo gestionado **solo si no lo has modificado** desde la última copia (lo comprueba con los hashes de `.github/kit-manifest.json`). Si lo tocaste, deja la versión nueva al lado como `.kit` y te lo dice. Al abrir `copilot`, el hook de inicio avisa cuando los archivos del proyecto son de una versión anterior al plugin; `node kit.js version` lo muestra también.
+En modo `usuario`, `update` refresca también los archivos del perfil (`~/.copilot/…` y prompts de VS Code). `update` sobrescribe un archivo gestionado **solo si no lo has modificado** desde la última copia (lo comprueba con los hashes de `.github/kit-manifest.json`). Si lo tocaste, deja la versión nueva al lado como `.kit` y te lo dice. Al abrir `copilot`, el hook de inicio avisa cuando los archivos del proyecto son de una versión anterior al plugin; `kit version` lo muestra también.
 
 ## 6.4 Personalizar sin perder las actualizaciones
 
@@ -61,13 +61,13 @@ En un proyecto de prueba, la variable de entorno `KIT_PLUGIN_ROOT` con la ruta `
 
 ## 6.6 Aviso automático de versión nueva
 
-Cada sesión, el hook de inicio compara la versión instalada con la de GitHub (una petición al día, caché en `~/.multiagent-kit/`) y avisa si hay una nueva. `node kit.js update` hace la misma comprobación y te dice el comando para actualizar el plugin (`node kit.js update --plugin` lo ejecuta por ti); después vuelve a ejecutar `node kit.js update` para refrescar los archivos del proyecto. 
+Cada sesión, el hook de inicio compara la versión instalada con la de GitHub (una petición al día, caché en `~/.multiagent-kit/`) y avisa si hay una nueva. `kit update` hace la misma comprobación y te dice el comando para actualizar el plugin (`kit update --plugin` lo ejecuta por ti); después vuelve a ejecutar `kit update` para refrescar los archivos del proyecto. 
 
-Recuerda que **hacer push del kit no cambia nada en los PCs**: cada uno tiene su copia instalada hasta que actualiza el plugin. `node kit.js doctor` te lo señala.
+Recuerda que **hacer push del kit no cambia nada en los PCs**: cada uno tiene su copia instalada hasta que actualiza el plugin. `kit doctor` te lo señala.
 
-## 6.7 `node kit.js doctor`
+## 6.7 `kit doctor`
 
-Cuando algo no cuadra, antes de investigar a mano: `node kit.js doctor` revisa plugin (versión frente a GitHub), Node, archivos del proyecto (versión, modo, `kit.js`, `.git/info/exclude`, restos de versiones antiguas), hooks (lanza un `git push origin main` de prueba y espera que lo bloquee), permisos, copias `.kit`, locks de git colgados y las entradas de `SDKS`. Cada problema trae su arreglo; `node kit.js doctor --fix` aplica los seguros (permisos que faltan, `kit.js` desactualizado, `.kit` idénticos, locks de más de 10 minutos).
+Cuando algo no cuadra, antes de investigar a mano: `kit doctor` revisa plugin (versión frente a GitHub), Node, archivos del proyecto (versión, modo, `kit.js`, `.git/info/exclude`, restos de versiones antiguas), hooks (lanza un `git push origin main` de prueba y espera que lo bloquee), permisos, copias `.kit`, locks de git colgados y las entradas de `SDKS`. Cada problema trae su arreglo; `kit doctor --fix` aplica los seguros (permisos que faltan, `kit.js` desactualizado, `.kit` idénticos, locks de más de 10 minutos).
 
 ---
 Anterior: [05-arquitectura-viva.md](05-arquitectura-viva.md) · Siguiente: [07-problemas-frecuentes.md](07-problemas-frecuentes.md) · [Índice](../README.md)

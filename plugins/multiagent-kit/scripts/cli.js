@@ -18,6 +18,12 @@ async function main(cmd, argv) {
     case "sdk": return require("./sdk")(opts);
     case "doctor": return require("./doctor")(opts);
     case "epica": return require("./epica")(opts);
+    case "plantilla": {
+      const root = C.findProjectRoot();
+      const kinds = opts._[0] ? [opts._[0]] : Object.keys(C.TEMPLATES);
+      for (const k of kinds) { const p = C.templatePath(root, k); if (!p) { console.error(`Plantilla desconocida: ${k} (${Object.keys(C.TEMPLATES).join(", ")})`); return 1; } console.log(kinds.length > 1 ? `${k.padEnd(13)} ${p}` : p); }
+      return 0;
+    }
     case "lecciones": {
       const R = require("./remote"), fs = require("fs");
       const p = R.ensureLessons();
@@ -38,7 +44,7 @@ async function main(cmd, argv) {
       return 0;
     }
     default:
-      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | epica | doctor | lecciones | version`);
+      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | epica | plantilla | doctor | lecciones | version`);
       return 1;
   }
 }

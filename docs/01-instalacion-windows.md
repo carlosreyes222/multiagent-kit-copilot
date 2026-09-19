@@ -1,6 +1,6 @@
 # 1. Instalación (Windows y macOS)
 
-Una vez por PC. El kit está escrito en Node.js (que la CLI de Copilot ya exige), así que no necesita PowerShell ni bash especiales: los comandos `node kit.js …` y los hooks son idénticos en Windows, macOS, Linux y en el sandbox del cloud agent.
+Una vez por PC. El kit está escrito en Node.js (que la CLI de Copilot ya exige), así que no necesita PowerShell ni bash especiales: los comandos `kit …` y los hooks son idénticos en Windows, macOS, Linux y en el sandbox del cloud agent.
 
 ## 1.1 Windows
 
@@ -33,7 +33,7 @@ Requiere una suscripción a Copilot (individual, Business o Enterprise). En Busi
 
 ## 1.4 VS Code (opcional, para trabajar con `@agentes` y `/prompts`)
 
-Instala VS Code y la extensión **GitHub Copilot Chat**. Con eso VS Code lee `.github/agents`, `.github/skills`, `.github/prompts` y `.github/hooks` del proyecto, que es lo que `node kit.js init` copia. No hace falta instalar el plugin para VS Code: el plugin es para la CLI y el cloud agent.
+Instala VS Code y la extensión **GitHub Copilot Chat**. Con eso VS Code lee `.github/agents`, `.github/skills`, `.github/prompts` y `.github/hooks` del proyecto, que es lo que `kit init` copia. No hace falta instalar el plugin para VS Code: el plugin es para la CLI y el cloud agent.
 
 ## 1.5 Instalar el plugin del kit
 
@@ -55,7 +55,7 @@ copilot plugin install multiagent-kit@carlos-kits-copilot
 
 ## 1.6 Comprobar
 
-Abre `copilot` en cualquier carpeta y escribe `/skills list`: deben aparecer `pipeline`, `analisis`, `bugfix`, `ideas`, `kit-init`, `metodo-*` y `stack-*`. Con `/agent` deben verse `director`, `product-owner`, `arquitecto`, etc. En un proyecto inicializado, `node kit.js check` muestra el sistema detectado y da las pistas de instalación de tu sistema (`winget`, `brew` o `apt`).
+Abre `copilot` en cualquier carpeta y escribe `/skills list`: deben aparecer `pipeline`, `analisis`, `bugfix`, `ideas`, `kit-init`, `metodo-*` y `stack-*`. Con `/agent` deben verse `director`, `product-owner`, `arquitecto`, etc. En un proyecto inicializado, `kit check` muestra el sistema detectado y da las pistas de instalación de tu sistema (`winget`, `brew` o `apt`).
 
 Siguiente: [03-usar-en-un-proyecto.md](03-usar-en-un-proyecto.md) (o [02](02-publicar-en-github.md) si aún no has publicado el kit).
 

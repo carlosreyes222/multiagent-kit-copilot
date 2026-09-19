@@ -3,7 +3,7 @@ name: metodo-spec
 description: Método para convertir una idea en una especificación funcional verificable (problema, usuarios, alcance mínimo, criterios Dado/Cuando/Entonces, fuera de alcance, preguntas abiertas). La usa el product-owner en la Etapa 1 del pipeline y cualquier agente que deba escribir o revisar una spec.
 ---
 
-Aplica este método siempre que escribas o revises una spec. La plantilla (`docs/specs/_PLANTILLA.md`) dice qué secciones hay; este método dice cómo llenarlas bien.
+Aplica este método siempre que escribas o revises una spec. La plantilla (la plantilla que indica `kit plantilla spec` (la del proyecto en `docs/specs/_PLANTILLA.md` si existe; si no, la del plugin en `<pluginRoot>/templates/docs/specs/_PLANTILLA.md`, con `pluginRoot` en `.pipeline/kit.json`)) dice qué secciones hay; este método dice cómo llenarlas bien.
 
 ## 1. Principios
 

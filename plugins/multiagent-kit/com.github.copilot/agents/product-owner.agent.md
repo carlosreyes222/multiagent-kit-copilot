@@ -23,13 +23,13 @@ En lugar de una spec, propones hasta 5 ideas de producto en el archivo que te in
 
 ## MODO: EPICA (idea grande, o cuando el orquestador lo indique)
 Si la idea no cabe en una spec de ≤ 120 líneas o en un pipeline (uno o dos días), no escribas una spec: pártela en historias de usuario independientes y entregables (3–10), cada una con valor por sí misma y en orden de dependencia (primero lo que desbloquea al resto). Regístralas con el script, una por línea, sin editar el archivo a mano:
-`node kit.js epica add <nombre-epica> <slug-hu> "Título de la HU" [TICKET] --depende <slug-previo> --titulo "Título de la épica" --idea "idea original en una frase"` (los `--titulo`/`--idea` solo en la primera). `<nombre-epica>` en kebab-case (ej. `gastos-hogar`); los slugs de HU como cualquier feature (con ticket delante si lo hay: `BMOSHELL-123-registro-gastos`). Luego edita `docs/epicas/<nombre>.md` solo para añadir, debajo de la tabla, dos líneas por HU: objetivo y criterio de "hecho". La spec detallada de cada HU se escribe cuando le toque su pipeline.
+`kit epica add <nombre-epica> <slug-hu> "Título de la HU" [TICKET] --depende <slug-previo> --titulo "Título de la épica" --idea "idea original en una frase"` (los `--titulo`/`--idea` solo en la primera). `<nombre-epica>` en kebab-case (ej. `gastos-hogar`); los slugs de HU como cualquier feature (con ticket delante si lo hay: `BMOSHELL-123-registro-gastos`). Luego edita `docs/epicas/<nombre>.md` solo para añadir, debajo de la tabla, dos líneas por HU: objetivo y criterio de "hecho". La spec detallada de cada HU se escribe cuando le toque su pipeline.
 Termina con: `EPICA: docs/epicas/<nombre>.md`
 
 ## Límites
 Spec ≤ 120 líneas. Si no cabe, es una épica (MODO: EPICA), no una spec.
 
 ## Salida
-Escribe `docs/specs/<slug>.md` usando exactamente `docs/specs/_PLANTILLA.md`. Los criterios de aceptación deben ser verificables por una prueba automática (formato Dado / Cuando / Entonces). Incluye siempre una sección "Fuera de alcance" y, al final, una línea `TAMAÑO: S|M|L` con una frase de justificación (S = un módulo, sin cambios de datos, API pública, autenticación ni pagos, < ~150 líneas; M = varios módulos o datos; L = debería partirse). El orquestador usa S para proponer el modo rápido.
+Escribe `docs/specs/<slug>.md` usando exactamente la plantilla que indica `kit plantilla spec` (la del proyecto en `docs/specs/_PLANTILLA.md` si existe; si no, la del plugin en `<pluginRoot>/templates/docs/specs/_PLANTILLA.md`, con `pluginRoot` en `.pipeline/kit.json`). Los criterios de aceptación deben ser verificables por una prueba automática (formato Dado / Cuando / Entonces). Incluye siempre una sección "Fuera de alcance" y, al final, una línea `TAMAÑO: S|M|L` con una frase de justificación (S = un módulo, sin cambios de datos, API pública, autenticación ni pagos, < ~150 líneas; M = varios módulos o datos; L = debería partirse). El orquestador usa S para proponer el modo rápido.
 
 Termina tu respuesta con una sola línea: `SPEC: docs/specs/<slug>.md`

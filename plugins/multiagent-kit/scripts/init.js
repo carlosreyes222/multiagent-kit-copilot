@@ -17,6 +17,7 @@ const fs = require("fs");
 const path = require("path");
 const C = require("./common");
 const U = require("./user-install");
+const G = require("./global-install");
 
 const MODES = ["repo", "local", "usuario"];
 
@@ -29,7 +30,7 @@ module.exports = async function init(opts, { mode }) {
   // Modo: --modo X, alias --usuario/--local, o el guardado en .pipeline/kit.json (para update)
   const kitJsonPath = path.join(dest, ".pipeline", "kit.json");
   const prevKit = C.readJson(kitJsonPath, {});
-  let kitMode = opts.modo || opts.mode || (opts.usuario || opts.user ? "usuario" : opts.local ? "local" : null) || prevKit.mode || "repo";
+  let kitMode = opts.modo || opts.mode || (opts.usuario || opts.user ? "usuario" : opts.local ? "local" : null) || prevKit.mode || "usuario";
   if (!MODES.includes(kitMode)) { C.log.fail(`Modo desconocido: ${kitMode} (repo | local | usuario)`); return 1; }
   const excludeFromGit = kitMode !== "repo";
   const copyGithub = isCopilot && kitMode !== "usuario";
@@ -41,15 +42,17 @@ module.exports = async function init(opts, { mode }) {
   const creados = [], conservados = [], fusionados = [], actualizados = [], modificados = [], excluidos = [], retirados = [];
   // Cambio a modo usuario desde repo/local: retira de .github/ lo que el kit copió antes (solo si sigue idéntico a lo copiado)
   const oldGithubManifest = path.join(dest, ".github", "kit-manifest.json");
-  if (kitMode === "usuario" && isCopilot && fs.existsSync(oldGithubManifest)) {
-    const old = C.readJson(oldGithubManifest, { files: {}, templates: {} });
+  const oldManifestPath = fs.existsSync(oldGithubManifest) ? oldGithubManifest : path.join(dest, ".pipeline", "kit-manifest.json");
+  const KEEP = new Set(["pipeline.config.json", C.CONTEXT_FILE]);
+  if (kitMode === "usuario" && fs.existsSync(kitJsonPath) && (prevKit.mode || "repo") !== "usuario" && fs.existsSync(oldManifestPath)) {
+    const old = C.readJson(oldManifestPath, { files: {}, templates: {} });
     const rmIfSame = (rel, hash) => {
       const f = path.join(dest, rel);
-      if (!rel.startsWith(".github/") || !fs.existsSync(f)) return;
+      if (KEEP.has(rel) || !fs.existsSync(f)) return;
       if (C.sha256(f) !== hash) { modificados.push(`${rel}  (lo modificaste; no lo retiro al cambiar a modo usuario)`); return; }
       fs.unlinkSync(f); retirados.push(rel);
       let d = path.dirname(f);
-      while (d.startsWith(path.join(dest, ".github")) && fs.existsSync(d) && fs.readdirSync(d).length === 0) { fs.rmdirSync(d); d = path.dirname(d); }
+      while (d !== dest && d.startsWith(dest) && fs.existsSync(d) && fs.readdirSync(d).length === 0) { fs.rmdirSync(d); d = path.dirname(d); }
     };
     for (const [rel, hash] of Object.entries(old.files || {})) rmIfSame(rel, hash);
     for (const [rel, hash] of Object.entries(old.templates || {})) rmIfSame(rel, hash);
@@ -57,12 +60,13 @@ module.exports = async function init(opts, { mode }) {
       const t = path.join(tpl, "github", rel.replace(/^\.github\//, ""));
       if (fs.existsSync(t) && !(old.templates || {})[rel]) rmIfSame(rel, C.sha256(t));
     }
-    for (const rel of [".gitignore", ".dockerignore"]) { // solo si los creó el kit y nadie los tocó
+    for (const rel of [".gitignore", ".dockerignore", ".worktreeinclude"]) { // solo si los creó el kit y nadie los tocó
       const f = path.join(dest, rel), t = path.join(tpl, rel);
       if (fs.existsSync(f) && fs.existsSync(t) && C.sha256(f) === C.sha256(t)) { fs.unlinkSync(f); retirados.push(rel); }
     }
-    fs.unlinkSync(oldGithubManifest); retirados.push(".github/kit-manifest.json");
+    if (oldManifestPath === oldGithubManifest) { fs.unlinkSync(oldGithubManifest); retirados.push(".github/kit-manifest.json"); }
     const gh = path.join(dest, ".github"); if (fs.existsSync(gh) && fs.readdirSync(gh).length === 0) fs.rmdirSync(gh);
+    for (const rel of [".claude/settings.json.kit", "kit.js.kit"]) { const f = path.join(dest, rel); if (fs.existsSync(f)) { fs.unlinkSync(f); retirados.push(rel); } }
   }
   const manifest = C.readJson(manifestPath, { version: "", files: {}, templates: {} });
   if (!manifest.files) manifest.files = {};
@@ -120,22 +124,26 @@ module.exports = async function init(opts, { mode }) {
     copySafe("github/copilot-instructions.md", ".github/copilot-instructions.md");
     copySafe("github/copilot/settings.json", ".github/copilot/settings.json");
     copySafe("github/workflows/copilot-setup-steps.yml", ".github/workflows/copilot-setup-steps.yml");
-  } else if (!isCopilot) {
+  } else if (!isCopilot && kitMode !== "usuario") {
     copySafe("claude/settings.json", ".claude/settings.json");
   }
-  copySafe("staging/docker-compose.staging.yml");
-  copySafe("staging/Dockerfile.staging");
-  copySafe("staging/env.staging.example", "staging/.env.staging");
-  copySafe("docs/_PLANTILLA-ARQUITECTURA.md");
-  copySafe("docs/specs/_PLANTILLA.md");
-  copySafe("docs/adr/_PLANTILLA.md");
-  copySafe("docs/reviews/_PLANTILLA-seguridad.md");
-  mergeLines(".gitignore");
-  mergeLines(".dockerignore");
-  if (!isCopilot && fs.existsSync(path.join(tpl, ".worktreeinclude"))) mergeLines(".worktreeinclude");
+  if (kitMode !== "usuario") {
+    // Modos repo/local: copias en el proyecto (para equipos sin el plugin o el cloud agent). En modo usuario las
+    // plantillas se leen del plugin, staging/ se crea solo si se usa docker, y los permisos viven en ~/.claude.
+    copySafe("staging/docker-compose.staging.yml");
+    copySafe("staging/Dockerfile.staging");
+    copySafe("staging/env.staging.example", "staging/.env.staging");
+    copySafe("docs/_PLANTILLA-ARQUITECTURA.md");
+    copySafe("docs/specs/_PLANTILLA.md");
+    copySafe("docs/adr/_PLANTILLA.md");
+    copySafe("docs/reviews/_PLANTILLA-seguridad.md");
+    mergeLines(".gitignore");
+    mergeLines(".dockerignore");
+    if (!isCopilot && fs.existsSync(path.join(tpl, ".worktreeinclude"))) mergeLines(".worktreeinclude");
+  }
 
   // --- Archivos gestionados por el kit ---
-  installManaged(path.join(tpl, "kit.js"), "kit.js");
+  if (kitMode !== "usuario") installManaged(path.join(tpl, "kit.js"), "kit.js");
   if (copyGithub) {
     installManaged(path.join(tpl, "github/hooks/kit.json"), ".github/hooks/kit.json");
     installManaged(path.join(tpl, "github/instructions/kit.instructions.md"), ".github/instructions/kit.instructions.md");
@@ -151,6 +159,7 @@ module.exports = async function init(opts, { mode }) {
   // --- Instalación a nivel de usuario (modo usuario) ---
   let userResult = null;
   if (kitMode === "usuario" && isCopilot) userResult = U.installUser({ update: mode === "update" });
+  const globalResult = G.installGlobal({ quiet: true });
 
   // Manifiesto y registro local
   const files = {};
@@ -178,12 +187,13 @@ module.exports = async function init(opts, { mode }) {
 
   const show = (title, list, color, mark) => { if (list.length) { C.log[color]("\n" + title); list.forEach((x) => console.log(`  ${mark} ${x}`)); } };
   show("Creados:", creados, "green", "+");
-  show("Retirados del proyecto (ahora viven en tu perfil de usuario):", retirados, "cyan", "x");
+  show("Retirados del proyecto (ahora son globales: plugin y perfil de usuario):", retirados, "cyan", "x");
   show("Actualizados (gestionados por el kit):", actualizados, "green", "^");
   show("Fusionados:", fusionados, "green", "~");
   show("Ya existían (NO se tocaron; revisa el .kit y fusiona a mano):", conservados, "yellow", "=");
   show("Gestionados por el kit pero modificados por ti (NO se tocaron):", modificados, "yellow", "!");
   show("Excluidos de git en este clon (.git/info/exclude):", excluidos, "cyan", "-");
+  show("Global en este PC:", globalResult.messages, "green", "*");
   if (userResult) {
     show("Instalados en tu perfil de usuario:", userResult.creados.concat(userResult.actualizados), "green", "*");
     show("En tu perfil, modificados por ti (NO se tocaron):", userResult.modificados, "yellow", "!");
@@ -195,10 +205,10 @@ module.exports = async function init(opts, { mode }) {
     C.log.cyan("\nSiguiente:");
     console.log("  1. Edita pipeline.config.json (build/test/lint, proveedor de staging)");
     console.log(`  2. Edita ${C.CONTEXT_FILE} con la descripción de tu proyecto`);
-    console.log("  3. node kit.js check      (verifica herramientas)");
+    console.log(`  3. ${globalResult.pathOk ? "kit check" : "node \"" + path.join(G.binDir(), "kit-launcher.js") + "\" check"}      (verifica herramientas)`);
     console.log(`  4. ${isCopilot ? "copilot  ->  /pipeline \"tu idea\"     (o en VS Code: /pipeline)" : "claude  ->  /pipeline \"tu idea\""}`);
     if (kitMode === "repo" && isCopilot) console.log("  5. Haz commit de .github/ y kit.js para que el equipo y el cloud agent usen lo mismo");
-    if (kitMode === "usuario") console.log("  5. Reinicia VS Code / la sesión de copilot para que cargue los agentes del perfil de usuario. Nada del kit aparece en git status.");
+    if (kitMode === "usuario") console.log(`  5. En el proyecto solo quedan pipeline.config.json, ${C.CONTEXT_FILE} y .pipeline/ (excluidos de git). Plantillas, staging y permisos son globales.${isCopilot ? " Reinicia VS Code / copilot para cargar los agentes del perfil." : ""}`);
     if (kitMode === "local") console.log("  5. Nada del kit aparece en git status (está en .git/info/exclude). Para versionarlo más adelante: node kit.js init --modo repo y borra las líneas de exclude.");
   }
 

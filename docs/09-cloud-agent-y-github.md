@@ -26,14 +26,14 @@ En la nube no hay compuertas humanas interactivas: el `director` deja la spec en
 
 ## 9.4 Agentes a nivel de organización (opcional)
 
-Para que todos los repositorios de la organización vean los agentes sin copiarlos, publica los `*.agent.md` en la carpeta `agents/` del repositorio `.github` (o `.github-private`) de la organización. Los agentes del repositorio (`.github/agents/`) tienen prioridad sobre los de la organización si coinciden en nombre. Las skills y los hooks, en cambio, se leen solo del repositorio del proyecto (o de un plugin), por eso `node kit.js init` sigue siendo necesario.
+Para que todos los repositorios de la organización vean los agentes sin copiarlos, publica los `*.agent.md` en la carpeta `agents/` del repositorio `.github` (o `.github-private`) de la organización. Los agentes del repositorio (`.github/agents/`) tienen prioridad sobre los de la organización si coinciden en nombre. Las skills y los hooks, en cambio, se leen solo del repositorio del proyecto (o de un plugin), por eso `kit init` sigue siendo necesario.
 
 ## 9.5 Flujo sugerido para un tren de release
 
 1. HU en Jira → issue en GitHub con `pipeline: <HU>` → asignar a Copilot (o `/pipeline` en local si prefieres seguirlo en vivo).
 2. Copilot abre el PR con spec, ADR, código, pruebas e informes de QA, código y seguridad.
 3. Copilot code review + revisión de los seniors solo sobre lo que los informes marcan como riesgo.
-4. Actions en verde → merge al tren → `node kit.js staging` (o el pipeline de despliegue del equipo) → QA manual → `node kit.js prod` por una persona.
+4. Actions en verde → merge al tren → `kit staging` (o el pipeline de despliegue del equipo) → QA manual → `kit prod` por una persona.
 
 ---
 Anterior: [08-superficies-copilot.md](08-superficies-copilot.md) · Siguiente: [10-supabase.md](10-supabase.md) · [Índice](../README.md)

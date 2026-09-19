@@ -13,6 +13,7 @@ module.exports = async function doctor(opts) {
   const fix = !!opts.fix;
   const root = C.findProjectRoot();
   const problems = [], fixed = [];
+  let migrateToUser = false;
   const bad = (msg, how) => { problems.push({ msg, how }); C.log.fail(msg); if (how) C.log.plain("    → " + how); };
   const good = (m) => C.log.ok(m);
 
@@ -45,11 +46,26 @@ module.exports = async function doctor(opts) {
   for (const rest of ["kit.ps1", "pipeline.config.ps1.migrado", "scripts/run-hook.sh"]) if (fs.existsSync(path.join(root, rest))) bad(`Resto de versiones antiguas: ${rest}`, "bórralo");
   // kit.js igual a la plantilla (normalizando CRLF)
   const kitJs = path.join(root, "kit.js"), tplKit = path.join(C.PLUGIN_ROOT, "templates", "kit.js");
-  if (!fs.existsSync(kitJs)) bad("Falta kit.js.", "node kit.js init");
-  else if (C.sha256(kitJs) !== C.sha256(tplKit)) {
-    if (fix) { fs.copyFileSync(tplKit, kitJs); fixed.push("kit.js refrescado"); good("kit.js refrescado desde la plantilla"); }
-    else bad("kit.js no coincide con la plantilla del plugin.", "node kit.js update (o doctor --fix)");
-  } else good("kit.js al día");
+  const G = require("./global-install");
+  if (!fs.existsSync(path.join(G.binDir(), "kit-launcher.js"))) { if (fix) { G.installGlobal({ quiet: true }); fixed.push("comando global kit instalado"); good("comando global 'kit' instalado"); } else bad(`Falta el comando global 'kit' en ${G.binDir()}`, "kit update (o doctor --fix)"); }
+  else good(`comando global 'kit' en ${G.binDir()}${G.onPath(G.binDir()) ? "" : " (no está en el PATH de esta terminal)"}`);
+  if (mode === "usuario") { if (fs.existsSync(kitJs)) C.log.warn("kit.js sigue en el proyecto (modo usuario no lo necesita): bórralo si quieres, el comando es 'kit'."); }
+  // Proyecto de una versión anterior (modo repo/local) con copias del kit: se puede pasar a modo usuario y retirarlas
+  if (mode !== "usuario") {
+    const copias = ["kit.js", ".claude/settings.json", "docs/_PLANTILLA-ARQUITECTURA.md", "docs/specs/_PLANTILLA.md", "docs/adr/_PLANTILLA.md", "docs/reviews/_PLANTILLA-seguridad.md", "staging/Dockerfile.staging", "staging/docker-compose.staging.yml", ".github/agents/director.agent.md", ".github/skills/pipeline/SKILL.md", ".github/hooks/kit.json"].filter((f) => fs.existsSync(path.join(root, f)));
+    const tracked = copias.filter((f) => spawnSync("git", ["-C", root, "ls-files", "--error-unmatch", f], { encoding: "utf8" }).status === 0);
+    if (copias.length) {
+      if (fix && opts.usuario) {
+        C.log.step("Pasando el proyecto a modo usuario (retira las copias del kit que no editaste)");
+        migrateToUser = true;
+      } else bad(`Modo ${mode}: ${copias.length} archivos del kit copiados en el proyecto${tracked.length ? ` (${tracked.length} versionados en git)` : ""}: ${copias.slice(0, 5).join(", ")}${copias.length > 5 ? "…" : ""}`, `kit doctor --fix --usuario (o kit init --modo usuario): los retira si siguen idénticos a lo copiado y deja pipeline.config.json, ${C.CONTEXT_FILE} y .pipeline/${tracked.length ? "; los versionados quedarán como borrados en git: revisa y haz commit" : ""}`);
+    }
+    if (!fs.existsSync(kitJs)) bad("Falta kit.js.", "kit init");
+    else if (C.sha256(kitJs) !== C.sha256(tplKit)) {
+      if (fix) { fs.copyFileSync(tplKit, kitJs); fixed.push("kit.js refrescado"); good("kit.js refrescado desde la plantilla"); }
+      else bad("kit.js no coincide con la plantilla del plugin.", "kit update (o doctor --fix)");
+    } else good("kit.js al día");
+  }
   if (mode !== "repo") {
     const ex = path.join(root, ".git", "info", "exclude");
     if (fs.existsSync(ex) && /multiagent-kit/.test(fs.readFileSync(ex, "utf8"))) good(".git/info/exclude con el bloque del kit");
@@ -80,8 +96,14 @@ module.exports = async function doctor(opts) {
     if (!fs.existsSync(launcher)) bad("Falta el lanzador de hooks de usuario ~/.copilot/multiagent-kit-hook.js", "node kit.js update");
   }
 
-  // 4. Permisos (.claude/settings.json)
-  if (!isCopilot) {
+  // 4. Permisos: globales (~/.claude/settings.json) en modo usuario; por proyecto en repo/local
+  if (!isCopilot && mode === "usuario") {
+    C.log.step(G.claudeSettingsPath());
+    const miss = G.claudeSettingsMissing();
+    if (!miss.length) good("permisos del kit presentes");
+    else if (fix) { const m = G.mergeClaudeSettings(); if (m.ok) { fixed.push(`~/.claude/settings.json: +${m.added}`); good("permisos añadidos"); } else bad(m.error, "corrígelo a mano"); }
+    else bad(`Faltan ${miss.length} permisos del kit`, "kit doctor --fix");
+  } else if (!isCopilot) {
     C.log.step(".claude/settings.json");
     const sp = path.join(root, ".claude", "settings.json");
     if (!fs.existsSync(sp)) bad("Falta .claude/settings.json", "node kit.js init");
@@ -144,6 +166,13 @@ module.exports = async function doctor(opts) {
   if (fs.existsSync(R.lessonsPath())) good(`Lecciones compartidas: ${R.lessonsPath()}`);
   else C.log.plain(`Sin lecciones compartidas todavía (${R.lessonsPath()}); /retro-kit las crea.`);
 
+  if (migrateToUser) {
+    const code = await require("./init")(Object.assign({}, opts, { modo: "usuario" }), { mode: "init" });
+    if (code === 0) fixed.push("proyecto pasado a modo usuario");
+    const del = spawnSync("git", ["-C", root, "status", "--short"], { encoding: "utf8" }).stdout || "";
+    const borrados = del.split(/\r?\n/).filter((l) => /^\s*D\s/.test(l) || /^ D /.test(l)).length;
+    if (borrados) C.log.yellow(`${borrados} archivos del kit estaban versionados y ahora figuran como borrados: revisa 'git status' y haz commit (p. ej. "chore: kit multiagente en modo usuario").`);
+  }
   return finish();
 
   function finish() {

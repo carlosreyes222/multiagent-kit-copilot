@@ -9,47 +9,36 @@ cd C:\ruta\a\tu\proyecto     # debe ser un repositorio git (git init si no lo es
 copilot
 ```
 
-Dentro de Copilot:
+Dentro de Copilot: `/kit-init` (o en la terminal, si ya tienes el comando global: `kit init`).
 
-```
-/kit-init
-```
-
-(En VS Code: abre el chat en modo agente y ejecuta el prompt `/kit-init`, o en el terminal integrado `node <ruta del plugin>/scripts/cli.js init`.)
-
-Crea dos tipos de archivo:
-
-**Tuyos** (se crean si faltan y **nunca se sobrescriben**; si el kit trae una versión nueva queda al lado como `.kit`):
+**En el proyecto solo quedan tres cosas**, y las tres van a `.git/info/exclude` (privado de tu clon, nunca se suben):
 
 | Archivo | Para qué |
 |---|---|
-| `pipeline.config.json` | Comandos de instalar/build/test/lint, **proveedor de staging**, smoke, sub-repos, límites de tamaño. Lo único que rellenas. Ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md). |
-| `AGENTS.md` | Contexto del proyecto. Lo leen Copilot (CLI, VS Code, cloud agent) y todos los agentes. ≤ 40 líneas. |
-| `.github/copilot-instructions.md` | Instrucciones cortas de Copilot para el repositorio (apuntan a `AGENTS.md` y a las compuertas). |
-| `.github/copilot/settings.json` | Marketplace y plugin habilitados para este repositorio (la CLI y el cloud agent instalan el plugin solos). |
-| `.github/workflows/copilot-setup-steps.yml` | Entorno del cloud agent (dependencias, Node). Ver [09](09-cloud-agent-y-github.md). |
-| `staging/`, `docs/` | Compose y Dockerfile de staging; plantillas de spec, ADR, revisión de seguridad y arquitectura. |
-| `.gitignore`, `.dockerignore` | Se fusionan: solo se añaden las líneas que falten. |
+| `pipeline.config.json` | Comandos de instalar/build/test/lint, **proveedor de staging** (`docker`, `compose`, `supabase`, `comando`, `ninguno`), smoke, sub-repos, SDKs, límites. Lo único que rellenas. Ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md). |
+| `AGENTS.md` | Contexto del proyecto que leen todos los agentes. Si quieres compartirlo con el equipo, quítalo del exclude y versiónalo. |
+| `.pipeline/` | Estado del pipeline, manifiesto del kit, SDKs sincronizados, historial. |
 
-**Gestionados por el kit** (copias de lo que hay en el plugin, para que VS Code y el cloud agent las vean; se refrescan con `node kit.js update` mientras no los edites):
+Lo que los agentes producen (`docs/specs`, `docs/adr`, `docs/reviews`, `docs/epicas`, `docs/ARQUITECTURA.md`) sí es del proyecto y se versiona como cualquier documento.
 
-| Archivo | Para qué |
+**Todo lo demás es global por máquina** y lo instala el propio `init` la primera vez (y refresca `kit update`):
+
+| Dónde | Qué |
 |---|---|
-| `.github/agents/*.agent.md` | `director` y los 8 agentes. En VS Code aparecen como `@director`, `@arquitecto`… |
-| `.github/skills/*/SKILL.md` | `/pipeline`, `/analisis`, `/bugfix`, `/ideas`, `/retro-kit`, `/deploy-staging`, `/promote-prod`, `/kit-init`, `metodo-*`, `stack-*`. |
-| `.github/prompts/*.prompt.md` | Los comandos como prompts de VS Code (`/pipeline`, `/bugfix`…), que lanzan al agente `director`. |
-| `.github/hooks/kit.json` | Hooks: ramas protegidas, secretos, compuerta de commit, contexto al iniciar sesión. |
-| `.github/instructions/kit.instructions.md` | Reglas del kit aplicadas a todo archivo. |
-| `.github/kit-manifest.json` | Versión y hashes de los archivos gestionados (para `update`). |
-| `kit.js` | Lanzador de los scripts del plugin. |
+| `~/.multiagent-kit/bin/` | El comando **`kit`** (`kit check`, `kit status`, `kit staging`…). `init` lo añade al PATH del usuario (Windows: variable de entorno; macOS/Linux: tu `.zshrc`/`.bashrc`); abre una terminal nueva la primera vez. |
+| `~/.multiagent-kit/` | Caché de versión y `lecciones.md` compartidas entre proyectos. |
+| Plugin | Plantillas de spec, ADR, revisión de seguridad y arquitectura (`kit plantilla <spec|adr|seguridad|arquitectura>` dice la ruta). Si un proyecto quiere una plantilla propia, la pone en `docs/…/_PLANTILLA*.md` y tiene prioridad. |
+| `~/.copilot/{agents,skills,hooks}` y `User/prompts` de VS Code | Agentes, skills, hooks y prompts del kit (ver [08](08-superficies-copilot.md)). |
 
-Haz **commit de todo `.github/` y `kit.js`**: así el equipo y el cloud agent usan exactamente lo mismo. Si no puedes o no quieres versionar nada del kit, usa los modos `local` o `usuario` (§3.7).
+Los archivos de `staging/` (Dockerfile, compose, `.env.staging`) ya no se copian por defecto: `kit staging` los crea desde la plantilla la primera vez **solo** si `STAGING_PROVIDER` es `docker`.
+
+Si un archivo tuyo ya existía (por ejemplo tu propio `AGENTS.md`), no se toca y la versión del kit queda al lado como `.kit` solo cuando la plantilla cambió.
 
 ## 3.2 Proyecto con código existente
 
 1. Rellena `pipeline.config.json`. `/kit-init` mira tu código (`package.json`, `build.gradle.kts`, `pyproject.toml`…) y te propone los valores; confirma y los aplica.
 2. Completa `AGENTS.md` con la descripción y convenciones del proyecto.
-3. Verifica: `node kit.js check`.
+3. Verifica: `kit check`.
 4. Lanza tu primera feature:
 
 ```
@@ -114,37 +103,35 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 
 | Comando | Qué hace |
 |---|---|
-| `node kit.js check` | Verifica Node ≥ 18, Git, Copilot CLI, Docker/Supabase según proveedor, y la configuración |
-| `node kit.js staging --feature <slug>` | Build + tests + desplegar a staging con el proveedor configurado |
-| `node kit.js smoke` | Smoke tests contra staging |
-| `node kit.js prod` | Promover a producción (pide escribir `PRODUCCION`) |
-| `node kit.js init` | Re-ejecutar la inicialización (sin sobrescribir lo tuyo) |
-| `node kit.js update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
-| `node kit.js migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
-| `node kit.js version` | Versión del plugin y de los archivos del proyecto |
-| `node kit.js epica list\|status\|next\|add\|set` | Épicas: progreso real de cada HU (leído de specs, informes, ramas y estado), siguiente HU y comando para retomarla |
-| `node kit.js doctor [--fix]` | Diagnóstico del kit: plugin frente a GitHub, archivos y modo del proyecto, hooks (prueba real), permisos, copias `.kit`, locks de git; `--fix` aplica lo seguro |
-| `node kit.js update --limpiar` / `--plugin` | Borra las copias `.kit` ya revisadas / actualiza el propio plugin (Copilot) si GitHub tiene versión nueva |
-| `node kit.js state reset` | Cierra la feature actual (la archiva en `.pipeline/historial.jsonl`) y deja el estado limpio para la siguiente |
-| `node kit.js lecciones [add "…"]` | Lecciones reutilizables entre proyectos (`~/.multiagent-kit/lecciones.md`); las escribe `/retro-kit` y las leen los agentes |
-| `node kit.js sdk api <nombre>` · `sdk publish <nombre> --version X.Y.Z` | Breaking changes de la API pública del SDK frente a la rama base · versión definitiva del SDK y dependencia del padre (paso humano). Ver [14](14-sdks-y-end-to-end.md) |
-| `node kit.js sdk list\|sync\|pack\|status` | SDKs del equipo declarados en `SDKS`: sincronizar (ruta local o clon por rama), empaquetar versión de trabajo y enlazarla en el padre (ver [14](14-sdks-y-end-to-end.md)) |
-| `node kit.js status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
-| `node kit.js state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
+| `kit check` | Verifica Node ≥ 18, Git, Copilot CLI, Docker/Supabase según proveedor, y la configuración |
+| `kit staging --feature <slug>` | Build + tests + desplegar a staging con el proveedor configurado |
+| `kit smoke` | Smoke tests contra staging |
+| `kit prod` | Promover a producción (pide escribir `PRODUCCION`) |
+| `kit init` | Re-ejecutar la inicialización (sin sobrescribir lo tuyo) |
+| `kit update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
+| `kit migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
+| `kit version` | Versión del plugin y de los archivos del proyecto |
+| `kit epica list\|status\|next\|add\|set` | Épicas: progreso real de cada HU (leído de specs, informes, ramas y estado), siguiente HU y comando para retomarla |
+| `kit doctor [--fix]` | Diagnóstico del kit: plugin frente a GitHub, archivos y modo del proyecto, hooks (prueba real), permisos, copias `.kit`, locks de git; `--fix` aplica lo seguro |
+| `kit update --limpiar` / `--plugin` | Borra las copias `.kit` ya revisadas / actualiza el propio plugin (Copilot) si GitHub tiene versión nueva |
+| `kit state reset` | Cierra la feature actual (la archiva en `.pipeline/historial.jsonl`) y deja el estado limpio para la siguiente |
+| `kit lecciones [add "…"]` | Lecciones reutilizables entre proyectos (`~/.multiagent-kit/lecciones.md`); las escribe `/retro-kit` y las leen los agentes |
+| `kit sdk api <nombre>` · `sdk publish <nombre> --version X.Y.Z` | Breaking changes de la API pública del SDK frente a la rama base · versión definitiva del SDK y dependencia del padre (paso humano). Ver [14](14-sdks-y-end-to-end.md) |
+| `kit sdk list\|sync\|pack\|status` | SDKs del equipo declarados en `SDKS`: sincronizar (ruta local o clon por rama), empaquetar versión de trabajo y enlazarla en el padre (ver [14](14-sdks-y-end-to-end.md)) |
+| `kit status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
+| `kit state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
 
-## 3.7 Modos de instalación: repo, local o usuario
+## 3.7 Modos de instalación: usuario (por defecto), local o repo
 
-`node kit.js init` acepta `--modo repo|local|usuario` (`/kit-init` te lo pregunta). Elige según de quién sea el repositorio:
+`kit init --modo usuario|local|repo` (`/kit-init` lo pregunta). Elige según de quién sea el repositorio:
 
-| Modo | Qué queda en el proyecto | Qué ve git | Quién lo ve | Cuándo |
-|---|---|---|---|---|
-| `repo` (por defecto) | Todo: `.github/` (agentes, skills, prompts, hooks) + config | Todo, se commitea | Todo el equipo, VS Code, CLI y el **cloud agent** | Repositorio propio o del equipo que adopta el kit |
-| `local` | Lo mismo que `repo` | **Nada**: cada archivo va a `.git/info/exclude` (privado de tu clon, no se sube nunca) | Solo tú, en este clon | Quieres probar el kit en un repo sin ensuciar `git status` |
-| `usuario` | Solo `pipeline.config.json`, `kit.js`, `AGENTS.md`, `.pipeline/` y las plantillas de `docs/`, todos en `.git/info/exclude` | **Nada** | Solo tú, en **todos** tus repos: agentes, skills y hooks viven en `~/.copilot/{agents,skills,hooks}` y los prompts/agentes en el perfil de usuario de VS Code | Repositorios ajenos o del trabajo donde no puedes añadir archivos |
+| Modo | Qué queda en el proyecto | Qué ve git | Cuándo |
+|---|---|---|---|
+| `usuario` (por defecto) | `pipeline.config.json`, `AGENTS.md`, `.pipeline/` — todo en `.git/info/exclude` | **Nada** | Siempre que trabajes tú solo con el kit, incluidos repositorios ajenos o del trabajo. Comando `kit`, plantillas y permisos globales. |
+| `local` | Además copias de `kit.js`, plantillas de `docs/`, `staging/` y `.github/` (agentes, skills, prompts, hooks) — todo en `.git/info/exclude` | **Nada** | Quieres las copias a mano en el proyecto sin versionarlas |
+| `repo` | Lo mismo que `local`, versionado | Todo, se commitea | El equipo entero adopta el kit o el cloud agent de github.com necesita los agentes en el repo y quiere exactamente los mismos archivos en el repo |
 
-En modo `usuario` el kit se instala una vez por PC (la primera vez que lo ejecutas) y `node kit.js update` refresca tanto el perfil como el proyecto; el hook de usuario solo actúa en carpetas que tengan `pipeline.config.json`, así que no interfiere en otros repos. Limitaciones: el cloud agent de github.com no ve los agentes (necesita los archivos en el repo), y los prompts de VS Code se copian a la carpeta `User/prompts` de tu perfil (si VS Code está en otra ruta, define `KIT_VSCODE_PROMPTS_DIR`). `.github/copilot-instructions.md` y `copilot-setup-steps.yml` no se crean en este modo.
-
-Cambiar de modo: `node kit.js init --modo usuario` retira de `.github/` lo que el kit copió en modo `repo` (si no lo editaste); `node kit.js init --modo repo` vuelve a copiar los archivos; borra a mano las líneas del bloque `multiagent-kit` en `.git/info/exclude` si quieres versionarlos.
+**Proyecto existente en modo `repo`/`local`**: `kit doctor` te avisa de cuántos archivos del kit hay copiados y `kit doctor --fix --usuario` (o `kit init --modo usuario`) los retira — solo los que siguen idénticos a lo que el kit copió; lo que editaste se conserva y se avisa. Los que estaban versionados quedan como borrados en `git status`: revisa y haz commit. `pipeline.config.json` y `AGENTS.md` siguen versionados si ya lo estaban (son del proyecto). Cambiar de vuelta: `kit init --modo repo` vuelve a copiar todo.
 
 ---
 Anterior: [02-publicar-en-github.md](02-publicar-en-github.md) · Siguiente: [04-flujo-y-compuertas.md](04-flujo-y-compuertas.md) · [Índice](../README.md)

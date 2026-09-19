@@ -16,7 +16,7 @@ Lee `.pipeline/state.json` y `docs/reviews/<feature>-seguridad.md` y presenta un
 Si todas están en verde, indica al usuario que ejecute en su terminal:
 
 ```bash
-node kit.js prod
+kit prod
 ```
 
-y que el script le pedirá escribir `PRODUCCION` para confirmar. Si alguna está en rojo, indica qué comando o agente la resuelve. Nunca ejecutes `node kit.js prod` desde aquí.
+y que el script le pedirá escribir `PRODUCCION` para confirmar. Si alguna está en rojo, indica qué comando o agente la resuelve. Nunca ejecutes `kit prod` desde aquí.

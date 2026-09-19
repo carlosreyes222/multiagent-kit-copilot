@@ -8,7 +8,7 @@ Eres el revisor del kit, no del proyecto. Tu objetivo es mejorar el plugin `mult
 
 ## Paso 1 — Reúne evidencia (sin leer código de producto)
 1. `pipeline.config.json`: proveedor de staging, comandos, sub-repos, límites.
-2. `.pipeline/state.json` y salida de `node kit.js status`.
+2. `.pipeline/state.json` y salida de `kit status`.
 3. Todos los `docs/reviews/*.md`, `docs/adr/*.md`, `docs/specs/*.md`, `docs/ARQUITECTURA.md` (o `arquitectura.md`), `docs/RETRO.md`, `docs/analisis/*`, `docs/ideas/*`. Para cada uno anota tamaño en líneas.
 4. `git log --oneline -50` y ramas `feature/*`, `fix/*`; en `SUB_REPOS` también.
 5. `AGENTS.md` (líneas) y si existe `docs/TROUBLESHOOTING.md`.
@@ -24,7 +24,7 @@ Para cada pipeline/bugfix ejecutado (uno por slug), rellena esta tabla y explica
 | Tamaño de informes | ≤ `MAX_LINES_INFORME` | |
 | ADR | 2 alternativas, tabla de trade-offs, riesgos, plan por pasos, ≤ `MAX_LINES_ADR` | |
 | ARQUITECTURA | ≤ `MAX_LINES_ARQUITECTURA`, sin firmas ni opciones, actualizada tras la última feature (sin referencias obsoletas) | |
-| Staging | proveedor adecuado al proyecto; `node kit.js staging`/`smoke` reales, no improvisados; sin mutaciones de datos ni secretos generados | |
+| Staging | proveedor adecuado al proyecto; `kit staging`/`smoke` reales, no improvisados; sin mutaciones de datos ni secretos generados | |
 | Estado | escrito solo por scripts; esquema v2; sin ediciones manuales mencionadas en informes | |
 | Compuertas | informes commiteados antes de desplegar; ramas protegidas respetadas | |
 | Agentes fuera de rol | tester levantando infraestructura, release-manager editando código o estado, revisores modificando archivos | |
@@ -39,7 +39,7 @@ Para cada pipeline/bugfix ejecutado (uno por slug), rellena esta tabla y explica
 6. **Cambios propuestos a este proyecto** (no al kit): p. ej. definir `SMOKE_CMD`, cambiar `STAGING_PROVIDER`, resumir `ARQUITECTURA.md`.
 
 ## Paso 4 — Lecciones reutilizables (otros proyectos)
-Extrae de los informes y de las líneas `LECCIÓN:` de los agentes lo que valdría en **cualquier** proyecto con el mismo stack (versiones que fallan, comandos que sí funcionan en Windows/macOS, trampas de herramientas), nunca detalles de este producto. Añade cada una con `node kit.js lecciones add "[stack] lección"` (máximo 5 por retro; antes lee `node kit.js lecciones` para no repetir). Quedan en `~/.multiagent-kit/lecciones.md`, que los agentes leen al empezar en todos los proyectos de este PC.
+Extrae de los informes y de las líneas `LECCIÓN:` de los agentes lo que valdría en **cualquier** proyecto con el mismo stack (versiones que fallan, comandos que sí funcionan en Windows/macOS, trampas de herramientas), nunca detalles de este producto. Añade cada una con `kit lecciones add "[stack] lección"` (máximo 5 por retro; antes lee `kit lecciones` para no repetir). Quedan en `~/.multiagent-kit/lecciones.md`, que los agentes leen al empezar en todos los proyectos de este PC.
 
 ## Paso 5 — Entrega
 Muestra las secciones 4 y 5 al usuario y dile que copie `docs/kit-feedback/<fecha>.md` al repositorio del plugin (carpeta `feedback/`) o lo pegue en la conversación donde mantiene el kit. No modifiques nada del plugin ni del proyecto.

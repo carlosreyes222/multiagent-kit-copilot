@@ -66,9 +66,9 @@ function protectMain(a, root, cfg) {
   const cmd = a.command;
   const target = gitTargetDir(a, root);
   const branch = C.currentBranch(target); // rama del repo sobre el que actúa el comando (padre o SDK)
-  if (/kit\.js\s+sdk\s+publish\b/.test(cmd) || /scripts[\\/]sdk\.js\s+publish\b/.test(cmd))
+  if (/(^|[\s"'\\/])kit(\.js)?\s+sdk\s+publish\b/.test(cmd) || /scripts[\\/]sdk\.js\s+publish\b/.test(cmd))
     deny("'node kit.js sdk publish' (versión definitiva del SDK) lo ejecuta una persona desde su terminal, no los agentes.");
-  if (/kit\.(js|ps1)\s+prod\b/.test(cmd) || /promote-prod\.(js|ps1)/.test(cmd) || /scripts[\\/]prod\.js/.test(cmd))
+  if (/(^|[\s"'\\/])kit(\.js|\.ps1)?\s+prod\b/.test(cmd) || /promote-prod\.(js|ps1)/.test(cmd) || /scripts[\\/]prod\.js/.test(cmd))
     deny("la promoción a producción ('node kit.js prod') solo la ejecuta una persona desde su terminal.");
   if (/supabase\s+(db\s+push|functions\s+deploy|db\s+reset)\b/.test(cmd))
     deny("despliegues a Supabase solo a través de 'node kit.js staging' (staging) o 'node kit.js prod' (persona).");
@@ -131,12 +131,14 @@ async function sessionStart(root) {
     const prev = C.readJson(kitJson, {});
     C.writeJson(kitJson, { pluginRoot: C.PLUGIN_ROOT, version: C.VERSION, projectFilesVersion: prev.projectFilesVersion || "", updatedAt: C.nowIso() });
     const cfg = C.loadConfig(root);
-    msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} activo. Staging: ${cfg.STAGING_PROVIDER}. Comandos del kit: node kit.js <check|staging|smoke|status|state|update> (iguales en Windows, macOS y Linux). Flujos: /pipeline, /analisis, /bugfix, /ideas, /deploy-staging, /promote-prod.`;
+    const kitCmd = fs.existsSync(path.join(root, "kit.js")) ? "node kit.js" : "kit";
+    msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} activo. Staging: ${cfg.STAGING_PROVIDER}. Comandos del kit: ${kitCmd} <check|staging|smoke|status|state|epica|sdk|update> (iguales en Windows, macOS y Linux). Plantillas de documentos: ${kitCmd} plantilla <spec|adr|seguridad|arquitectura> (o ${path.join(C.PLUGIN_ROOT, "templates", "docs")}). Flujos: /pipeline, /analisis, /bugfix, /ideas, /deploy-staging, /promote-prod.`;
     if (Array.isArray(cfg.SDKS) && cfg.SDKS.length) msg += ` SDKs declarados: ${cfg.SDKS.map((s) => s && s.nombre).filter(Boolean).join(", ")} (node kit.js sdk list; flujo end-to-end: /pipeline --sdk <nombre> "idea").`;
     if (cfg._source === "ps1") msg += " AVISO: pipeline.config.ps1 es el formato antiguo; ejecuta 'node kit.js migrate'.";
     const m = C.readJson(path.join(root, ".github", "kit-manifest.json"), null) || C.readJson(path.join(root, ".pipeline", "kit-manifest.json"), null);
     if (m && m.version && m.version !== C.VERSION) msg += ` AVISO: los archivos del proyecto son de la versión ${m.version}; ejecuta 'node kit.js update'.`;
-    if (!fs.existsSync(path.join(root, "kit.js"))) msg += " AVISO: falta kit.js (proyecto de una versión anterior); ejecuta la inicialización del kit.";
+    const kj = C.readJson(path.join(root, ".pipeline", "kit.json"), {});
+    if (!fs.existsSync(path.join(root, "kit.js")) && (kj.mode || "repo") !== "usuario") msg += " AVISO: falta kit.js (proyecto de una versión anterior); ejecuta la inicialización del kit.";
   }
   try {
     const R = require("./remote");

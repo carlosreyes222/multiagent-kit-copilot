@@ -22,7 +22,7 @@ Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `st
 ## MODO: SDK (solo si el orquestador lo indica; flujo `/pipeline --sdk <nombre>`)
 La feature empieza en el SDK del equipo y termina en este proyecto. Carpeta del SDK: la que te indique el orquestador (o `.pipeline/sdks.json`). Orden obligatorio:
 1. En el SDK: `git checkout -b feature/<slug>` (usa `git -C <carpeta>` o `cd <carpeta> &&`; los hooks vigilan también ese repo), implementa la parte del ADR que corresponde al SDK con sus pruebas, y haz commits allí. **Nunca `git push` del SDK ni `npm publish`/publicación remota.**
-2. Empaqueta y enlaza: `node kit.js sdk pack <nombre> --feature <slug>` desde la raíz del padre. Genera la versión de trabajo `X.Y.Z-local.N` (npm: tgz en `vendor/sdks/` + `file:` en `package.json`; Android: `publishToMavenLocal` + versión en gradle; iOS: `:path` en el Podfile) sin dejar ese número en el repo del SDK.
+2. Empaqueta y enlaza: `kit sdk pack <nombre> --feature <slug>` desde la raíz del padre. Genera la versión de trabajo `X.Y.Z-local.N` (npm: tgz en `vendor/sdks/` + `file:` en `package.json`; Android: `publishToMavenLocal` + versión en gradle; iOS: `:path` en el Podfile) sin dejar ese número en el repo del SDK.
 3. En el padre: rama `feature/<slug>`, integra la nueva API, pruebas, commits (incluye los archivos que cambió el enlace: `package.json`, lockfile, `vendor/sdks/*.tgz`, `libs.versions.toml`, `Podfile`…).
 Si al integrar descubres que la API del SDK debe cambiar, vuelve al paso 1 y repite el 2 (N sube solo). En el resumen final indica rama y commits del SDK, versión de trabajo enlazada y qué debe hacer el humano antes de publicar (PR del SDK, versión real, sustituir `-local.N`).
 Termina con: `IMPLEMENTADO: feature/<slug> (SDK <nombre> <versión>)`
@@ -35,8 +35,8 @@ Si `pipeline.config.json` define `SUB_REPOS`, cada sub-repositorio es un git ind
 - Crea o cambia a la rama `feature/<slug>` antes de tocar código (`git checkout -b feature/<slug>` si no existe).
 - Nunca hagas commit ni push a `main`/`master`: los hooks lo bloquearán.
 - Nunca escribas secretos, contraseñas ni tokens en el código; usa variables de entorno.
-- Los comandos de build/test del proyecto están en `pipeline.config.json`; úsalos tal cual (`node kit.js <comando>` o el comando directo).
-- Ramas y commits con la nomenclatura del equipo: si el estado tiene `ticket` (`node kit.js status`), la rama es `feature/<TICKET>-<desc>` o `fix/<TICKET>-<desc>` (ticket en MAYÚSCULAS, el slug ya lo incluye) y **cada** mensaje de commit empieza por `<tipo>: <TICKET> descripción` (`feat: BMOSHELL-123 añade refreshToken`; tipos: feat, fix, chore, docs, test, refactor, perf, build, ci, style). El hook rechaza lo que no cumpla; también en el repo del SDK.
+- Los comandos de build/test del proyecto están en `pipeline.config.json`; úsalos tal cual (`kit <comando>` o el comando directo).
+- Ramas y commits con la nomenclatura del equipo: si el estado tiene `ticket` (`kit status`), la rama es `feature/<TICKET>-<desc>` o `fix/<TICKET>-<desc>` (ticket en MAYÚSCULAS, el slug ya lo incluye) y **cada** mensaje de commit empieza por `<tipo>: <TICKET> descripción` (`feat: BMOSHELL-123 añade refreshToken`; tipos: feat, fix, chore, docs, test, refactor, perf, build, ci, style). El hook rechaza lo que no cumpla; también en el repo del SDK.
 - Haz commits pequeños y descriptivos. El hook `commit-gate` corre lint + tests antes de cada commit; si falla, corrige y vuelve a intentar, no desactives la compuerta.
 - Si recibes un informe de revisión, atiende TODOS los hallazgos marcados como BLOQUEANTE antes de terminar.
 
@@ -46,7 +46,7 @@ Un resumen con: rama, archivos tocados, cómo probarlo manualmente, y "Desviacio
 Termina con una sola línea: `IMPLEMENTADO: feature/<slug>`
 
 ## Lecciones de otros proyectos
-Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `node kit.js lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
+Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `kit lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
 
 ## Sistema operativo
-Los comandos del kit (`node kit.js …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.
+Los comandos del kit (`kit …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.

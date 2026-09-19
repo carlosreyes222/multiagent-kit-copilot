@@ -2,7 +2,7 @@
 
 El staging es la prueba real antes de producción, y no es igual para una API, un backend en Supabase o un juego Android. `pipeline.config.json` lo declara con `STAGING_PROVIDER`; el release-manager **no debe improvisar** una infraestructura distinta: si el proveedor no encaja, reporta `STAGING: FALLÓ — CONFIGURACION` y te pide cambiarlo.
 
-| Proveedor | Para qué | Qué hace `node kit.js staging` | Variables |
+| Proveedor | Para qué | Qué hace `kit staging` | Variables |
 |---|---|---|---|
 | `docker` | Un servicio (API, web) empaquetable en una imagen | Build/tests → `Dockerfile.staging` + compose del kit → espera `STAGING_URL+HEALTH_PATH` | `STAGING_PORT`, `BASE_IMAGE`, `CONTAINER_CMD`, `STAGING_ENV_FILE` |
 | `compose` | Varios servicios (app + db + seed…) con tu propio compose | Build/tests → `docker compose -f STAGING_COMPOSE_FILE up -d --build` → espera salud | `STAGING_COMPOSE_FILE`, `STAGING_ENV_FILE`, `STAGING_URL`, `HEALTH_PATH` |
@@ -10,7 +10,7 @@ El staging es la prueba real antes de producción, y no es igual para una API, u
 | `comando` | Vercel, Fly, Railway, APK a emulador, export de Godot… | Build/tests → `STAGING_DEPLOY_CMD` → espera salud si hay `STAGING_URL` | `STAGING_DEPLOY_CMD`, `STAGING_URL`, `HEALTH_PATH` |
 | `ninguno` | Nada automatizable todavía (app móvil sin export, hardware) | Sale con código 3; el release-manager documenta la verificación manual y termina con `STAGING: MANUAL — …` | — |
 
-En todos los casos, `SMOKE_CMD` es el smoke test **del proyecto**: un script que llame a los endpoints o pantallas de la feature contra la variable de entorno `STAGING_URL` y falle con código ≠ 0. Sin él, `node kit.js smoke` solo prueba la salud y avisa; el release-manager puede hacer lecturas manuales, pero nunca escribir datos, borrar volúmenes ni generar secretos sin tu confirmación.
+En todos los casos, `SMOKE_CMD` es el smoke test **del proyecto**: un script que llame a los endpoints o pantallas de la feature contra la variable de entorno `STAGING_URL` y falle con código ≠ 0. Sin él, `kit smoke` solo prueba la salud y avisa; el release-manager puede hacer lecturas manuales, pero nunca escribir datos, borrar volúmenes ni generar secretos sin tu confirmación.
 
 ## Ejemplos
 
@@ -43,7 +43,7 @@ En todos los casos, `SMOKE_CMD` es el smoke test **del proyecto**: un script que
 
 ## Errores frecuentes
 
-- **Puerto ocupado**: `node kit.js staging` comprueba `STAGING_PORT` antes de levantar Docker y te dice qué cambiar.
+- **Puerto ocupado**: `kit staging` comprueba `STAGING_PORT` antes de levantar Docker y te dice qué cambiar.
 - **`docker compose down` falla por variables**: el kit pasa siempre `--env-file STAGING_ENV_FILE` y comprueba que existe.
 - **Secretos dentro de la imagen**: el `.dockerignore` del kit excluye `*.jks`, `*.keystore`, `google-services.json`, `.env*` y similares; si tu proyecto ya tenía uno, `init` añade las líneas que falten.
 - **Windows y macOS**: los scripts corren con Node y ejecutan los comandos del proyecto en el shell del sistema (`cmd` en Windows, `sh` en macOS/Linux); escribe `INSTALL_CMD`/`BUILD_CMD`… para ese shell, o usa `npm run …`/Gradle, que valen en ambos.

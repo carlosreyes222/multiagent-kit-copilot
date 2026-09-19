@@ -31,6 +31,14 @@ module.exports = async function staging(opts) {
     C.runProjectCmd(root, "Tests", cfg.TEST_CMD);
   }
   const assertEnvFile = () => {
+    // Proveedor docker: si el proyecto no tiene los archivos de staging, se crean desde las plantillas del plugin (una vez)
+    if (cfg.STAGING_PROVIDER === "docker") {
+      const tpl = path.join(C.PLUGIN_ROOT, "templates", "staging");
+      for (const [src, dst] of [["Dockerfile.staging", "staging/Dockerfile.staging"], ["docker-compose.staging.yml", "staging/docker-compose.staging.yml"], ["env.staging.example", cfg.STAGING_ENV_FILE || "staging/.env.staging"]]) {
+        const d = path.join(root, dst);
+        if (!fs.existsSync(d) && fs.existsSync(path.join(tpl, src))) { fs.mkdirSync(path.dirname(d), { recursive: true }); fs.copyFileSync(path.join(tpl, src), d); C.log.warn(`Creado ${dst} desde la plantilla del kit: revísalo (imagen, puerto, comando) y decide si lo versionas.`); }
+      }
+    }
     if (cfg.STAGING_ENV_FILE && !fs.existsSync(path.join(root, cfg.STAGING_ENV_FILE)))
       throw new Error(`Falta ${cfg.STAGING_ENV_FILE}. Créalo (sin secretos de producción) antes de desplegar.`);
   };

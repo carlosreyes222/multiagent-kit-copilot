@@ -10,7 +10,7 @@ Si tu backend vive en Supabase (migraciones SQL + Edge Functions), el staging en
 | Supabase local (`supabase start`) | Quieres staging sin nube; tienes Docker Desktop con recursos de sobra | Pesado (varios contenedores); Auth/Storage/Edge se comportan casi igual, no igual |
 | Branching de Supabase | Plan que lo soporte y quieres una rama por feature | Coste; más piezas móviles |
 
-Con dos proyectos, lo que pasa por el pipeline se prueba en staging con datos de prueba, y `node kit.js prod` repite exactamente los mismos comandos contra producción. Nunca se toca producción desde el navegador.
+Con dos proyectos, lo que pasa por el pipeline se prueba en staging con datos de prueba, y `kit prod` repite exactamente los mismos comandos contra producción. Nunca se toca producción desde el navegador.
 
 ## 10.2 Configurar una vez
 
@@ -37,9 +37,9 @@ Con dos proyectos, lo que pasa por el pipeline se prueba en staging con datos de
 
 ## 10.3 Qué hace el kit
 
-- `node kit.js staging --feature <slug>`: build y tests del proyecto → `supabase link` al ref de staging → `supabase db push` → `supabase functions deploy <fn> --no-verify-jwt` por cada función → comprueba `STAGING_URL + HEALTH_PATH`.
-- `node kit.js smoke`: salud + `SMOKE_CMD` si lo definiste.
-- `node kit.js prod`: las mismas compuertas de siempre (staging OK, smoke OK, `VEREDICTO: APROBADO`, escribir `PRODUCCION`) y después los mismos comandos contra `SUPABASE_PROD_REF`. Se niega si staging y prod tienen el mismo ref.
+- `kit staging --feature <slug>`: build y tests del proyecto → `supabase link` al ref de staging → `supabase db push` → `supabase functions deploy <fn> --no-verify-jwt` por cada función → comprueba `STAGING_URL + HEALTH_PATH`.
+- `kit smoke`: salud + `SMOKE_CMD` si lo definiste.
+- `kit prod`: las mismas compuertas de siempre (staging OK, smoke OK, `VEREDICTO: APROBADO`, escribir `PRODUCCION`) y después los mismos comandos contra `SUPABASE_PROD_REF`. Se niega si staging y prod tienen el mismo ref.
 
 Lo que **no** automatiza (y el informe de release debe listar como comprobación manual): ajustes de Auth (p. ej. "Allow new users to sign up"), buckets de Storage, secretos de funciones (`supabase secrets set`), y el panel en Vercel u otro hosting (usa `STAGING_DEPLOY_CMD`/`PROD_DEPLOY_CMD` o el despliegue por git de Vercel).
 

@@ -15,7 +15,7 @@ Trabajas en uno de tres modos, según te indique el orquestador. Si no te indica
 ## Cómo entender el proyecto (todos los modos)
 1. Lee primero `docs/ARQUITECTURA.md` si existe: es la fuente de verdad del estado actual. Solo explora con `Grep`/`Glob` los módulos que la feature toca, no todo el repositorio.
 2. Lee `AGENTS.md` y la spec.
-3. Si `docs/ARQUITECTURA.md` no existe en un proyecto con código, créalo en este mismo turno a partir de lo que explores (usa `docs/_PLANTILLA-ARQUITECTURA.md`) antes de seguir.
+3. Si `docs/ARQUITECTURA.md` no existe en un proyecto con código, créalo en este mismo turno a partir de lo que explores (usa la plantilla que indica `kit plantilla arquitectura` (la del proyecto en `docs/_PLANTILLA-ARQUITECTURA.md` si existe; si no, la del plugin en `<pluginRoot>/templates/docs/_PLANTILLA-ARQUITECTURA.md`, con `pluginRoot` en `.pipeline/kit.json`)) antes de seguir.
 
 ## Stacks preferidos y skills de stack
 El dueño del proyecto tiene fortalezas definidas; las skills `stack-android`, `stack-react-native`, `stack-nestjs`, `stack-ktor` y `stack-db` del plugin contienen sus convenciones, las URLs oficiales que debes consultar antes de fijar versiones, y las reglas que los demás agentes seguirán. Léelas cuando el proyecto use (o vaya a usar) ese stack.
@@ -31,10 +31,10 @@ Si `pipeline.config.json` declara `SDKS`, el orquestador los sincroniza y `.pipe
 Sin ADR. Añade a `docs/specs/<slug>.md` una sección "Nota técnica" de ≤ 15 líneas: archivos a tocar, enfoque, riesgos y qué prueba debe escribir el tester. Si al mirar el código ves que la feature no es S (toca API pública, datos, autenticación o más de un módulo), dilo y termina con `TAMAÑO: NO ES S` para que el orquestador pase al pipeline completo. Si no, termina con `NOTA: docs/specs/<slug>.md`.
 
 ## Lecciones de otros proyectos
-Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `node kit.js lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
+Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `kit lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
 
 ## MODO: FEATURE (por defecto)
-Evalúa al menos dos alternativas de diseño, elige una justificando los trade-offs, declara los riesgos de seguridad y divide la implementación en pasos pequeños. Escribe `docs/adr/<slug>.md` con `docs/adr/_PLANTILLA.md`; el plan debe listar archivos a crear/modificar y qué pruebas debe escribir el tester.
+Evalúa al menos dos alternativas de diseño, elige una justificando los trade-offs, declara los riesgos de seguridad y divide la implementación en pasos pequeños. Escribe `docs/adr/<slug>.md` con la plantilla que indica `kit plantilla adr` (la del proyecto en `docs/adr/_PLANTILLA.md` si existe; si no, la del plugin en `<pluginRoot>/templates/docs/adr/_PLANTILLA.md`, con `pluginRoot` en `.pipeline/kit.json`); el plan debe listar archivos a crear/modificar y qué pruebas debe escribir el tester.
 Termina con: `ADR: docs/adr/<slug>.md`
 
 ## MODO: PROYECTO NUEVO

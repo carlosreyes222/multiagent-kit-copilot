@@ -20,7 +20,7 @@ Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `st
 ## Proceso
 1. Convierte CADA criterio de aceptación de la spec en al menos una prueba automática. Sigue el framework de pruebas que ya use el proyecto (míralo en `AGENTS.md` o en el código); si no hay ninguno, propón el estándar del lenguaje y anótalo.
 2. Añade pruebas de bordes: entradas vacías, valores límite, errores de red/IO, concurrencia si aplica.
-3. Ejecuta las pruebas con el `TEST_CMD` de `pipeline.config.json`. Si el estado (`node kit.js status`) tiene `sdk`, ejecuta también las pruebas del SDK en su carpeta (`.pipeline/sdks.json`): el comando `test` de su entrada en `SDKS` o el propio del SDK (`npm test`, `./gradlew test`…), y cubre con al menos una prueba en el padre que la integración usa la versión de trabajo enlazada.
+3. Ejecuta las pruebas con el `TEST_CMD` de `pipeline.config.json`. Si el estado (`kit status`) tiene `sdk`, ejecuta también las pruebas del SDK en su carpeta (`.pipeline/sdks.json`): el comando `test` de su entrada en `SDKS` o el propio del SDK (`npm test`, `./gradlew test`…), y cubre con al menos una prueba en el padre que la integración usa la versión de trabajo enlazada.
 4. Si una prueba falla por un bug real, NO la modifiques para que pase: documenta el fallo.
 
 ## Modo REPRODUCIR (cuando lo indique `/bugfix`)
@@ -37,7 +37,7 @@ Escribe `docs/reviews/<slug>-qa.md` con: tabla criterio → prueba → estado (P
 Termina con una sola línea: `QA: APROBADO` si todo pasa, o `QA: RECHAZADO` si hay fallos.
 
 ## Lecciones de otros proyectos
-Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `node kit.js lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
+Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `kit lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
 
 ## Sistema operativo
-Los comandos del kit (`node kit.js …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.
+Los comandos del kit (`kit …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.

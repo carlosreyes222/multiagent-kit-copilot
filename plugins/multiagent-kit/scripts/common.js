@@ -235,6 +235,16 @@ function supabaseDeploy(root, cfg, projectRef, label) {
   }
 }
 
+// --- Plantillas de documentos: la del proyecto si existe (docs/...), si no la del plugin (templates/docs/...) ---------
+const TEMPLATES = { spec: "docs/specs/_PLANTILLA.md", adr: "docs/adr/_PLANTILLA.md", seguridad: "docs/reviews/_PLANTILLA-seguridad.md", arquitectura: "docs/_PLANTILLA-ARQUITECTURA.md" };
+function templatePath(root, kind) {
+  const rel = TEMPLATES[kind];
+  if (!rel) return null;
+  const local = root ? path.join(root, rel) : null;
+  if (local && fs.existsSync(local)) return local;
+  return path.join(PLUGIN_ROOT, "templates", rel);
+}
+
 // --- Ticket de Jira en ramas y commits -----------------------------------------------------------------
 // Detecta un ticket tipo ABC-123 (cualquier mayúscula/minúscula) en un texto; devuelve { ticket: "ABC-123", rest }.
 const TICKET_RE = /(?:^|[\s(\[:#])([A-Za-z][A-Za-z0-9]{1,14}-\d{1,7})(?=$|[\s)\]:,.])/;
@@ -275,5 +285,5 @@ module.exports = {
   IS_WIN, OS_NAME, PLUGIN_ROOT, FLAVOR, VERSION, CONTEXT_FILE, MANIFEST, DEFAULTS, STATE_KEYS,
   log, findProjectRoot, requireProjectRoot, loadConfig, stateFile, parseLegacyPs1, getState, setState, nowIso,
   run, runProjectCmd, currentBranch, which, httpStatus, waitHealthy, securityVerdict, docLimits, supabaseDeploy,
-  sha256, readJson, writeJson, parseArgs, homeDir: os.homedir, parseTicket, commitMatchesTicket, branchMatchesTicket, COMMIT_TYPES,
+  sha256, readJson, writeJson, parseArgs, homeDir: os.homedir, parseTicket, commitMatchesTicket, branchMatchesTicket, COMMIT_TYPES, TEMPLATES, templatePath,
 };

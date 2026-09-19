@@ -3,7 +3,7 @@ name: metodo-adr
 description: Método para tomar y documentar decisiones de arquitectura (ADR) — cuándo abrir uno, cómo comparar alternativas con trade-offs reales, declarar riesgos y convertir la decisión en un plan de implementación por pasos verificables. La usa el arquitecto en la Etapa 2 y en modo DOCUMENTAR.
 ---
 
-Aplica este método al escribir o revisar un ADR. La plantilla (`docs/adr/_PLANTILLA.md`) fija las secciones; esto fija el criterio.
+Aplica este método al escribir o revisar un ADR. La plantilla (la plantilla que indica `kit plantilla adr` (la del proyecto en `docs/adr/_PLANTILLA.md` si existe; si no, la del plugin en `<pluginRoot>/templates/docs/adr/_PLANTILLA.md`, con `pluginRoot` en `.pipeline/kit.json`)) fija las secciones; esto fija el criterio.
 
 ## 1. Cuándo hace falta un ADR
 

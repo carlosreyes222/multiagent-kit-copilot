@@ -2,7 +2,7 @@
 
 Un equipo de agentes de GitHub Copilot que lleva una idea desde la especificación hasta un ambiente de pruebas, con compuertas de calidad y seguridad, y deja la promoción a producción en manos de una persona. Es el equivalente para Copilot del kit [`multiagent-kit`](https://github.com/carlosreyes222/multiagent-kit) de Claude Code: mismos agentes, mismas skills de método y de stack, mismos scripts de staging, mismas compuertas.
 
-Funciona en las tres superficies de Copilot: **Copilot CLI** (terminal), **VS Code** (agent mode, `@agentes`, `/prompts`) y el **cloud agent de github.com** (asignar un issue a Copilot). Se distribuye como **plugin de Copilot** con marketplace propio; `node kit.js init` deja en cada proyecto la copia de `.github/` que VS Code y el cloud agent necesitan, y `node kit.js update` la refresca. En repositorios ajenos, `--modo usuario` instala todo en tu perfil y no deja nada en git.
+Funciona en las tres superficies de Copilot: **Copilot CLI** (terminal), **VS Code** (agent mode, `@agentes`, `/prompts`) y el **cloud agent de github.com** (asignar un issue a Copilot). Se distribuye como **plugin de Copilot** con marketplace propio; `kit init` deja en cada proyecto la copia de `.github/` que VS Code y el cloud agent necesitan, y `kit update` la refresca. En repositorios ajenos, `--modo usuario` instala todo en tu perfil y no deja nada en git.
 
 ```
 idea ──► product-owner ──► arquitecto ──► implementador ──► tester ──► revisor-codigo ┐
@@ -37,13 +37,13 @@ copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot
 copilot plugin install multiagent-kit@carlos-kits-copilot
 
 # 2. En cada proyecto (dentro de `copilot`, o con el prompt /kit-init en VS Code)
-/kit-init
+/kit-init              # deja solo pipeline.config.json, el contexto y .pipeline/ (fuera de git); instala el comando global `kit`
 
 # 3. Trabajar
 /pipeline "Quiero que los usuarios puedan restablecer su contraseña por correo"
 
 # 4. Cuando staging está en verde y lo has probado tú
-node kit.js prod
+kit prod
 ```
 
 ## Estructura del repositorio

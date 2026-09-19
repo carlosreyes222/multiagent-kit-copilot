@@ -5,7 +5,7 @@
 VEREDICTO: RECHAZADO
 
 > La línea anterior debe ser exactamente `VEREDICTO: APROBADO` o `VEREDICTO: RECHAZADO`.
-> Los scripts `promote-prod.ps1` y el hook de merge la leen literalmente.
+> Los scripts `scripts/prod.js` y el hook de merge la leen literalmente.
 
 ## Resumen
 Una frase con el estado general.
