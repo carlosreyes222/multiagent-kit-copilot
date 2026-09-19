@@ -39,6 +39,8 @@ En `pipeline.config.json` del proyecto padre:
 | `node kit.js sdk list` | SDKs declarados, origen y estado |
 | `node kit.js sdk sync [nombre] [--rama x]` | Localiza la carpeta o clona/actualiza el repo en la rama declarada (`fetch` + `pull --ff-only`; si el clon tiene cambios sin commit no toca nada). Sin nombre: todos |
 | `node kit.js sdk pack <nombre> [--feature slug]` | Versión de trabajo + publicar en local + actualizar la dependencia del padre (ver abajo) |
+| `node kit.js sdk api <nombre> [--base]` | Breaking changes de la API pública frente a la rama base (§14.4) |
+| `node kit.js sdk publish <nombre> --version X.Y.Z` | Versión definitiva y enlace del padre a la versión publicada; paso humano (§14.5) |
 | `node kit.js sdk status` | Qué versión de trabajo está enlazada en el padre |
 
 Lo que hace `pack` según el tipo:
@@ -64,13 +66,21 @@ El número `N` sube en cada `pack` (se guarda en `.pipeline/sdks.json`). La vers
 4. **Implementación**, en orden: rama `feature/<slug>` en el SDK con código y pruebas, commits **sin push** → `node kit.js sdk pack core --feature <slug>` → rama `feature/<slug>` en el padre con la integración, commits (incluidos `package.json`, lockfile y `vendor/sdks/*.tgz`, o `libs.versions.toml`, o `Podfile`).
 5. **QA y revisiones**: el tester corre las pruebas del SDK (`test` de la entrada o las del propio SDK) y las del padre; los revisores revisan los dos diffs, con especial atención a la API pública nueva.
 6. **Staging** y **arquitectura viva** como siempre (`docs/ARQUITECTURA.md` registra qué SDKs consume el proyecto y con qué versión).
-7. **Entrega**: rama y commits del SDK, versión de trabajo enlazada, y lo que queda para ti: abrir el PR del SDK, publicar la versión real y cambiar la dependencia `-local.N` por la publicada.
+7. **Entrega**: rama y commits del SDK, versión de trabajo enlazada, resultado de `sdk api`, y lo que queda para ti: `node kit.js sdk publish <nombre> --version X.Y.Z` (§14.5), que fija la versión, enlaza el padre y te dice qué publicar.
 
 Los hooks aplican también dentro del SDK: no se puede hacer commit ni push en `main`/`master` del SDK, y la compuerta de commit usa `test`/`lint` de su entrada (si no los declaras, se omite con aviso). Nada del kit publica en npm, Maven remoto ni hace `git push`.
 
 Sin `--sdk`, los SDKs declarados sirven igualmente como **contexto de solo lectura**: el arquitecto los consulta para no reimplementar en el padre lo que el SDK ya ofrece. Si solo quieres usar en el padre una versión nueva del SDK que ya está en `main`: `node kit.js sdk sync core` y `node kit.js sdk pack core`, y sigues con `/pipeline` normal.
 
-## 14.4 Dónde queda cada cosa
+## 14.4 Breaking changes: `node kit.js sdk api <nombre>`
+
+`sdk sync` guarda una instantánea de la API pública del SDK cuando está en su rama base (`.pipeline/sdks/api/<nombre>.json`): en npm, los `export` de los `.d.ts` (`types` del `package.json`, `dist/` o `lib/`; si no hay build, `src/index.ts`) y los miembros públicos de clases e interfaces exportadas; en Android, los archivos `api/*.api` de *binary-compatibility-validator* si el SDK los tiene (exacto) o, si no, las declaraciones públicas de `src/main` (aproximado); en iOS, las declaraciones `public`/`open` de Swift. `node kit.js sdk api <nombre>` compara la API actual con la base: lista los símbolos nuevos y los **eliminados o renombrados**; si hay eliminados y la versión no sube la major, termina con error. `sdk pack` avisa de lo mismo, el revisor de código lo trata como BLOQUEANTE y `sdk publish` se niega salvo con major nueva o `--forzar`. `sdk api <nombre> --base` vuelve a guardar la base desde la rama actual.
+
+## 14.5 Versión definitiva: `node kit.js sdk publish <nombre> --version X.Y.Z`
+
+Es el paso humano que cierra el ciclo (los agentes lo tienen bloqueado, como `prod`). Comprueba los breaking changes, fija la versión definitiva en el SDK (`package.json`, `gradle.properties`/`build.gradle`, `.podspec`) y hace commit en la rama actual del SDK (`--sin-commit` para no hacerlo), cambia la dependencia del padre a la versión publicada (npm: `^X.Y.Z`, o exacta con `--exacta`, y borra el tgz de `vendor/sdks/`; Android: versión en `libs.versions.toml`/gradle; iOS: `pod 'X', '~> X.Y.Z'`) y te deja los tres pasos que quedan: push + PR + publicar en el SDK, `install`/sync + commit en el padre, y `sdk sync` para actualizar la API base.
+
+## 14.6 Dónde queda cada cosa
 
 | | Dónde | ¿Va a git? |
 |---|---|---|

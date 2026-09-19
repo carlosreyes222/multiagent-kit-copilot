@@ -11,7 +11,7 @@ Cada etapa la hace un **agente personalizado del kit** (`product-owner`, `arquit
 
 ## Paso 0 — Encuadre
 1. Detecta modificadores al inicio de `**la petición del usuario** (el texto que acompaña a la invocación de la skill)`: `--solo-diagnostico` (termina tras el Paso 1), `--urgente` (hotfix: ver "Modo urgente"). Quítalos del texto.
-2. Deriva un slug (`login-null-token`), registra con el script: `node kit.js state feature=fix-<slug> type=bugfix stage=reproducir`.
+2. **Ticket de Jira**: si el texto contiene `abc-123`, es el ticket: MAYÚSCULAS, quítalo del texto y el slug pasa a ser `<TICKET>-<descripcion>` (ej. `BMOSHELL-124-login-null-token`); rama `fix/<slug>`, commits `fix: BMOSHELL-124 descripción`; registra `node kit.js state ticket=<TICKET>`. Sin ticket, slug normal (`login-null-token`). Registra: `node kit.js state feature=fix-<slug> type=bugfix stage=reproducir`.
 3. Si el usuario pegó una traza o log, consérvalo íntegro en `docs/reviews/fix-<slug>-qa.md` (sección "Evidencia original").
 4. Si `AGENTS.md` lista skills de stack, indícalo a cada agente.
 

@@ -117,7 +117,7 @@ function loadConfig(root) {
 }
 
 // --- Estado del pipeline (.pipeline/state.json), esquema v2 ------------------------------------
-const STATE_KEYS = ["feature", "type", "mode", "stage", "qa", "codigo", "seguridad", "qa_iter", "codigo_iter", "staging_ok", "smoke_ok", "staging_at", "promoted_at", "promoted_tag", "started_at", "sdk", "sdk_version"];
+const STATE_KEYS = ["feature", "type", "mode", "stage", "qa", "codigo", "seguridad", "qa_iter", "codigo_iter", "staging_ok", "smoke_ok", "staging_at", "promoted_at", "promoted_tag", "started_at", "sdk", "sdk_version", "tamano", "compuertas", "ticket"];
 function stateFile(root) { return path.join(root, ".pipeline", "state.json"); }
 function getState(root) {
   const f = stateFile(root);
@@ -235,6 +235,19 @@ function supabaseDeploy(root, cfg, projectRef, label) {
   }
 }
 
+// --- Ticket de Jira en ramas y commits -----------------------------------------------------------------
+// Detecta un ticket tipo ABC-123 (cualquier mayúscula/minúscula) en un texto; devuelve { ticket: "ABC-123", rest }.
+const TICKET_RE = /(?:^|[\s(\[:#])([A-Za-z][A-Za-z0-9]{1,14}-\d{1,7})(?=$|[\s)\]:,.])/;
+function parseTicket(text) {
+  const m = TICKET_RE.exec(String(text || ""));
+  if (!m) return { ticket: "", rest: String(text || "").trim() };
+  return { ticket: m[1].toUpperCase(), rest: String(text).replace(m[1], " ").replace(/\s+/g, " ").trim() };
+}
+const COMMIT_TYPES = "feat|fix|chore|docs|test|refactor|perf|build|ci|style|revert";
+// Mensaje de commit válido con ticket: "feat: ABC-123 descripción" (también feat(scope): ABC-123 …)
+function commitMatchesTicket(msg, ticket) { return new RegExp(`^(${COMMIT_TYPES})(\\([^)]*\\))?!?:\\s*${ticket.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(String(msg || "").trim()); }
+function branchMatchesTicket(branch, ticket) { return new RegExp(`^(feature|fix|hotfix)/${ticket}(-|$)`, "i").test(branch) && /^(feature|fix|hotfix)\/[A-Z0-9]+-\d+/.test(branch); }
+
 // --- Utilidades ------------------------------------------------------------------------------------
 // Hash de un archivo. Los de texto se normalizan a LF: git en Windows (autocrlf) convierte a CRLF y no debe contar como "modificado".
 function sha256(file) {
@@ -260,7 +273,7 @@ function parseArgs(argv) {
 
 module.exports = {
   IS_WIN, OS_NAME, PLUGIN_ROOT, FLAVOR, VERSION, CONTEXT_FILE, MANIFEST, DEFAULTS, STATE_KEYS,
-  log, findProjectRoot, requireProjectRoot, loadConfig, parseLegacyPs1, getState, setState, nowIso,
+  log, findProjectRoot, requireProjectRoot, loadConfig, stateFile, parseLegacyPs1, getState, setState, nowIso,
   run, runProjectCmd, currentBranch, which, httpStatus, waitHealthy, securityVerdict, docLimits, supabaseDeploy,
-  sha256, readJson, writeJson, parseArgs, homeDir: os.homedir,
+  sha256, readJson, writeJson, parseArgs, homeDir: os.homedir, parseTicket, commitMatchesTicket, branchMatchesTicket, COMMIT_TYPES,
 };

@@ -25,6 +25,9 @@
 | `update` no toca un archivo y deja un `.kit` | Lo habías modificado | Fusiona a mano o borra tu copia y repite `update` |
 | `sdk pack` no encuentra la dependencia en el padre | El paquete no está en `package.json` / `libs.versions.toml` / `Podfile`, o está en otra carpeta | Añade la dependencia una vez a mano (cualquier versión) o indica `destino` en la entrada de `SDKS`; repite `sdk pack` |
 | `sdk sync` dice que el clon tiene cambios sin commit | Una feature en curso en `.pipeline/sdks/<nombre>` | Es lo esperado: termina o commitea esa feature; el kit no cambia de rama ni hace pull con cambios pendientes |
+| Hice push del kit pero los agentes se comportan como antes | El plugin instalado en el PC es la versión anterior | `node kit.js doctor` lo indica; actualiza el plugin y luego `node kit.js update` |
+| `git commit` dice `index.lock` exists | Un git anterior se interrumpió | `node kit.js doctor --fix` borra los locks de más de 10 minutos (si no hay ningún git en marcha) |
+| Un pipeline nuevo hereda veredictos o `sdk` de la feature anterior | Estado no cerrado | `node kit.js state reset` |
 
 ---
 Anterior: [06-actualizar-el-kit.md](06-actualizar-el-kit.md) · Siguiente: [08-superficies-copilot.md](08-superficies-copilot.md) · [Índice](../README.md)

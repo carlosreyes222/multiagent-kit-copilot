@@ -25,6 +25,6 @@ En lugar de una spec, propones hasta 5 ideas de producto en el archivo que te in
 Spec ≤ 120 líneas. Si no cabe, son dos features.
 
 ## Salida
-Escribe `docs/specs/<slug>.md` usando exactamente `docs/specs/_PLANTILLA.md`. Los criterios de aceptación deben ser verificables por una prueba automática (formato Dado / Cuando / Entonces). Incluye siempre una sección "Fuera de alcance".
+Escribe `docs/specs/<slug>.md` usando exactamente `docs/specs/_PLANTILLA.md`. Los criterios de aceptación deben ser verificables por una prueba automática (formato Dado / Cuando / Entonces). Incluye siempre una sección "Fuera de alcance" y, al final, una línea `TAMAÑO: S|M|L` con una frase de justificación (S = un módulo, sin cambios de datos, API pública, autenticación ni pagos, < ~150 líneas; M = varios módulos o datos; L = debería partirse). El orquestador usa S para proponer el modo rápido.
 
 Termina tu respuesta con una sola línea: `SPEC: docs/specs/<slug>.md`

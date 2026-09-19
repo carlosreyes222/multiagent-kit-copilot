@@ -3,6 +3,8 @@
 //   node kit.js sdk list                          -> SDKs declarados y dónde están
 //   node kit.js sdk sync [nombre|--all] [--rama x] -> localiza el SDK (ruta local) o lo clona/actualiza desde GitHub en .pipeline/sdks/<nombre>
 //   node kit.js sdk pack <nombre> [--feature s]   -> versión de trabajo X.Y.Z-local.N, build, publicar en local y actualizar la dependencia del padre
+//   node kit.js sdk api <nombre> [--base]         -> compara la API pública con la de la rama base (breaking changes); --base la reguarda
+//   node kit.js sdk publish <nombre> --version X.Y.Z -> (persona) versión definitiva en el SDK + commit, dependencia del padre a X.Y.Z, sin tgz local
 //   node kit.js sdk status                        -> qué versión de trabajo tiene enlazada el padre de cada SDK
 // Nunca publica en un registro remoto ni hace push: la versión -local.N vive solo en este PC y en vendor/sdks/ (npm).
 "use strict";
@@ -93,6 +95,8 @@ function sync(root, s, ramaOpt) {
   const version = readVersion(s, dir).version || "";
   record(root, s.nombre, { tipo: s.tipo, paquete: s.paquete || "", dir, origin, rama, branch, commit, version });
   C.log.ok(`${path.relative(root, dir) || "."}  ·  rama ${branch}  ·  ${commit}${version ? "  ·  v" + version : ""}`);
+  if (branch === rama && s.tipo !== "comando") { try { snapshotApi(root, s, dir, `rama ${rama}`); } catch (e) { C.log.warn("No pude guardar la API base: " + e.message); } }
+  else if (s.tipo !== "comando" && !fs.existsSync(apiBasePath(root, s.nombre))) C.log.warn(`Sin API base (estás en ${branch}, no en ${rama}); 'node kit.js sdk api ${s.nombre} --base' la guarda desde aquí.`);
   return dir;
 }
 
@@ -205,14 +209,10 @@ function packNpm(root, s, dir, version) {
 }
 
 function gradlew(dir) { return C.IS_WIN ? "gradlew.bat" : "./gradlew"; }
-function packAndroid(root, s, dir, version) {
-  if (s.build) C.run(s.build, { cwd: dir });
-  const cmd = s.publicar || `${gradlew(dir)} publishToMavenLocal`;
-  C.log.step(`Publicar en Maven local: ${cmd}`);
-  C.run(cmd, { cwd: dir, env: { SDK_VERSION: version } });
+function updateGradleDep(root, s, version) {
+  const touched = [];
   const [group, artifact] = s.paquete.split(":");
   const G = esc(group), A = esc(artifact);
-  const touched = [];
   // 1) libs.versions.toml
   for (const toml of [path.join(root, "gradle", "libs.versions.toml")]) {
     if (!fs.existsSync(toml)) continue;
@@ -257,6 +257,16 @@ function packAndroid(root, s, dir, version) {
     }
     if (!done) C.log.warn("No encontré un bloque repositories {} donde añadir mavenLocal(); añádelo a mano en settings.gradle(.kts).");
   }
+  return touched;
+}
+
+function packAndroid(root, s, dir, version) {
+  if (s.build) C.run(s.build, { cwd: dir });
+  const cmd = s.publicar || `${gradlew(dir)} publishToMavenLocal`;
+  C.log.step(`Publicar en Maven local: ${cmd}`);
+  C.run(cmd, { cwd: dir, env: { SDK_VERSION: version } });
+  const touched = updateGradleDep(root, s, version);
+  const [group, artifact] = s.paquete.split(":");
   return { artefacto: `~/.m2/repository/${group.replace(/\./g, "/")}/${artifact}/${version}`, archivos: touched.map((t) => path.relative(root, t)) };
 }
 
@@ -319,12 +329,172 @@ function pack(root, s, opts) {
     restore(); // la versión -local.N nunca queda en el repo del SDK
   }
   const branch = C.currentBranch(dir), commit = git(dir, "rev-parse --short HEAD").out.trim();
+  try { const cmp = compareApi(root, s, dir); if (cmp && cmp.breaking) C.log.yellow(`AVISO: la API pública del SDK elimina ${cmp.removed.length} símbolo(s) respecto a la base${cmp.majorBumped ? " (major subida)" : " sin subir la major"}. Detalle: node kit.js sdk api ${s.nombre}`); } catch { /* opcional */ }
   record(root, s.nombre, { dir, branch, commit, version: info.version || "", local_version: version, local_n: noBump ? (reg && reg.local_n) || 0 : n, artefacto: result.artefacto, archivos: result.archivos, feature: opts.feature || (reg && reg.feature) || "", packedAt: C.nowIso() });
   const st = C.getState(root);
   if (opts.feature || st.sdk === s.nombre) C.setState(root, { sdk: s.nombre, sdk_version: version });
   C.log.green(`\nSDK ${s.nombre} enlazado en el padre: ${version || "por ruta"}  ·  ${result.artefacto}`);
   if (result.archivos.length) C.log.plain(`Archivos del padre modificados: ${result.archivos.join(", ")}  (revísalos y haz commit en la rama feature/*)`);
   C.log.yellow(`Recuerda: antes de publicar la versión real del SDK, sustituye la dependencia -local.N por la versión publicada.`);
+  return 0;
+}
+
+
+// --- API pública: instantánea y comparación (breaking changes) ------------------------------------------------
+function walkFiles(dir, pred, depth = 6, out = [], skip = ["node_modules", ".git", "build", ".gradle", "dist-test", "__tests__", "test", "tests", "androidTest"]) {
+  if (depth < 0 || !fs.existsSync(dir)) return out;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) { if (!skip.includes(e.name)) walkFiles(p, pred, depth - 1, out, skip); }
+    else if (pred(p) && out.length < 2000) out.push(p);
+  }
+  return out;
+}
+function apiFromDts(files) {
+  const api = new Set();
+  const decl = /^\s*export\s+(?:declare\s+)?(?:default\s+)?(?:abstract\s+)?(function|class|const|let|var|type|interface|enum|namespace|async function)\s+([A-Za-z_$][\w$]*)/gm;
+  const named = /^\s*export\s*\{([^}]*)\}/gm;
+  for (const f of files) {
+    const txt = fs.readFileSync(f, "utf8"); let m;
+    while ((m = decl.exec(txt))) api.add(`${m[1].replace("async ", "")} ${m[2]}`);
+    while ((m = named.exec(txt))) for (const part of m[1].split(",")) { const n = part.trim().split(/\s+as\s+/).pop().trim(); if (n && !/^type\s/.test(n)) api.add(`export ${n}`); }
+    // miembros públicos de clases/interfaces exportadas (nombre.miembro)
+    const cls = /^\s*export\s+(?:declare\s+)?(?:abstract\s+)?(?:class|interface)\s+([A-Za-z_$][\w$]*)[^{]*\{([\s\S]*?)^\}/gm;
+    while ((m = cls.exec(txt))) for (const line of m[2].split("\n")) { const mm = /^\s+(?!private|protected|\/\/|\*)(?:readonly\s+|static\s+|abstract\s+|get\s+|set\s+|async\s+)*([A-Za-z_$][\w$]*)\s*[(:<?]/.exec(line); if (mm && mm[1] !== "constructor") api.add(`${m[1]}.${mm[1]}`); }
+  }
+  return api;
+}
+function computeApi(s, dir) {
+  if (s.tipo === "npm") {
+    const pkg = C.readJson(path.join(dir, "package.json"), {});
+    let files = [];
+    const typesEntry = pkg.types || pkg.typings;
+    if (typesEntry && fs.existsSync(path.join(dir, typesEntry))) files = walkFiles(path.dirname(path.join(dir, typesEntry)), (p) => p.endsWith(".d.ts"));
+    if (!files.length) files = walkFiles(path.join(dir, "dist"), (p) => p.endsWith(".d.ts")).concat(walkFiles(path.join(dir, "lib"), (p) => p.endsWith(".d.ts")));
+    if (files.length) return { fuente: `${files.length} archivos .d.ts`, api: apiFromDts(files) };
+    const idx = ["src/index.ts", "src/index.tsx", "index.ts", "src/main.ts"].map((f) => path.join(dir, f)).find((f) => fs.existsSync(f));
+    if (idx) return { fuente: path.relative(dir, idx) + " (sin .d.ts; ejecuta build para más precisión)", api: apiFromDts([idx]) };
+    return { fuente: "sin tipos ni index.ts", api: new Set() };
+  }
+  if (s.tipo === "android") {
+    const bcv = walkFiles(dir, (p) => p.endsWith(".api") && p.includes(`${path.sep}api${path.sep}`), 4);
+    if (bcv.length) {
+      const api = new Set();
+      for (const f of bcv) for (const line of fs.readFileSync(f, "utf8").split(/\r?\n/)) { const t = line.trim(); if (t && !t.startsWith("}")) api.add(t.replace(/\s*\{$/, "")); }
+      return { fuente: `binary-compatibility-validator (${bcv.length} .api)`, api };
+    }
+    const kt = walkFiles(dir, (p) => (p.endsWith(".kt") || p.endsWith(".java")) && /[\\/]src[\\/]main[\\/]/.test(p), 8);
+    const api = new Set();
+    const re = /^\s*(?:@\w+(?:\([^)]*\))?\s*)*(?:public\s+)?(?!private|internal|protected)(?:(?:open|abstract|final|data|sealed|inline|suspend|override|operator|infix|enum|annotation|value)\s+)*(fun|class|object|interface|val|var|typealias)\s+(?:<[^>]+>\s*)?(?:[\w.]+\.)?([A-Za-z_][\w]*)/;
+    for (const f of kt) for (const line of fs.readFileSync(f, "utf8").split(/\r?\n/)) { const m = re.exec(line); if (m && !/^\s*(private|internal|protected)\b/.test(line)) api.add(`${m[1]} ${m[2]}`); }
+    return { fuente: `${kt.length} fuentes Kotlin/Java (aproximado; añade binary-compatibility-validator para exactitud)`, api };
+  }
+  if (s.tipo === "ios") {
+    const sw = walkFiles(dir, (p) => p.endsWith(".swift") && !/Tests?[\\/]/.test(p), 8);
+    const api = new Set();
+    const re = /^\s*(?:@\w+\s+)*(?:public|open)\s+(?:static\s+|final\s+|class\s+)*(func|class|struct|enum|protocol|var|let|init|typealias)\s*([A-Za-z_][\w]*)?/;
+    for (const f of sw) for (const line of fs.readFileSync(f, "utf8").split(/\r?\n/)) { const m = re.exec(line); if (m) api.add(`${m[1]} ${m[2] || ""}`.trim()); }
+    return { fuente: `${sw.length} fuentes Swift`, api };
+  }
+  return { fuente: "tipo comando: sin análisis de API", api: new Set() };
+}
+function apiBasePath(root, name) { return path.join(root, ".pipeline", "sdks", "api", `${name}.json`); }
+function snapshotApi(root, s, dir, label) {
+  const { fuente, api } = computeApi(s, dir);
+  C.writeJson(apiBasePath(root, s.nombre), { version: readVersion(s, dir).version || "", branch: C.currentBranch(dir), commit: git(dir, "rev-parse --short HEAD").out.trim(), fuente, at: C.nowIso(), api: [...api].sort() });
+  C.log.plain(`API base guardada (${label}): ${api.size} símbolos · ${fuente}`);
+}
+// Compara la API actual con la base. Devuelve { removed, added, breaking, majorBumped }
+function compareApi(root, s, dir) {
+  const base = C.readJson(apiBasePath(root, s.nombre), null);
+  if (!base) return null;
+  const { fuente, api } = computeApi(s, dir);
+  const baseSet = new Set(base.api || []);
+  const removed = [...baseSet].filter((x) => !api.has(x)).sort(), added = [...api].filter((x) => !baseSet.has(x)).sort();
+  const cur = (readVersion(s, dir).version || "").replace(/-local\.\d+$/, "");
+  const majorBumped = cur && base.version && parseInt(cur, 10) > parseInt(base.version, 10);
+  return { base, fuente, removed, added, breaking: removed.length > 0, majorBumped, current: cur };
+}
+function apiReport(root, s, opts) {
+  const reg = getRegistry(root).sdks[s.nombre];
+  const dir = reg && reg.dir && fs.existsSync(reg.dir) ? reg.dir : sync(root, s);
+  if (opts.base) { snapshotApi(root, s, dir, "manual"); return 0; }
+  const r = compareApi(root, s, dir);
+  if (!r) { C.log.warn(`No hay API base para ${s.nombre}. Ejecuta 'node kit.js sdk sync ${s.nombre}' en la rama base (o 'sdk api ${s.nombre} --base').`); return 0; }
+  C.log.step(`API pública de ${s.nombre}: base ${r.base.branch}@${r.base.commit} (v${r.base.version}) → actual ${C.currentBranch(dir)} (v${r.current})  ·  ${r.fuente}`);
+  if (r.added.length) { C.log.ok(`Nuevos (${r.added.length}):`); r.added.slice(0, 40).forEach((x) => C.log.plain("  + " + x)); if (r.added.length > 40) C.log.plain(`  … y ${r.added.length - 40} más`); }
+  if (r.removed.length) { C.log.fail(`Eliminados o renombrados (${r.removed.length}) — BREAKING:`); r.removed.slice(0, 40).forEach((x) => C.log.plain("  - " + x)); if (r.removed.length > 40) C.log.plain(`  … y ${r.removed.length - 40} más`); }
+  if (!r.added.length && !r.removed.length) C.log.ok("Sin cambios en la API pública.");
+  if (r.breaking) {
+    if (r.majorBumped) { C.log.yellow(`API BREAKING con subida de major (${r.base.version} → ${r.current}): permitido, documenta la migración.`); return 0; }
+    C.log.red(`API BREAKING sin subir la versión major (${r.base.version} → ${r.current || "?"}): otros consumidores del SDK romperán. Sube la major o restaura los símbolos.`);
+    return 1;
+  }
+  return 0;
+}
+
+// --- publish: versión definitiva (paso humano) --------------------------------------------------------------------
+function publish(root, s, opts) {
+  const version = typeof opts.version === "string" ? opts.version : "";
+  if (!/^\d+\.\d+\.\d+([-+][\w.]+)?$/.test(version)) throw new Error("Indica la versión definitiva: node kit.js sdk publish <nombre> --version X.Y.Z");
+  const reg = getRegistry(root).sdks[s.nombre] || {};
+  const dir = reg.dir && fs.existsSync(reg.dir) ? reg.dir : sync(root, s);
+  const info = readVersion(s, dir);
+  const branch = C.currentBranch(dir);
+  C.log.step(`Publicar SDK ${s.nombre}: ${info.version || "?"} → ${version}  ·  ${path.relative(root, dir) || "."} (rama ${branch || "?"})`);
+  const cmp = compareApi(root, s, dir);
+  if (cmp && cmp.breaking && !(parseInt(version, 10) > parseInt(cmp.base.version, 10)) && !opts.forzar) {
+    C.log.red(`La API pública elimina ${cmp.removed.length} símbolo(s) respecto a la base y ${version} no sube la major. Usa una major nueva o --forzar si es intencionado.`);
+    cmp.removed.slice(0, 10).forEach((x) => C.log.plain("  - " + x));
+    return 1;
+  }
+  // 1. Versión definitiva en el SDK (esta vez sí se conserva) + commit
+  if (info.file) {
+    setVersionTemp(s, info, version); // sin restaurar
+    C.log.ok(`${path.relative(dir, info.file)}: versión ${version}`);
+    if (!opts["sin-commit"] && fs.existsSync(path.join(dir, ".git"))) {
+      const add = git(dir, `add ${q(path.relative(dir, info.file))}`);
+      const cm = add.code === 0 ? git(dir, `commit -m "chore: versión ${version}"`) : add;
+      if (cm.code === 0) C.log.ok(`commit en el SDK (${branch}): chore: versión ${version}`); else C.log.warn(`No se pudo commitear en el SDK: ${cm.out.trim().split(/\r?\n/).pop()}`);
+    }
+  } else C.log.warn("No encontré dónde vive la versión del SDK; fíjala a mano.");
+  // 2. Dependencia del padre → versión publicada
+  const touched = [];
+  if (s.tipo === "npm") {
+    const pkgName = C.readJson(path.join(dir, "package.json"), {}).name || s.paquete;
+    for (const pj of findPackageJsons(root, s)) {
+      const p = C.readJson(pj, null); if (!p) continue; let hit = false;
+      for (const k of ["dependencies", "devDependencies", "optionalDependencies"]) if (p[k] && p[k][s.paquete]) { p[k][s.paquete] = (opts.exacta ? "" : "^") + version; hit = true; }
+      if (hit) { fs.writeFileSync(pj, JSON.stringify(p, null, 2) + "\n", "utf8"); touched.push(path.relative(root, pj)); C.log.ok(`${path.relative(root, pj)}: "${s.paquete}": "${(opts.exacta ? "" : "^") + version}"`); }
+    }
+    const vendor = path.join(root, "vendor", "sdks");
+    const prefix = `${String(pkgName).replace(/^@/, "").replace(/\//g, "-")}-`;
+    if (fs.existsSync(vendor)) for (const f of fs.readdirSync(vendor)) if (f.startsWith(prefix) && f.endsWith(".tgz")) { fs.unlinkSync(path.join(vendor, f)); C.log.ok(`borrado vendor/sdks/${f}`); touched.push(`vendor/sdks/${f}`); }
+  } else if (s.tipo === "android") {
+    touched.push(...updateGradleDep(root, s, version).map((t) => path.relative(root, t)));
+    C.log.plain("mavenLocal() se mantiene en settings.gradle; quítalo cuando el artefacto esté en el repositorio Maven del equipo.");
+  } else if (s.tipo === "ios") {
+    const podfiles = s.destino ? [path.resolve(root, s.destino)] : ["Podfile", "ios/Podfile", "app/Podfile"].map((f) => path.join(root, f)).filter((p) => fs.existsSync(p));
+    for (const pf of podfiles) {
+      if (!fs.existsSync(pf)) continue;
+      const txt = fs.readFileSync(pf, "utf8");
+      const re = new RegExp(`^(\\s*pod\\s+['"]${esc(s.paquete)}['"]).*$`, "m");
+      if (re.test(txt)) { fs.writeFileSync(pf, txt.replace(re, `$1, '~> ${version}'`), "utf8"); touched.push(path.relative(root, pf)); C.log.ok(`${path.relative(root, pf)}: pod '${s.paquete}', '~> ${version}'`); }
+    }
+    if (fs.existsSync(path.join(root, "Package.swift"))) C.log.warn("Package.swift: cambia .package(path:) por .package(url:, from: \"" + version + "\") a mano (no conozco la URL).");
+  } else if (s.enlazar) {
+    C.run(s.enlazar, { cwd: root, env: { SDK_VERSION: version, SDK_DIR: dir, SDK_NOMBRE: s.nombre, PROJECT_DIR: root, SDK_PUBLISH: "1" } });
+  }
+  record(root, s.nombre, { version, local_version: "", published_version: version, publishedAt: C.nowIso() });
+  const st = C.getState(root); if (st.sdk === s.nombre) C.setState(root, { sdk_version: version });
+  // 3. Siguientes pasos humanos
+  const pm = detectPm(dir);
+  const publishCmd = s.publicar ? s.publicar : s.tipo === "npm" ? `${pm} publish` : s.tipo === "android" ? `${gradlew(dir)} publish` : s.tipo === "ios" ? "pod trunk push / git tag " + version : "(tu comando)";
+  C.log.green(`\nSDK ${s.nombre} preparado para publicar la ${version}.`);
+  console.log("  Siguientes pasos (en este orden):");
+  console.log(`  1. En el SDK (${path.relative(root, dir) || "."}): git push de la rama ${branch}, PR y merge; luego publicar:  ${publishCmd}`);
+  console.log(`  2. En este proyecto: ${s.tipo === "npm" ? detectPm(root) + " install" : s.tipo === "android" ? "sincroniza Gradle" : "pod install"}, prueba, y commit de: ${touched.join(", ") || "(nada cambió)"}`);
+  console.log("  3. node kit.js sdk sync " + s.nombre + "   (actualiza la API base a la versión publicada)");
   return 0;
 }
 
@@ -361,7 +531,15 @@ module.exports = async function sdk(opts) {
     if (!name) { C.log.fail("Uso: node kit.js sdk pack <nombre> [--feature slug]"); return 1; }
     return pack(root, find(cfg, name), { feature: opts.feature });
   }
-  C.log.fail(`Subcomando desconocido: ${sub}. Usa: list | sync [nombre|--all] | pack <nombre> | status`);
+  if (sub === "api") {
+    if (!name) { C.log.fail("Uso: node kit.js sdk api <nombre> [--base]"); return 1; }
+    return apiReport(root, find(cfg, name), opts);
+  }
+  if (sub === "publish" || sub === "publicar") {
+    if (!name) { C.log.fail("Uso: node kit.js sdk publish <nombre> --version X.Y.Z [--exacta] [--sin-commit] [--forzar]"); return 1; }
+    return publish(root, find(cfg, name), opts);
+  }
+  C.log.fail(`Subcomando desconocido: ${sub}. Usa: list | sync [nombre|--all] | pack <nombre> | api <nombre> | publish <nombre> --version X.Y.Z | status`);
   return 1;
 };
 module.exports.declared = declared;

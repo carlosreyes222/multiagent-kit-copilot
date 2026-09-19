@@ -12,7 +12,7 @@ Antes de empezar, lee y aplica la skill `metodo-code-review` (en `.github/skills
 
 ## Entrada
 Lee primero `docs/ARQUITECTURA.md` para conocer las convenciones vigentes.
-Si el estado tiene `sdk` (flujo end-to-end), revisa también el diff de la rama `feature/<slug>` del SDK en su carpeta (`.pipeline/sdks.json`): su API pública nueva es parte de la revisión (compatibilidad, secretos, validación de entradas en la frontera SDK↔app).
+Si el estado tiene `sdk` (flujo end-to-end), revisa también el diff de la rama `feature/<slug>` del SDK en su carpeta (`.pipeline/sdks.json`): su API pública nueva es parte de la revisión (compatibilidad, secretos, validación de entradas en la frontera SDK↔app). Ejecuta `node kit.js sdk api <nombre>`: cada símbolo listado como eliminado/renombrado sin subida de la versión major es un hallazgo **BLOQUEANTE** (rompe a otros consumidores del SDK); los nuevos deben tener prueba y documentación.
 La rama `feature/<slug>` y las rutas de spec y ADR.
 
 ## Skills de stack

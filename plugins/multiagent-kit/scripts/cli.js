@@ -16,6 +16,19 @@ async function main(cmd, argv) {
     case "update": return require("./init")(opts, { mode: "update" });
     case "migrate": return require("./init")(opts, { mode: "migrate" });
     case "sdk": return require("./sdk")(opts);
+    case "doctor": return require("./doctor")(opts);
+    case "lecciones": {
+      const R = require("./remote"), fs = require("fs");
+      const p = R.ensureLessons();
+      if (opts._[0] === "add" || opts._[0] === "agregar") {
+        const txt = opts._.slice(1).join(" ").trim();
+        if (!txt) { console.error("Uso: node kit.js lecciones add \"[stack] lección\""); return 1; }
+        fs.appendFileSync(p, `- [${new Date().toISOString().slice(0, 10)}] ${txt}\n`, "utf8");
+        C.log.ok(`Añadida a ${p}`);
+        return 0;
+      }
+      console.log(`${p}\n`); console.log(fs.readFileSync(p, "utf8")); return 0;
+    }
     case "version": {
       const root = C.findProjectRoot();
       const m = root ? (C.readJson(path.join(root, ".github", "kit-manifest.json"), null) || C.readJson(path.join(root, ".pipeline", "kit-manifest.json"), null)) : null;
@@ -24,7 +37,7 @@ async function main(cmd, argv) {
       return 0;
     }
     default:
-      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | version`);
+      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | doctor | lecciones | version`);
       return 1;
   }
 }

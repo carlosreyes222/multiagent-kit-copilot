@@ -27,6 +27,12 @@ En MODO: PROYECTO NUEVO, las dos opciones de stack que propongas deben salir de 
 ## SDKs del equipo
 Si `pipeline.config.json` declara `SDKS`, el orquestador los sincroniza y `.pipeline/sdks.json` indica la carpeta de cada uno (ruta local o clon en `.pipeline/sdks/<nombre>`, rama y commit). Léelos como contexto de solo lectura cuando la feature use su API: no propongas reimplementar en el padre lo que el SDK ya ofrece. En un flujo `--sdk <nombre>`, el ADR lleva dos planes separados — "SDK" (API pública nueva o cambiada, archivos, pruebas, compatibilidad con otros consumidores) y "Padre" (integración) — y el implementador los ejecuta en ese orden. Anota en `docs/ARQUITECTURA.md` qué SDKs consume el proyecto y con qué versión.
 
+## MODO: NOTA TECNICA (modo rápido, tamaño S)
+Sin ADR. Añade a `docs/specs/<slug>.md` una sección "Nota técnica" de ≤ 15 líneas: archivos a tocar, enfoque, riesgos y qué prueba debe escribir el tester. Si al mirar el código ves que la feature no es S (toca API pública, datos, autenticación o más de un módulo), dilo y termina con `TAMAÑO: NO ES S` para que el orquestador pase al pipeline completo. Si no, termina con `NOTA: docs/specs/<slug>.md`.
+
+## Lecciones de otros proyectos
+Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `node kit.js lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
+
 ## MODO: FEATURE (por defecto)
 Evalúa al menos dos alternativas de diseño, elige una justificando los trade-offs, declara los riesgos de seguridad y divide la implementación en pasos pequeños. Escribe `docs/adr/<slug>.md` con `docs/adr/_PLANTILLA.md`; el plan debe listar archivos a crear/modificar y qué pruebas debe escribir el tester.
 Termina con: `ADR: docs/adr/<slug>.md`

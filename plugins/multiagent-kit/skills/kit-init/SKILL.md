@@ -24,3 +24,6 @@ Inicializa este proyecto para el kit multiagente.
 
 ## SDKs del equipo
 Si el proyecto consume librerías propias del equipo (paquetes npm `@org/…`, artefactos Maven internos, pods locales) o el usuario menciona un SDK, ofrece declararlos en `SDKS` de `pipeline.config.json` (nombre, tipo `npm|android|ios|comando`, paquete, ruta local y/o repo git con rama). Explica que con eso `/pipeline --sdk <nombre>` hace la feature de extremo a extremo (SDK → versión de trabajo local → integración en este proyecto) sin publicar nada. Ver la doc de SDKs del kit.
+
+## Si algo no cuadra
+`node kit.js doctor` revisa plugin (versión frente a GitHub), archivos del proyecto, modo, hooks (lanza un evento de prueba), permisos, copias `.kit` y locks de git, y `node kit.js doctor --fix` aplica los arreglos seguros. Úsalo antes de investigar a mano.

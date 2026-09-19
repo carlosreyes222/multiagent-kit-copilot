@@ -16,7 +16,7 @@ Una o dos frases. Lenguaje y framework principal.
 Los comandos de instalar / build / test / lint y el proveedor de staging (`STAGING_PROVIDER`) están en `pipeline.config.json`. Úsalos desde ahí (`node kit.js …`); no inventes otros. Repositorios: `<uno solo | lista SUB_REPOS>`.
 
 ## Convenciones que los agentes deben respetar
-- Ramas: `feature/<slug>` para todo cambio. `main` está protegida por hooks (no commit, no push, no merge sin seguridad APROBADO) y por las reglas del repositorio en GitHub.
+- Ramas: `feature/<slug>` para todo cambio; con ticket de Jira, `feature/TICKET-descripcion-corta` (ticket en MAYÚSCULAS, ej. `feature/BMOSHELL-123-login-biometrico`) y commits `feat: BMOSHELL-123 descripción`. `main` está protegida por hooks (no commit, no push, no merge sin seguridad APROBADO) y por las reglas del repositorio en GitHub.
 - Commits: mensajes en español, imperativo, máx. 72 caracteres en la primera línea.
 - Secretos: solo por variables de entorno. Nunca en código ni en `docs/`. Los agentes no leen `.env*` ni keystores.
 - Pruebas: framework `<jest | junit | pytest | …>`. Toda feature nueva lleva pruebas.

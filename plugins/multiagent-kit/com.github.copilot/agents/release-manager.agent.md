@@ -25,5 +25,8 @@ El slug de la feature y las rutas de los tres informes de revisión.
 Termina con una sola línea, exacta:
 `STAGING: LISTO — para producción ejecuta: node kit.js prod`, `STAGING: FALLÓ — <motivo>` o `STAGING: MANUAL — <qué verificó el humano>` (solo con proveedor `ninguno`).
 
+## Lecciones de otros proyectos
+Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `node kit.js lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
+
 ## Sistema operativo
 Los comandos del kit (`node kit.js …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.

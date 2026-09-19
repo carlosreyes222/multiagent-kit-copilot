@@ -59,5 +59,15 @@ copilot plugin install multiagent-kit@carlos-kits-copilot
 
 En un proyecto de prueba, la variable de entorno `KIT_PLUGIN_ROOT` con la ruta `…\multiagent-kit-copilot\plugins\multiagent-kit` hace que `kit.js` use esa copia directamente (`$env:KIT_PLUGIN_ROOT="…"` en PowerShell, `export KIT_PLUGIN_ROOT=…` en macOS). Al terminar, `copilot plugin marketplace remove carlos-kits-copilot --force` y vuelve a añadir el de GitHub.
 
+## 6.6 Aviso automático de versión nueva
+
+Cada sesión, el hook de inicio compara la versión instalada con la de GitHub (una petición al día, caché en `~/.multiagent-kit/`) y avisa si hay una nueva. `node kit.js update` hace la misma comprobación y te dice el comando para actualizar el plugin (`node kit.js update --plugin` lo ejecuta por ti); después vuelve a ejecutar `node kit.js update` para refrescar los archivos del proyecto. 
+
+Recuerda que **hacer push del kit no cambia nada en los PCs**: cada uno tiene su copia instalada hasta que actualiza el plugin. `node kit.js doctor` te lo señala.
+
+## 6.7 `node kit.js doctor`
+
+Cuando algo no cuadra, antes de investigar a mano: `node kit.js doctor` revisa plugin (versión frente a GitHub), Node, archivos del proyecto (versión, modo, `kit.js`, `.git/info/exclude`, restos de versiones antiguas), hooks (lanza un `git push origin main` de prueba y espera que lo bloquee), permisos, copias `.kit`, locks de git colgados y las entradas de `SDKS`. Cada problema trae su arreglo; `node kit.js doctor --fix` aplica los seguros (permisos que faltan, `kit.js` desactualizado, `.kit` idénticos, locks de más de 10 minutos).
+
 ---
 Anterior: [05-arquitectura-viva.md](05-arquitectura-viva.md) · Siguiente: [07-problemas-frecuentes.md](07-problemas-frecuentes.md) · [Índice](../README.md)

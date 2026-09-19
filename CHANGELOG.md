@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0 — ticket de Jira, doctor, modo rápido, lecciones, SDK publish y breaking changes
+- **Ticket de Jira en ramas y commits**: si la idea de `/pipeline` o `/bugfix` incluye `abc-123`, el ticket va en MAYÚSCULAS al slug (`BMOSHELL-123-login-biometrico`), a la rama (`feature/…`, `fix/…`, también en el SDK), a los documentos y al tag de producción; los commits siguen `<tipo>: BMOSHELL-123 descripción`. El hook bloquea ramas `feature/*`/`fix/*` y commits sin el ticket mientras esté registrado (`node kit.js state ticket=…`).
+- **Aviso de versión nueva**: el hook de inicio de sesión y `node kit.js update` comparan la versión instalada con GitHub (una vez al día) y dicen cómo actualizar; `node kit.js update --plugin` ejecuta `copilot plugin update`.
+- **`node kit.js doctor [--fix]`**: diagnóstico del kit — plugin, archivos y modo del proyecto, hooks (prueba real), permisos, `.kit`, locks de git, `SDKS` — con arreglo por problema; `--fix` aplica los seguros.
+- **`update --limpiar`** borra las copias `.kit` revisadas; **`state reset`** cierra la feature (archiva en `.pipeline/historial.jsonl`) y limpia el estado; claves nuevas `tamano` y `compuertas`.
+- **Modo rápido**: el product-owner estima `TAMAÑO: S|M|L`; con `--rapido` o S confirmado por el usuario, el pipeline omite el ADR (nota técnica en la spec) y el revisor de código, mantiene QA y seguridad, y registra `compuertas=reducidas`.
+- **Lecciones entre proyectos**: `~/.multiagent-kit/lecciones.md`, que `/retro-kit` alimenta (`node kit.js lecciones add "…"`) y que arquitecto, implementador, tester y release-manager leen al empezar.
+- **`sdk api <nombre>`**: instantánea de la API pública en `sdk sync` (`.d.ts`, `api/*.api` de BCV o fuentes) y comparación: símbolos eliminados sin subir la major = BREAKING (error; el revisor de código lo trata como BLOQUEANTE; `sdk pack` avisa).
+- **`sdk publish <nombre> --version X.Y.Z`**: paso humano que fija la versión definitiva en el SDK (+ commit), cambia la dependencia del padre a la publicada, borra el tgz local y lista lo que queda por hacer. Bloqueado para los agentes por el hook.
+- Prompt `/pipeline` acepta `--rapido`; el director confirma el modo rápido como compuerta humana.
+
 ## 1.3.2
 - `init --modo usuario` en un proyecto que ya estaba en modo `repo`/`local` retira de `.github/` (y `.gitignore`/`.dockerignore`) lo que el kit había copiado, siempre que siga idéntico a lo copiado; lo que editaste se conserva y se avisa. Así cambiar de modo no deja archivos del kit en el repositorio.
 

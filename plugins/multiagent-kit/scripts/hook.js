@@ -66,6 +66,8 @@ function protectMain(a, root, cfg) {
   const cmd = a.command;
   const target = gitTargetDir(a, root);
   const branch = C.currentBranch(target); // rama del repo sobre el que actúa el comando (padre o SDK)
+  if (/kit\.js\s+sdk\s+publish\b/.test(cmd) || /scripts[\\/]sdk\.js\s+publish\b/.test(cmd))
+    deny("'node kit.js sdk publish' (versión definitiva del SDK) lo ejecuta una persona desde su terminal, no los agentes.");
   if (/kit\.(js|ps1)\s+prod\b/.test(cmd) || /promote-prod\.(js|ps1)/.test(cmd) || /scripts[\\/]prod\.js/.test(cmd))
     deny("la promoción a producción ('node kit.js prod') solo la ejecuta una persona desde su terminal.");
   if (/supabase\s+(db\s+push|functions\s+deploy|db\s+reset)\b/.test(cmd))
@@ -77,6 +79,20 @@ function protectMain(a, root, cfg) {
   if ((protectedRe && new RegExp(`git\\s+push\\b.*\\b(${protectedRe})\\b`).test(cmd)) || (/git\s+push\b/.test(cmd) && onProtected))
     deny(`no se permite 'git push' a ramas protegidas (${(cfg.PROTECTED_BRANCHES || []).join(", ")}). Abre un PR desde una rama feature/*.`);
   if (/git\s+commit\b/.test(cmd) && onProtected) deny(`estás en '${branch}'. Crea una rama: git checkout -b feature/<nombre>`);
+  // Nomenclatura con ticket de Jira (cuando el flujo registró uno): feature/TICKET-desc y "feat: TICKET descripción"
+  const ticket = (C.getState(root).ticket || "").toUpperCase();
+  if (ticket) {
+    const nb = /git\s+(?:checkout\s+-b|switch\s+-c)\s+("([^"]+)"|'([^']+)'|(\S+))/.exec(cmd);
+    const newBranch = nb && (nb[2] || nb[3] || nb[4]);
+    if (newBranch && /^(feature|fix|hotfix)\//i.test(newBranch) && !C.branchMatchesTicket(newBranch, ticket))
+      deny(`la rama debe llevar el ticket en mayúsculas: ${newBranch.split("/")[0]}/${ticket}-<descripcion-corta> (ticket registrado: ${ticket}).`);
+    if (/git\s+commit\b/.test(cmd)) {
+      const mm = /(?:^|\s)-m\s+("((?:[^"\\]|\\.)*)"|'([^']*)'|(\S+))/.exec(cmd);
+      const msg = mm && (mm[2] || mm[3] || mm[4]);
+      if (msg !== undefined && msg !== null && !C.commitMatchesTicket(msg, ticket))
+        deny(`mensaje de commit sin la nomenclatura del equipo. Formato: "<tipo>: ${ticket} descripción" (tipo: ${C.COMMIT_TYPES.replace(/\|/g, ", ")}). Recibido: ${msg}`);
+    }
+  }
   if (/git\s+merge\b/.test(cmd) && onProtected) {
     const feature = C.getState(root).feature || "";
     if (C.securityVerdict(root, feature) !== "APROBADO") deny(`merge a '${branch}' requiere 'VEREDICTO: APROBADO' en docs/reviews/${feature}-seguridad.md`);
@@ -106,7 +122,7 @@ function commitGate(a, root, cfg) {
   }
 }
 
-function sessionStart(root) {
+async function sessionStart(root) {
   let msg;
   if (!root) {
     msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} instalado, pero este proyecto no está inicializado. Si el usuario quiere usarlo aquí, ejecuta ${C.FLAVOR === "claude" ? "/multiagent-kit:init" : "/kit-init"}.`;
@@ -122,11 +138,17 @@ function sessionStart(root) {
     if (m && m.version && m.version !== C.VERSION) msg += ` AVISO: los archivos del proyecto son de la versión ${m.version}; ejecuta 'node kit.js update'.`;
     if (!fs.existsSync(path.join(root, "kit.js"))) msg += " AVISO: falta kit.js (proyecto de una versión anterior); ejecuta la inicialización del kit.";
   }
+  try {
+    const R = require("./remote");
+    const u = await R.checkUpdate({ timeoutMs: 3000 });
+    if (u.remote && R.cmpVer(u.remote, C.VERSION) > 0) msg += ` AVISO: hay una versión nueva del plugin (${u.remote}, instalada ${C.VERSION}): ${R.updateHint()} y luego 'node kit.js update'.`;
+    if (fs.existsSync(R.lessonsPath())) msg += ` Lecciones de otros proyectos en ${R.lessonsPath()} (los agentes deben leerlas al empezar).`;
+  } catch { /* sin red: no molestar */ }
   if (C.FLAVOR === "copilot") process.stdout.write(JSON.stringify({ additionalContext: msg }) + "\n");
   else process.stdout.write(msg + "\n");
 }
 
-function main() {
+async function main() {
   const name = process.argv[2];
   const evt = readEvent();
   const a = normalize(evt);
@@ -138,4 +160,4 @@ function main() {
   if (name === "commit-gate") return commitGate(a, root, cfg);
   process.stderr.write(`hook desconocido: ${name}\n`);
 }
-try { main(); } catch (e) { process.stderr.write(`kit hook ${process.argv[2]}: ${e.message}\n`); process.exit(0); }
+main().catch((e) => { process.stderr.write(`kit hook ${process.argv[2]}: ${e.message}\n`); process.exit(0); });

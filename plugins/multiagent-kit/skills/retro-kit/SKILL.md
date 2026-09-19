@@ -38,5 +38,8 @@ Para cada pipeline/bugfix ejecutado (uno por slug), rellena esta tabla y explica
 5. **Cambios propuestos al plugin**, priorizados, cada uno con: archivo del plugin (`agents/x.md`, `scripts/x.js`, `skills/x/SKILL.md`, `templates/...`), qué cambiar en una o dos frases, y por qué (evidencia). Máximo 10.
 6. **Cambios propuestos a este proyecto** (no al kit): p. ej. definir `SMOKE_CMD`, cambiar `STAGING_PROVIDER`, resumir `ARQUITECTURA.md`.
 
-## Paso 4 — Entrega
+## Paso 4 — Lecciones reutilizables (otros proyectos)
+Extrae de los informes y de las líneas `LECCIÓN:` de los agentes lo que valdría en **cualquier** proyecto con el mismo stack (versiones que fallan, comandos que sí funcionan en Windows/macOS, trampas de herramientas), nunca detalles de este producto. Añade cada una con `node kit.js lecciones add "[stack] lección"` (máximo 5 por retro; antes lee `node kit.js lecciones` para no repetir). Quedan en `~/.multiagent-kit/lecciones.md`, que los agentes leen al empezar en todos los proyectos de este PC.
+
+## Paso 5 — Entrega
 Muestra las secciones 4 y 5 al usuario y dile que copie `docs/kit-feedback/<fecha>.md` al repositorio del plugin (carpeta `feedback/`) o lo pegue en la conversación donde mantiene el kit. No modifiques nada del plugin ni del proyecto.

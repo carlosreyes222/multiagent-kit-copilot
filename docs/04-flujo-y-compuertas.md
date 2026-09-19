@@ -25,7 +25,7 @@
 |---|---|---|---|
 | 1 Ideación | `product-owner` | `docs/specs/<slug>.md` | **Humana**: apruebas la spec |
 | 2 Arquitectura | `arquitecto` | `docs/adr/<slug>.md` (y `0000-stack.md` en proyecto vacío) | **Humana** en proyecto vacío: eliges el stack |
-| 3 Implementación | `implementador` | rama `feature/<slug>` | Hook `commit-gate`: lint + tests en cada commit |
+| 3 Implementación | `implementador` | rama `feature/<slug>` (con ticket: `feature/TICKET-<slug>`, ver §4.5) | Hook `commit-gate`: lint + tests en cada commit |
 | 4 QA | `tester` | `docs/reviews/<slug>-qa.md` | `QA: APROBADO` o vuelve a 3 (máx. 2 veces) |
 | 5 Revisiones (paralelo) | `revisor-codigo`, `revisor-seguridad` | `<slug>-codigo.md`, `<slug>-seguridad.md` | Ambos APROBADOS o vuelve a 3 |
 | 6 Staging | `release-manager` | `<slug>-release.md`, contenedor Docker | Smoke tests |
@@ -74,6 +74,21 @@ El estado del pipeline (`.pipeline/state.json`, esquema v2) lo escriben solo los
 El staging depende de `STAGING_PROVIDER` (ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md)). Con `docker`, `node kit.js staging` compila, corre las pruebas, construye la imagen con `staging/Dockerfile.staging` y levanta `staging/docker-compose.staging.yml` en `http://localhost:<STAGING_PORT>`. Espera hasta 60 s a que `HEALTH_PATH` responda 200. `node kit.js smoke` comprueba salud y reinicios del contenedor; añade tus propias URLs en la sección *PRUEBAS DEL PROYECTO* de `scripts/smoke.js` (en el plugin) o en `AGENTS.md` para que el release-manager las pruebe.
 
 Si tu proyecto ya tiene Dockerfile, apunta `build.dockerfile` del compose a él. Si necesitas base de datos en staging, descomenta el servicio `db` de ejemplo.
+
+## 4.5 Nomenclatura de ramas, commits y tags
+
+| Situación | Rama | Commits | Tag de producción |
+|---|---|---|---|
+| Feature sin ticket | `feature/<slug>` (ej. `feature/login-biometrico`) | libres, pequeños y descriptivos | `prod-YYYYMMDD-HHMM-<slug>` |
+| Feature con ticket de Jira | `feature/<TICKET>-<slug>` (ej. `feature/BMOSHELL-123-login-biometrico`) | `<tipo>: <TICKET> descripción` (ej. `feat: BMOSHELL-123 añade refreshToken`) | `prod-YYYYMMDD-HHMM-BMOSHELL-123-login-biometrico` |
+| Bugfix | `fix/<slug>` o `fix/<TICKET>-<slug>` | `fix: <TICKET> descripción` | igual |
+| Feature en un SDK (`--sdk`) | la misma rama en el SDK y en el padre | igual en los dos repos | igual |
+
+El ticket se detecta solo: basta escribirlo en la idea (`/pipeline bmoshell-123 login biométrico`), en cualquier posición y en minúsculas; el orquestador lo pasa a MAYÚSCULAS, lo quita del texto y lo registra con `node kit.js state ticket=BMOSHELL-123`. A partir de ahí el hook `protect-main` **bloquea** a los agentes cualquier rama `feature/*` o `fix/*` sin el ticket y cualquier `git commit -m` que no empiece por `<tipo>: <TICKET>` (tipos: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `style`, `revert`; también con scope, `feat(auth): …`). `node kit.js state reset` al cerrar la feature lo limpia. Los documentos (`docs/specs`, `docs/adr`, `docs/reviews`) usan el mismo slug con ticket, así que todo lo de una feature se encuentra buscando `BMOSHELL-123`.
+
+## 4.6 Tamaño de la feature y modo rápido
+
+Cada spec termina con `TAMAÑO: S|M|L`. Si es S (un módulo, sin cambios de datos, API pública, autenticación ni pagos, < ~150 líneas) el orquestador te propone el **modo rápido** en la compuerta de la spec (o lo pides tú con `/pipeline --rapido "idea"`): sin ADR (el arquitecto deja una nota técnica de ≤ 15 líneas en la spec) y sin revisor de código; QA, revisor de seguridad, staging y arquitectura viva se mantienen. Queda registrado como `compuertas=reducidas` en el estado y en la entrega; si QA rechaza o seguridad detecta cambios de API, datos o autenticación, se escala al pipeline completo. No se combina con `--sdk`.
 
 ---
 Anterior: [03-usar-en-un-proyecto.md](03-usar-en-un-proyecto.md) · Siguiente: [05-arquitectura-viva.md](05-arquitectura-viva.md) · [Índice](../README.md)

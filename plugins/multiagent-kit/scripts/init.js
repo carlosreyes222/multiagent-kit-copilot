@@ -201,8 +201,46 @@ module.exports = async function init(opts, { mode }) {
     if (kitMode === "usuario") console.log("  5. Reinicia VS Code / la sesión de copilot para que cargue los agentes del perfil de usuario. Nada del kit aparece en git status.");
     if (kitMode === "local") console.log("  5. Nada del kit aparece en git status (está en .git/info/exclude). Para versionarlo más adelante: node kit.js init --modo repo y borra las líneas de exclude.");
   }
+
+  // --- update: limpieza de .kit y comprobación de versión del plugin en GitHub ---
+  if (mode === "update") {
+    if (opts.limpiar) {
+      const borrados = []; for (const f of listKitCopies(dest)) { try { fs.unlinkSync(f); borrados.push(path.relative(dest, f)); } catch { C.log.warn(`No pude borrar ${path.relative(dest, f)} (sin permiso)`); } }
+      if (borrados.length) { C.log.cyan("\nCopias .kit eliminadas (ya revisadas):"); borrados.forEach((b) => console.log(`  x ${b}`)); }
+      else C.log.plain("No hay copias .kit que limpiar.");
+    }
+    try {
+      const R = require("./remote");
+      const u = await R.checkUpdate({ force: !!opts.plugin });
+      if (u.remote && R.cmpVer(u.remote, C.VERSION) > 0) {
+        C.log.yellow(`\nHay una versión nueva del plugin en GitHub: ${u.remote} (instalada: ${C.VERSION}).`);
+        if (opts.plugin && R.updateCli() && C.which("copilot")) {
+          C.log.step(R.updateCli());
+          const r = C.run(R.updateCli(), { ignoreFailure: true });
+          if (r.code === 0) C.log.ok("Plugin actualizado. Vuelve a ejecutar: node kit.js update"); else C.log.fail("No se pudo actualizar el plugin desde aquí; hazlo a mano: " + R.updateHint());
+        } else C.log.plain(`Actualízalo con: ${R.updateHint()}${R.updateCli() ? "   (o: node kit.js update --plugin)" : ""} y repite node kit.js update.`);
+      } else if (u.remote && R.cmpVer(u.remote, C.VERSION) < 0) C.log.plain(`Plugin local ${C.VERSION} más nuevo que GitHub (${u.remote}): pendiente de push.`);
+      else if (u.remote) C.log.ok(`Plugin al día con GitHub (${u.remote}).`);
+      else if (opts.plugin) C.log.warn(`No pude consultar la versión en GitHub: ${u.error}.`);
+    } catch { /* sin red */ }
+  }
   return 0;
 };
+
+// Copias .kit que deja init/update junto a archivos tuyos o gestionados
+function listKitCopies(dest) {
+  const out = [];
+  const walk = (d, depth) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) { if (depth > 0 && ![".git", "node_modules", ".pipeline", "build", "dist", "worktrees"].includes(e.name)) walk(p, depth - 1); }
+      else if (e.name.endsWith(".kit")) out.push(p);
+    }
+  };
+  walk(dest, 4);
+  return out;
+}
+module.exports.listKitCopies = listKitCopies;
 
 // pipeline.config.ps1 -> pipeline.config.json (conserva el .ps1 con sufijo .migrado)
 function migrate(dest, silent) {

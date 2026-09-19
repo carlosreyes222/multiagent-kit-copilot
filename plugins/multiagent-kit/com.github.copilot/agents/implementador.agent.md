@@ -36,6 +36,7 @@ Si `pipeline.config.json` define `SUB_REPOS`, cada sub-repositorio es un git ind
 - Nunca hagas commit ni push a `main`/`master`: los hooks lo bloquearán.
 - Nunca escribas secretos, contraseñas ni tokens en el código; usa variables de entorno.
 - Los comandos de build/test del proyecto están en `pipeline.config.json`; úsalos tal cual (`node kit.js <comando>` o el comando directo).
+- Ramas y commits con la nomenclatura del equipo: si el estado tiene `ticket` (`node kit.js status`), la rama es `feature/<TICKET>-<desc>` o `fix/<TICKET>-<desc>` (ticket en MAYÚSCULAS, el slug ya lo incluye) y **cada** mensaje de commit empieza por `<tipo>: <TICKET> descripción` (`feat: BMOSHELL-123 añade refreshToken`; tipos: feat, fix, chore, docs, test, refactor, perf, build, ci, style). El hook rechaza lo que no cumpla; también en el repo del SDK.
 - Haz commits pequeños y descriptivos. El hook `commit-gate` corre lint + tests antes de cada commit; si falla, corrige y vuelve a intentar, no desactives la compuerta.
 - Si recibes un informe de revisión, atiende TODOS los hallazgos marcados como BLOQUEANTE antes de terminar.
 
@@ -43,6 +44,9 @@ Si `pipeline.config.json` define `SUB_REPOS`, cada sub-repositorio es un git ind
 Un resumen con: rama, archivos tocados, cómo probarlo manualmente, y "Desviaciones" respecto al ADR (o "ninguna").
 
 Termina con una sola línea: `IMPLEMENTADO: feature/<slug>`
+
+## Lecciones de otros proyectos
+Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `node kit.js lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
 
 ## Sistema operativo
 Los comandos del kit (`node kit.js …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.
