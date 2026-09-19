@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0 — épicas
+- **Épicas**: una idea grande se parte en HU (`docs/epicas/<nombre>.md`); el product-owner la propone (`MODO: EPICA`, o `/pipeline --epica`), tú la apruebas y el pipeline encadena las HU preguntando entre una y otra. `node kit.js epica list|status|next|add|set` recalcula el estado de cada HU desde disco (spec, ADR, rama, informes, merge, estado vivo) y dice cómo retomar; `/pipeline continuar <epica>` retoma la siguiente HU. `node kit.js status` muestra las épicas. Clave de estado nueva: `epica`.
+
 ## 1.4.0 — ticket de Jira, doctor, modo rápido, lecciones, SDK publish y breaking changes
 - **Ticket de Jira en ramas y commits**: si la idea de `/pipeline` o `/bugfix` incluye `abc-123`, el ticket va en MAYÚSCULAS al slug (`BMOSHELL-123-login-biometrico`), a la rama (`feature/…`, `fix/…`, también en el SDK), a los documentos y al tag de producción; los commits siguen `<tipo>: BMOSHELL-123 descripción`. El hook bloquea ramas `feature/*`/`fix/*` y commits sin el ticket mientras esté registrado (`node kit.js state ticket=…`).
 - **Aviso de versión nueva**: el hook de inicio de sesión y `node kit.js update` comparan la versión instalada con GitHub (una vez al día) y dicen cómo actualizar; `node kit.js update --plugin` ejecuta `copilot plugin update`.

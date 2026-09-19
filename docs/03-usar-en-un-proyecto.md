@@ -81,6 +81,7 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | `/pipeline "idea"` | Flujo completo (ver [04-flujo-y-compuertas.md](04-flujo-y-compuertas.md)) |
 | `/pipeline bmoshell-123 "idea"` | Con ticket de Jira: rama `feature/BMOSHELL-123-<desc>`, docs con ese slug y commits `feat: BMOSHELL-123 …` (lo exige el hook). Igual en `/bugfix` (`fix/…`) |
 | `/pipeline continuar <slug>` | Retoma un pipeline interrumpido |
+| `/pipeline continuar <epica>` · `/pipeline --epica "idea grande"` | Retoma la siguiente HU de una idea partida en varias (`docs/epicas/<nombre>.md`) · fuerza la partición en HU (ver [04 §4.7](04-flujo-y-compuertas.md)) |
 | `/pipeline --rapido "idea"` | Cambio pequeño (tamaño S): sin ADR y sin revisor de código, con QA y seguridad; queda registrado como compuertas reducidas. El product-owner estima `TAMAÑO: S|M|L` en cada spec y el orquestador te propone el modo rápido si es S |
 | `/pipeline --sdk <nombre> "idea"` | Feature que nace en un SDK del equipo y termina integrada en este proyecto ([14](14-sdks-y-end-to-end.md)) |
 | `/analisis "alcance o pregunta"` | Análisis de solo lectura (arquitectura, calidad, seguridad) con hallazgos priorizados en `docs/analisis/` |
@@ -121,6 +122,7 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | `node kit.js update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
 | `node kit.js migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
 | `node kit.js version` | Versión del plugin y de los archivos del proyecto |
+| `node kit.js epica list\|status\|next\|add\|set` | Épicas: progreso real de cada HU (leído de specs, informes, ramas y estado), siguiente HU y comando para retomarla |
 | `node kit.js doctor [--fix]` | Diagnóstico del kit: plugin frente a GitHub, archivos y modo del proyecto, hooks (prueba real), permisos, copias `.kit`, locks de git; `--fix` aplica lo seguro |
 | `node kit.js update --limpiar` / `--plugin` | Borra las copias `.kit` ya revisadas / actualiza el propio plugin (Copilot) si GitHub tiene versión nueva |
 | `node kit.js state reset` | Cierra la feature actual (la archiva en `.pipeline/historial.jsonl`) y deja el estado limpio para la siguiente |

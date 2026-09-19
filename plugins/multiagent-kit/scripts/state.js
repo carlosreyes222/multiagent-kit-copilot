@@ -7,6 +7,7 @@
 //   staging_ok / smoke_ok (true|false) · staging_at · promoted_at · promoted_tag · started_at
 //   sdk (nombre del SDK en flujo end-to-end, ver SDKS) · sdk_version (versión de trabajo enlazada en el padre)
 //   ticket (Jira, en MAYÚSCULAS, p. ej. BMOSHELL-123: ramas feature/BMOSHELL-123-desc y commits "feat: BMOSHELL-123 …"; lo exige el hook)
+//   epica (nombre de docs/epicas/<nombre>.md cuando la HU forma parte de una idea partida en varias)
 //   tamano (S|M|L, lo estima el product-owner) · compuertas (completas|reducidas: modo --rapido o --urgente, queda registrado)
 //   node kit.js state reset                     -> empieza de cero (conserva un histórico en .pipeline/historial.jsonl)
 "use strict";
@@ -51,6 +52,9 @@ module.exports = async function state(opts, { show }) {
     console.log(`  staging_ok = ${s.staging_ok}   smoke_ok = ${s.smoke_ok}   seguridad = ${C.securityVerdict(root, s.feature)}`);
     const over = C.docLimits(root, cfg);
     if (over.length) { C.log.warn("Documentos por encima del límite:"); over.forEach((o) => C.log.warn("  " + o)); }
+    const E = require("./epica");
+    const names = s.epica && E.load(root, s.epica) ? [s.epica] : E.listNames(root);
+    for (const n of names) { try { E.status(root, n); } catch { /* épica mal formada */ } }
   }
   return 0;
 };

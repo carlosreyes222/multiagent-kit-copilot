@@ -17,6 +17,7 @@ async function main(cmd, argv) {
     case "migrate": return require("./init")(opts, { mode: "migrate" });
     case "sdk": return require("./sdk")(opts);
     case "doctor": return require("./doctor")(opts);
+    case "epica": return require("./epica")(opts);
     case "lecciones": {
       const R = require("./remote"), fs = require("fs");
       const p = R.ensureLessons();
@@ -37,7 +38,7 @@ async function main(cmd, argv) {
       return 0;
     }
     default:
-      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | doctor | lecciones | version`);
+      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | epica | doctor | lecciones | version`);
       return 1;
   }
 }

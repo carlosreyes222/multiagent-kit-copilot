@@ -90,5 +90,11 @@ El ticket se detecta solo: basta escribirlo en la idea (`/pipeline bmoshell-123 
 
 Cada spec termina con `TAMAÑO: S|M|L`. Si es S (un módulo, sin cambios de datos, API pública, autenticación ni pagos, < ~150 líneas) el orquestador te propone el **modo rápido** en la compuerta de la spec (o lo pides tú con `/pipeline --rapido "idea"`): sin ADR (el arquitecto deja una nota técnica de ≤ 15 líneas en la spec) y sin revisor de código; QA, revisor de seguridad, staging y arquitectura viva se mantienen. Queda registrado como `compuertas=reducidas` en el estado y en la entrega; si QA rechaza o seguridad detecta cambios de API, datos o autenticación, se escala al pipeline completo. No se combina con `--sdk`.
 
+## 4.7 Épicas: una idea partida en varias HU
+
+Cuando la idea no cabe en una feature (spec > 120 líneas, más de un par de días), el product-owner no escribe una spec: propone una **épica** con 3–10 historias de usuario independientes, en orden de dependencia, y la registra en `docs/epicas/<nombre>.md` (tabla `# · HU · Slug · Ticket · Estado · Depende de · Notas`). Tú apruebas la partición (compuerta humana) y el pipeline arranca con la primera HU; al terminar cada una te pregunta si sigues con la siguiente. También puedes forzarlo: `/pipeline --epica "idea grande"`.
+
+El archivo lo mantiene el kit, no los agentes: `node kit.js epica status <nombre>` recalcula el estado de cada HU **desde lo que hay en disco** (spec, ADR, rama `feature/*`, informes de QA/código/seguridad/release, si la rama está fusionada en main y el estado vivo del pipeline) y te dice la siguiente HU y el comando exacto para retomarla. `node kit.js status` lo muestra también. Para retomar tras días: `/pipeline continuar <nombre-de-epica>`. Estados que solo se fijan a mano: `bloqueada` y `descartada` (`node kit.js epica set <nombre> <slug> estado=bloqueada notas="…"`).
+
 ---
 Anterior: [03-usar-en-un-proyecto.md](03-usar-en-un-proyecto.md) · Siguiente: [05-arquitectura-viva.md](05-arquitectura-viva.md) · [Índice](../README.md)

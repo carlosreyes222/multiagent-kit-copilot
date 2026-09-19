@@ -20,7 +20,7 @@ Cada etapa la hace un **agente personalizado del kit** (`product-owner`, `arquit
 5. Registra el inicio con el script (nunca editando el JSON a mano): `node kit.js state feature=<slug> type=feature mode=<nuevo|existente> stage=spec`.
 
 ## Etapa 1 — Ideación → Spec
-Delega al agente **product-owner** con la idea y el slug. Espera `SPEC: docs/specs/<slug>.md`.
+Delega al agente **product-owner** con la idea y el slug. Espera `SPEC: docs/specs/<slug>.md` — o `EPICA: docs/epicas/<nombre>.md` si la idea es demasiado grande (ver "Épicas"; si los argumentos traen `--epica`, indícale `MODO: EPICA`).
 Muestra al usuario los criterios de aceptación, las preguntas abiertas y el `TAMAÑO` estimado (si es S, propón el modo rápido y espera su respuesta). **COMPUERTA HUMANA**: pregunta si aprueba la spec o quiere cambios. No continúes sin un sí explícito.
 
 ## Etapa 2 — Arquitectura
@@ -53,6 +53,12 @@ Presenta un resumen final con:
 - URL de staging para que el usuario pruebe manualmente.
 - El comando exacto para promover: `node kit.js prod`
 **Nunca ejecutes `node kit.js prod` tú mismo.** La promoción a producción es siempre una acción humana.
+
+## Épicas: una idea partida en varias HU
+- **Detección**: si el product-owner responde `EPICA: docs/epicas/<nombre>.md` en vez de `SPEC:` (la idea no cabe en una feature), muéstrale al usuario la lista de HU propuestas con su orden y dependencias. **COMPUERTA HUMANA**: aprueba la partición o pide cambios. Luego continúa con la primera HU: `node kit.js state reset`, `node kit.js state feature=<slug-hu> epica=<nombre> …` y el pipeline normal desde la Etapa 1 (spec de esa HU). Si había ticket, cada HU lleva el suyo si el usuario lo da; si no, hereda el de la épica.
+- **Al terminar cada HU** (Etapa 8): `node kit.js epica status <nombre>` (recalcula la tabla desde disco) y pregunta al usuario si sigue con la siguiente HU que indica; si dice que sí, `node kit.js state reset` y repite desde la Etapa 1 con ese slug. Si no, deja el resumen y termina.
+- **Retomar**: `/pipeline continuar <nombre-de-epica>` (o `continuar` a secas si el estado tiene `epica`): ejecuta `node kit.js epica status <nombre>`; la HU "en curso" se retoma en su etapa con `continuar <slug>`; si no hay ninguna en curso, arranca la siguiente pendiente sin dependencias abiertas. Nunca reabras una HU `terminada` ni arranques una `bloqueada`.
+- El usuario puede pedirlo explícitamente: `/pipeline --epica "idea grande"` fuerza la partición aunque cupiera en una feature.
 
 ## Modo rápido (`--rapido` o tamaño S)
 Para cambios pequeños el pipeline completo es desproporcionado. Tamaño de la feature: lo estima el product-owner en la spec (línea `TAMAÑO: S|M|L`; S = un módulo, sin cambios de datos ni de API pública, < ~150 líneas). Se activa si los argumentos traen `--rapido` o si la spec dice `S` y **el usuario confirma** cuando se lo propones en la compuerta de la spec. Registra `node kit.js state tamano=<S|M|L> compuertas=reducidas`.

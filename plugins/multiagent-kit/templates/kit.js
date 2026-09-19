@@ -11,6 +11,7 @@
 //   node kit.js update                      -> refresca los archivos gestionados por el kit
 //   node kit.js migrate                     -> convierte pipeline.config.ps1 (antiguo) en pipeline.config.json
 //   node kit.js sdk <list|sync|pack|api|publish|status> -> SDKs del equipo (SDKS): sincronizar, empaquetar, breaking changes, publicar
+//   node kit.js epica <list|status|next|add|set>  -> idea partida en varias HU (docs/epicas/<nombre>.md): progreso y siguiente HU
 //   node kit.js doctor [--fix]              -> diagnóstico del kit (plugin, proyecto, hooks, permisos, restos) y arreglos seguros
 //   node kit.js lecciones [add "…"]         -> lecciones reutilizables entre proyectos (~/.multiagent-kit/lecciones.md)
 //   node kit.js hook <nombre>               -> (lo usan los hooks) reenvía el evento al script del plugin
@@ -75,7 +76,7 @@ if (cmd === "hook") {
   process.exit(r.status == null ? 0 : r.status);
 }
 if (cmd === "help" || cmd === "--help" || cmd === "-h") {
-  const lines = fs.readFileSync(__filename, "utf8").split("\n").slice(1, 17).map((l) => l.replace(/^\/\/ ?/, ""));
+  const lines = fs.readFileSync(__filename, "utf8").split("\n").slice(1, 18).map((l) => l.replace(/^\/\/ ?/, ""));
   console.log(lines.join("\n"));
   process.exit(0);
 }
