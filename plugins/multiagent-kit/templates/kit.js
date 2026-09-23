@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 // Lanzador de los scripts del kit multiagente desde la raíz del proyecto. Igual en Windows, macOS y Linux (Node >= 18).
 // Los scripts viven en el plugin instalado y se actualizan con él; este archivo solo los localiza.
-//   node kit.js check                       -> verifica herramientas y configuración
-//   node kit.js staging [--feature slug]    -> despliega a staging (proveedor según pipeline.config.json)
-//   node kit.js smoke                       -> smoke tests contra staging
-//   node kit.js prod [--yes]                -> promover a producción (pide escribir PRODUCCION)
+//   node kit.js check                       -> verifica herramientas (Node, git, gh, toolchain RN) y configuración
+//   node kit.js pr --feature <slug> --base <rama> -> sube la rama y abre el pull request (fin del flujo)
 //   node kit.js status                      -> estado del pipeline (.pipeline/state.json)
 //   node kit.js state clave=valor ...       -> actualizar el estado (lo usan los agentes)
 //   node kit.js init                        -> (re)inicializa archivos del proyecto sin sobrescribir los tuyos

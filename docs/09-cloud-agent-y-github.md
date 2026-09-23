@@ -33,7 +33,7 @@ Para que todos los repositorios de la organización vean los agentes sin copiarl
 1. HU en Jira → issue en GitHub con `pipeline: <HU>` → asignar a Copilot (o `/pipeline` en local si prefieres seguirlo en vivo).
 2. Copilot abre el PR con spec, ADR, código, pruebas e informes de QA, código y seguridad.
 3. Copilot code review + revisión de los seniors solo sobre lo que los informes marcan como riesgo.
-4. Actions en verde → merge al tren → `kit staging` (o el pipeline de despliegue del equipo) → QA manual → `kit prod` por una persona.
+4. Actions en verde → merge al tren de release del equipo (o el pipeline de despliegue del equipo) → QA manual → `kit prod` por una persona.
 
 ---
-Anterior: [08-superficies-copilot.md](08-superficies-copilot.md) · Siguiente: [10-supabase.md](10-supabase.md) · [Índice](../README.md)
+Anterior: [08-superficies-copilot.md](08-superficies-copilot.md) · Siguiente:  · [Índice](../README.md)

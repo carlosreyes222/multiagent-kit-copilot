@@ -117,7 +117,7 @@ function loadConfig(root) {
 }
 
 // --- Estado del pipeline (.pipeline/state.json), esquema v2 ------------------------------------
-const STATE_KEYS = ["feature", "type", "mode", "stage", "qa", "codigo", "seguridad", "qa_iter", "codigo_iter", "staging_ok", "smoke_ok", "staging_at", "promoted_at", "promoted_tag", "started_at", "sdk", "sdk_version", "tamano", "compuertas", "ticket", "epica"];
+const STATE_KEYS = ["feature", "type", "mode", "stage", "qa", "codigo", "seguridad", "qa_iter", "codigo_iter", "staging_ok", "smoke_ok", "staging_at", "promoted_at", "promoted_tag", "started_at", "sdk", "sdk_version", "tamano", "compuertas", "ticket", "epica", "pr_base", "pr_estado", "pr_url"];
 function stateFile(root) { return path.join(root, ".pipeline", "state.json"); }
 function getState(root) {
   const f = stateFile(root);

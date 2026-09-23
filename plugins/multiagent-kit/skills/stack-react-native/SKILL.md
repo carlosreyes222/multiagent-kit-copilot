@@ -71,7 +71,7 @@ Fija versiones exactas y anótalas en el ADR con la fecha de consulta.
 
 ## 5. Skills oficiales complementarias (detalle técnico)
 
-Si están instaladas, úsalas; si no, sugiere instalarlas (ver `docs/12-skills-y-plugins-externos.md`):
+Si están instaladas, úsalas; si no, sugiere instalarlas (ver `docs/10-skills-y-plugins-externos.md`):
 
 - `callstackincubator/agent-skills` — rendimiento (Measure → Optimize → Re-measure), subida de versión con rn-diff-purge, creación de librerías y módulos nativos, brownfield (MIT).
 - `software-mansion-labs/skills` — Reanimated, Gesture Handler, worklets, JSI (MIT).

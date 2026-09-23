@@ -7,9 +7,12 @@ async function main(cmd, argv) {
   const opts = C.parseArgs(argv);
   switch (cmd) {
     case "check": return require("./check")(opts);
-    case "staging": return require("./staging")(opts);
-    case "smoke": return require("./smoke")(opts);
-    case "prod": return require("./prod")(opts);
+    case "staging": case "smoke": case "prod":
+      if (C.FLAVOR !== "claude") { console.error(`'${cmd}' no existe en el kit de Copilot: el flujo termina en el PR (kit pr).`); return 1; }
+      return require("./" + cmd)(opts);
+    case "pr":
+      if (C.FLAVOR !== "copilot") { console.error("'pr' es del kit de Copilot; en Claude el flujo sigue con staging y prod."); return 1; }
+      return require("./pr")(opts);
     case "status": return require("./state")(opts, { show: true });
     case "state": return require("./state")(opts, { show: false });
     case "init": return require("./init")(opts, { mode: "init" });
@@ -44,7 +47,7 @@ async function main(cmd, argv) {
       return 0;
     }
     default:
-      console.error(`Comando desconocido: ${cmd}. Usa: check | staging | smoke | prod | status | state | init | update | migrate | sdk | epica | plantilla | doctor | lecciones | version`);
+      console.error(`Comando desconocido: ${cmd}. Usa: check | ${C.FLAVOR === "claude" ? "staging | smoke | prod" : "pr"} | status | state | init | update | migrate | sdk | epica | plantilla | doctor | lecciones | version`);
       return 1;
   }
 }

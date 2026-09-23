@@ -1,6 +1,6 @@
 # 1. Instalación (Windows y macOS)
 
-Una vez por PC. El kit está escrito en Node.js (que la CLI de Copilot ya exige), así que no necesita PowerShell ni bash especiales: los comandos `kit …` y los hooks son idénticos en Windows, macOS, Linux y en el sandbox del cloud agent.
+Una vez por PC. El kit está escrito en Node.js (que la CLI de Copilot ya exige), así que no necesita PowerShell ni bash especiales: los comandos `kit …` y los hooks son idénticos en Windows y macOS. Para React Native necesitas además el toolchain habitual (JDK 17 y Android Studio con SDK/emulador; en macOS Xcode y CocoaPods para iOS), que `kit check` comprueba sin exigirlo.
 
 ## 1.1 Windows
 
@@ -9,7 +9,7 @@ Abre una terminal (PowerShell o CMD) y ejecuta:
 ```powershell
 winget install --id Git.Git -e
 winget install --id OpenJS.NodeJS.LTS -e
-winget install --id Docker.DockerDesktop -e      # solo para staging docker/compose
+winget install --id GitHub.cli -e                # gh: el kit abre los pull requests con él (gh auth login después)
 ```
 
 Cierra y vuelve a abrir la terminal para que el PATH se actualice.
@@ -19,7 +19,7 @@ Cierra y vuelve a abrir la terminal para que el PATH se actualice.
 ```bash
 xcode-select --install            # git
 brew install node                 # Node LTS (>= 18)
-brew install --cask docker        # solo para staging docker/compose
+brew install gh                                  # gh: el kit abre los pull requests con él
 ```
 
 ## 1.3 GitHub Copilot CLI (igual en todos los sistemas)

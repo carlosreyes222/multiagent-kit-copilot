@@ -1,38 +1,36 @@
-# <Nombre del proyecto>
+# <Nombre de la app>
 
-> Rellena esta plantilla al inicializar el kit. La leen GitHub Copilot (CLI, VS Code y cloud agent) y todos los agentes del kit al arrancar: mantenla en ≤ 40 líneas. Los detalles largos (errores conocidos, procedimientos) van a `docs/TROUBLESHOOTING.md`, enlazado abajo.
+> Rellena esta plantilla al inicializar el kit. La leen GitHub Copilot (CLI y VS Code) y todos los agentes del kit al arrancar: mantenla en ≤ 40 líneas. Los detalles largos (errores conocidos, procedimientos) van a `docs/TROUBLESHOOTING.md`, enlazado abajo.
 
 ## Lectura obligatoria
-`docs/ARQUITECTURA.md` es la descripción viva del sistema (la mantiene el agente arquitecto al cierre de cada feature). Léelo antes de explorar código. Si no existe, el proyecto aún no ha pasado por el pipeline.
+`docs/ARQUITECTURA.md` es la descripción viva de la app (la mantiene el agente arquitecto al cierre de cada feature). Léelo antes de explorar código. Si no existe, el proyecto aún no ha pasado por el pipeline.
 
-## Qué es este proyecto
-Una o dos frases. Lenguaje y framework principal.
+## Qué es esta app
+Una o dos frases. React Native **bare** (`@react-native-community/cli`, TypeScript), sin Expo. Versión de RN: `<0.xx>`.
 
-## Stack y skills aplicables
-- Skills de stack: `<stack-android | stack-react-native | stack-nestjs | stack-ktor | stack-db>` (borra las que no apliquen; el arquitecto las fija en el ADR de stack). Están en `.github/skills/`.
-- Versiones fijadas: ver `docs/adr/0000-stack.md`
+## Stack
+- Skill de stack: `stack-react-native` (convenciones, reglas duras y lista de verificación; la aplican todos los agentes).
+- Navegación / estado / red / persistencia y versiones fijadas: ver `docs/adr/0000-stack.md`.
 
 ## Comandos
-Los comandos de instalar / build / test / lint y el proveedor de staging (`STAGING_PROVIDER`) están en `pipeline.config.json`. Úsalos desde ahí (`kit …`); no inventes otros. Repositorios: `<uno solo | lista SUB_REPOS>`.
+Los comandos de instalar / build / test / lint están en `pipeline.config.json`. Úsalos desde ahí (`kit …`); no inventes otros. Repositorios: `<uno solo | lista SUB_REPOS>`. SDKs del equipo: `<ninguno | lista SDKS>`.
 
 ## Convenciones que los agentes deben respetar
-- Ramas: `feature/<slug>` para todo cambio; con ticket de Jira, `feature/TICKET-descripcion-corta` (ticket en MAYÚSCULAS, ej. `feature/BMOSHELL-123-login-biometrico`) y commits `feat: BMOSHELL-123 descripción`. `main` está protegida por hooks (no commit, no push, no merge sin seguridad APROBADO) y por las reglas del repositorio en GitHub.
-- Commits: mensajes en español, imperativo, máx. 72 caracteres en la primera línea.
-- Secretos: solo por variables de entorno. Nunca en código ni en `docs/`. Los agentes no leen `.env*` ni keystores.
-- Pruebas: framework `<jest | junit | pytest | …>`. Toda feature nueva lleva pruebas.
-- Estructura relevante: `<src/…>`, `<tests/…>` (describe solo lo que no es obvio).
+- Ramas: `feature/<slug>` o `fix/<slug>`, creadas **desde la rama base que se acuerda al iniciar cada pipeline** (`develop`, `release_xx`…). Con ticket de Jira: `feature/TICKET-descripcion-corta` (ticket en MAYÚSCULAS, ej. `feature/BMOSHELL-123-login-biometrico`).
+- Commits: `<tipo>: <TICKET> descripción` (`feat: BMOSHELL-123 añade login biométrico`; tipos feat, fix, chore, docs, test, refactor, perf, build, ci, style). Primera línea ≤ 72 caracteres. El hook rechaza lo que no cumpla.
+- Entrega: el flujo termina en el **pull request** contra la rama base (`kit pr`). Nunca merge, nunca push a `main`/`develop`/`release_*`, nunca despliegues: eso es del equipo y del tren de release.
+- Secretos: solo por variables de entorno. Nunca en código ni en `docs/`. Los agentes no leen `.env*`, keystores ni `google-services.json`.
+- Pruebas: Jest + React Native Testing Library; cambios de UI con verificación en emulador Android (Nivel 2) documentada en el informe de QA.
+- Estructura relevante: `<src/…>`, `<__tests__/…>` (describe solo lo que no es obvio).
 
 ## Sistema operativo
-Los comandos del kit son **idénticos** en Windows, macOS y Linux: `kit <check|staging|smoke|status|state|init|update>` (Node ≥ 18, que ya exige la propia herramienta). Solo cambia lo del proyecto: detecta el sistema por la ruta (`C:\…` es Windows; `/Users/…` macOS; `/home/…` Linux) o con `node -p process.platform`, y usa `.\gradlew` / `winget` / `\` en Windows y `./gradlew` / `brew` / `/` en macOS/Linux. iOS solo en macOS. Escribe los comandos de `pipeline.config.json` para el sistema donde corre el proyecto (o usa `npm run …` / Gradle, que valen en todos), y cuando muestres un comando al usuario, en la forma de su sistema.
+Los comandos del kit son **idénticos** en Windows y macOS: `kit <check|pr|status|state|epica|sdk|update>` (Node ≥ 18). Para lo demás detecta el sistema (`node -p process.platform`): `.\gradlew` / `winget` / `\` en Windows, `./gradlew` / `brew` / `/` en macOS; iOS (`pod install`, Xcode) solo en macOS. Cuando muestres un comando al usuario, en la forma de su sistema.
 
 ## Flujo multiagente (kit `multiagent-kit` para Copilot)
-- `/pipeline "idea"` — flujo completo (spec → ADR → código → QA → revisiones → staging → arquitectura). En un proyecto vacío propone el stack y crea el esqueleto.
-- `/analisis "alcance o pregunta"` — entender/auditar sin tocar código.
-- `/bugfix "descripción o traza"` — reproducir, corregir y validar un bug (`--solo-diagnostico`, `--urgente`).
-- `/ideas ["dirección"]` — que el equipo proponga mejoras y nuevas ideas priorizadas (`--producto`, `--mercado`, `--tecnico`).
-- `/deploy-staging` — solo desplegar la rama actual a staging. `/promote-prod` — ver compuertas; la promoción real la hace una persona con `kit prod`.
-- Orquestador: agente `director` (`@director` en VS Code, `copilot --agent director` en la CLI). Agentes: `product-owner`, `arquitecto`, `implementador`, `tester`, `revisor-codigo`, `revisor-seguridad`, `release-manager`, `investigador` (en `.github/agents/`).
-- Skills de método (los agentes las aplican siempre): `metodo-spec`, `metodo-adr`, `metodo-code-review`, `metodo-qa`, `metodo-deploy`.
+- `/pipeline "idea"` — spec → ADR → código → QA → revisiones → **PR** → arquitectura viva. `--rapido` (tamaño S), `--epica` (idea grande en HU), `--sdk <nombre>` (feature que nace en un SDK), `continuar <slug|epica>`.
+- `/analisis "alcance o pregunta"` — entender/auditar sin tocar código. `/bugfix "descripción o traza"` — reproducir, corregir y validar (`--solo-diagnostico`, `--urgente`). `/ideas ["dirección"]` — mejoras priorizadas. `/retro-kit` — retrospectiva del kit.
+- Orquestador: agente `director` (`@director` en VS Code, `copilot --agent director` en la CLI). Agentes: `product-owner`, `arquitecto`, `implementador`, `tester`, `revisor-codigo`, `revisor-seguridad`, `release-manager`, `investigador`.
+- Skills de método (los agentes las aplican siempre): `metodo-spec`, `metodo-adr`, `metodo-code-review`, `metodo-qa`, `metodo-pr`.
 - Estado del pipeline: solo con `kit state clave=valor`; nunca editar `.pipeline/state.json` a mano.
 
 ## Cosas que suelen romperse

@@ -8,9 +8,9 @@
 | `skills/` — comandos, `metodo-*`, `stack-*` | `.github/skills/` | `AGENTS.md`, `.github/copilot-instructions.md` |
 | `templates/github/prompts/` | `.github/prompts/` | `.github/copilot/settings.json` |
 | `templates/github/hooks/kit.json` | `.github/hooks/kit.json` | `.github/workflows/copilot-setup-steps.yml` |
-| `templates/github/instructions/` | `.github/instructions/kit.instructions.md` | `staging/`, `docs/` |
+| `templates/github/instructions/` | `.github/instructions/kit.instructions.md` | |
 | `templates/kit.js` | `kit.js` | `.gitignore`, `.dockerignore` (se fusionan) |
-| `scripts/` — init/update, hooks, staging, smoke, prod, estado | (no se copian: `kit.js` los llama en el plugin) | |
+| `scripts/` — init/update, hooks, pr, sdk, epica, doctor, estado | (no se copian: `kit.js` los llama en el plugin) | |
 
 A diferencia del kit de Claude Code, aquí **sí** hay copias en el proyecto, porque VS Code y el cloud agent solo leen lo que está en el repositorio. Por eso actualizar tiene dos pasos: el plugin (una vez por PC) y los archivos gestionados (una vez por proyecto, y se hace commit para todo el equipo).
 

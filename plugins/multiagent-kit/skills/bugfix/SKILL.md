@@ -1,6 +1,6 @@
 ---
 name: bugfix
-description: Pipeline corto para bugs — reproducir, escribir la prueba que falla, corregir en rama fix/*, QA con regresión, revisiones, staging — con compuerta de reproducción y modo urgente para hotfixes. Uso — /bugfix "descripción, pasos o traza" · /bugfix --solo-diagnostico "…" · /bugfix --urgente "…"
+description: Pipeline corto para bugs — reproducir, escribir la prueba que falla, corregir en rama fix/*, QA con regresión, revisiones, pull request — con compuerta de reproducción y modo urgente para hotfixes. Uso — /bugfix "descripción, pasos o traza" · /bugfix --solo-diagnostico "…" · /bugfix --urgente "…"
 disable-model-invocation: true
 ---
 
@@ -30,16 +30,16 @@ El tester ejecuta la prueba roja (debe pasar ahora), toda la suite, y añade pru
 ## Paso 4 — Revisiones (en paralelo)
 **revisor-codigo** y **revisor-seguridad** sobre `fix/<slug>`. El revisor de código comprueba además que el cambio es mínimo y no introduce comportamiento nuevo. Ambos APROBADOS o vuelve al Paso 2.
 
-## Paso 5 — Staging
-**release-manager**: `kit.js staging --feature fix-<slug>` + `kit smoke`, y un smoke específico que ejercite el escenario del bug.
+## Paso 5 — Pull request
+**release-manager** con la rama base que el usuario indicó al empezar (pregúntala si no está en `pr_base`): `kit pr --feature fix-<slug> --base <rama>`. Espera `PR: …`.
 
 ## Paso 6 — Entrega y aprendizaje
-1. Resumen: causa raíz en una frase, archivos tocados, prueba de regresión, URL de staging, comando `kit prod`.
+1. Resumen: causa raíz en una frase, archivos tocados, prueba de regresión, estado del PR (URL o motivo).
 2. Añade una entrada en `docs/RETRO.md` (créalo si no existe): fecha, bug, causa raíz, cómo se detectó, qué lo habría evitado (una regla concreta). Si esa regla es general, propón al usuario añadirla a `AGENTS.md` o a la skill de stack.
 3. Si la causa raíz revela un problema de diseño, propón `/analisis "<módulo>"`.
 
 ## Modo urgente (`--urgente`)
-Para hotfixes en producción. Se mantienen: reproducir (Paso 1, aunque sea manual y documentado), corrección mínima, revisor de seguridad, smoke test en staging. Se pueden omitir: revisor de código y pruebas de variantes, **solo si el usuario lo confirma explícitamente** cuando se lo preguntes. Todo lo omitido se registra en `docs/reviews/fix-<slug>-release.md` bajo "Compuertas omitidas por urgencia" con la fecha, y se crea una entrada en `docs/RETRO.md` con la deuda de completarlas. La promoción sigue siendo humana (`kit prod`).
+Para hotfixes en producción. Se mantienen: reproducir (Paso 1, aunque sea manual y documentado), corrección mínima, revisor de seguridad, PR. Se pueden omitir: revisor de código y pruebas de variantes, **solo si el usuario lo confirma explícitamente** cuando se lo preguntes. Todo lo omitido se registra en `docs/reviews/fix-<slug>-release.md` bajo "Compuertas omitidas por urgencia" con la fecha, y se crea una entrada en `docs/RETRO.md` con la deuda de completarlas. El merge y el release siguen siendo del equipo.
 
 ## Reglas
 - Nunca "arreglar" un bug cambiando o desactivando la prueba que lo demuestra.

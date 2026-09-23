@@ -1,9 +1,12 @@
-# 13. Diferencias con el kit de Claude Code
+# 11. Diferencias con el kit de Claude Code
 
-Los dos kits comparten el diseño (agentes, compuertas, skills de método y de stack, scripts de staging y estado). Esta tabla resume lo que cambia y por qué, para mantenerlos a la par.
+Los dos kits comparten el núcleo (agentes, compuertas, skills de método, scripts de estado, SDKs, épicas, doctor) pero tienen alcance distinto: el de Claude es general (cualquier stack, staging por proveedor y promoción manual a producción); el de Copilot está recortado para el trabajo: **solo React Native bare** y el flujo **termina en el pull request**. Esta tabla resume lo que cambia y por qué.
 
 | Tema | `multiagent-kit` (Claude Code) | `multiagent-kit-copilot` |
 |---|---|---|
+| Alcance | Cualquier stack (Android, RN, NestJS, Ktor, bases de datos) | Solo React Native bare (CLI, sin Expo) |
+| Fin del flujo | Staging (`docker`, `compose`, `supabase`, `comando`, `ninguno`) → smoke → `kit prod` (persona) | Pull request contra la rama base que eliges (`kit pr`); merge y release del equipo |
+| Ramas y commits | `feature/<slug>`, commits libres | `feature/TICKET-<slug>` y commits `<tipo>: TICKET …` exigidos por el hook |
 | Distribución | Plugin en marketplace `.claude-plugin/`; nada se copia al proyecto salvo config | Plugin Agent Plugins 1.0 en la raíz; `kit init` copia agentes, skills, prompts y hooks a `.github/` porque VS Code y el cloud agent solo leen el repo |
 | Actualizar | `/plugin update` y listo | `copilot plugin update` **y** `kit update` en cada proyecto (con manifiesto de hashes para no pisar tus cambios) |
 | Agentes | `agents/*.md` con `tools` de Claude, `model`, `memory: project`, `isolation: worktree`, `skills:` precargadas | `com.github.copilot/agents/*.agent.md` con alias `read/search/edit/execute/web/agent`; sin memoria ni worktree; la skill de método se lee al empezar; agente extra `director` como orquestador |
@@ -28,4 +31,4 @@ Cuando cambies algo en uno, pásalo al otro con estas equivalencias:
 - Sube la versión en los dos manifiestos de cada kit y anótalo en ambos `CHANGELOG.md`.
 
 ---
-Anterior: [12-skills-y-plugins-externos.md](12-skills-y-plugins-externos.md) · Siguiente: [14-sdks-y-end-to-end.md](14-sdks-y-end-to-end.md) · [Índice](../README.md)
+Anterior: [10-skills-y-plugins-externos.md](10-skills-y-plugins-externos.md) · Siguiente: [12-sdks-y-end-to-end.md](12-sdks-y-end-to-end.md) · [Índice](../README.md)

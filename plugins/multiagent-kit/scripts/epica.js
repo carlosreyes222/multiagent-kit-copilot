@@ -72,6 +72,7 @@ function create(root, name, titulo, extra = {}) {
 
 // --- Estado real desde disco ----------------------------------------------------------------------------
 function verdict(root, slug, kind) {
+  if (kind === "pr") { const j = C.readJson(path.join(root, ".pipeline", "pr", `${slug}.json`), null); return j ? (["CREADO", "RAMA SUBIDA"].includes(j.estado) ? "APROBADO" : "PENDIENTE") : ""; }
   const f = path.join(root, "docs", "reviews", `${slug}-${kind}.md`);
   if (!fs.existsSync(f)) return "";
   const t = fs.readFileSync(f, "utf8");
@@ -87,7 +88,7 @@ function diskState(root, slug, state) {
   // fusionada = tiene commits propios y todos están ya en main (una rama recién creada sin commits no cuenta)
   const ahead = branch ? parseInt(gitOk(root, ["rev-list", "--count", `${mainBranch}..${branch}`]) || "0", 10) : 0;
   const own = branch ? gitOk(root, ["rev-parse", branch]) !== gitOk(root, ["rev-parse", mainBranch]) : false;
-  const v = { qa: verdict(root, slug, "qa"), codigo: verdict(root, slug, "codigo"), seguridad: verdict(root, slug, "seguridad"), release: verdict(root, slug, "release") };
+  const v = { qa: verdict(root, slug, "qa"), codigo: verdict(root, slug, "codigo"), seguridad: verdict(root, slug, "seguridad"), release: verdict(root, slug, C.FLAVOR === "copilot" ? "pr" : "release") };
   // tras un fast-forward la punta de la rama coincide con main: se considera fusionada solo si además hubo QA
   const merged = branch ? ahead === 0 && (own || !!v.qa) : false;
   let estado = "pendiente", detalle = "";
@@ -107,7 +108,7 @@ function diskState(root, slug, state) {
     if (v.qa !== "APROBADO") pendientes.push("QA");
     if (v.codigo !== "APROBADO") pendientes.push("revisión código");
     if (v.seguridad !== "APROBADO") pendientes.push("seguridad");
-    if (v.release !== "APROBADO") pendientes.push("staging");
+    if (v.release !== "APROBADO") pendientes.push(C.FLAVOR === "copilot" ? "PR" : "staging");
   }
   return { estado, detalle, pendientes, branch, merged };
 }

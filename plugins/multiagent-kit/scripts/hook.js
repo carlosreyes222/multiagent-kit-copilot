@@ -70,7 +70,7 @@ function protectMain(a, root, cfg) {
     deny("'node kit.js sdk publish' (versión definitiva del SDK) lo ejecuta una persona desde su terminal, no los agentes.");
   if (/(^|[\s"'\\/])kit(\.js|\.ps1)?\s+prod\b/.test(cmd) || /promote-prod\.(js|ps1)/.test(cmd) || /scripts[\\/]prod\.js/.test(cmd))
     deny("la promoción a producción ('node kit.js prod') solo la ejecuta una persona desde su terminal.");
-  if (/supabase\s+(db\s+push|functions\s+deploy|db\s+reset)\b/.test(cmd))
+  if (C.FLAVOR === "claude" && /supabase\s+(db\s+push|functions\s+deploy|db\s+reset)\b/.test(cmd))
     deny("despliegues a Supabase solo a través de 'node kit.js staging' (staging) o 'node kit.js prod' (persona).");
   if (/git\s+push\b.*(--force\b|\s-f\b|--force-with-lease)/.test(cmd) || /git\s+reset\s+--hard/.test(cmd) || /\brm\s+-rf\b/.test(cmd) ||
       /Remove-Item\b.*-Recurse/.test(cmd) || /docker\s+system\s+prune/.test(cmd) || /docker\s+volume\s+rm/.test(cmd) || /docker\s+compose\b.*\bdown\b.*(\s-v\b|--volumes)/.test(cmd))
@@ -80,14 +80,14 @@ function protectMain(a, root, cfg) {
     deny(`no se permite 'git push' a ramas protegidas (${(cfg.PROTECTED_BRANCHES || []).join(", ")}). Abre un PR desde una rama feature/*.`);
   if (/git\s+commit\b/.test(cmd) && onProtected) deny(`estás en '${branch}'. Crea una rama: git checkout -b feature/<nombre>`);
   // Nomenclatura con ticket de Jira (cuando el flujo registró uno): feature/TICKET-desc y "feat: TICKET descripción"
-  const ticket = (C.getState(root).ticket || "").toUpperCase();
+  const ticket = C.FLAVOR === "copilot" ? (C.getState(root).ticket || "").toUpperCase() : "";
   if (ticket) {
     const nb = /git\s+(?:checkout\s+-b|switch\s+-c)\s+("([^"]+)"|'([^']+)'|(\S+))/.exec(cmd);
     const newBranch = nb && (nb[2] || nb[3] || nb[4]);
     if (newBranch && /^(feature|fix|hotfix)\//i.test(newBranch) && !C.branchMatchesTicket(newBranch, ticket))
       deny(`la rama debe llevar el ticket en mayúsculas: ${newBranch.split("/")[0]}/${ticket}-<descripcion-corta> (ticket registrado: ${ticket}).`);
     if (/git\s+commit\b/.test(cmd)) {
-      const mm = /(?:^|\s)-m\s+("((?:[^"\\]|\\.)*)"|'([^']*)'|(\S+))/.exec(cmd);
+      const mm = /(?:^|\s)(?:-[a-zA-Z]*m|--message[= ])\s*("((?:[^"\\]|\\.)*)"|'([^']*)'|(\S+))/.exec(cmd);
       const msg = mm && (mm[2] || mm[3] || mm[4]);
       if (msg !== undefined && msg !== null && !C.commitMatchesTicket(msg, ticket))
         deny(`mensaje de commit sin la nomenclatura del equipo. Formato: "<tipo>: ${ticket} descripción" (tipo: ${C.COMMIT_TYPES.replace(/\|/g, ", ")}). Recibido: ${msg}`);
@@ -132,7 +132,9 @@ async function sessionStart(root) {
     C.writeJson(kitJson, { pluginRoot: C.PLUGIN_ROOT, version: C.VERSION, projectFilesVersion: prev.projectFilesVersion || "", updatedAt: C.nowIso() });
     const cfg = C.loadConfig(root);
     const kitCmd = fs.existsSync(path.join(root, "kit.js")) ? "node kit.js" : "kit";
-    msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} activo. Staging: ${cfg.STAGING_PROVIDER}. Comandos del kit: ${kitCmd} <check|staging|smoke|status|state|epica|sdk|update> (iguales en Windows, macOS y Linux). Plantillas de documentos: ${kitCmd} plantilla <spec|adr|seguridad|arquitectura> (o ${path.join(C.PLUGIN_ROOT, "templates", "docs")}). Flujos: /pipeline, /analisis, /bugfix, /ideas, /deploy-staging, /promote-prod.`;
+    msg = C.FLAVOR === "claude"
+      ? `Kit multiagente (claude) v${C.VERSION} activo. Staging: ${cfg.STAGING_PROVIDER}. Comandos del kit: ${kitCmd} <check|staging|smoke|status|state|epica|sdk|update> (iguales en Windows, macOS y Linux). Plantillas de documentos: ${kitCmd} plantilla <spec|adr|seguridad|arquitectura> (o ${path.join(C.PLUGIN_ROOT, "templates", "docs")}). Flujos: /pipeline, /analisis, /bugfix, /ideas, /deploy-staging, /promote-prod.`
+      : `Kit multiagente (copilot, React Native bare) v${C.VERSION} activo. El flujo termina en el PR (${kitCmd} pr). Comandos: ${kitCmd} <check|pr|status|state|epica|sdk|update> (iguales en Windows y macOS). Plantillas: ${kitCmd} plantilla <spec|adr|seguridad|arquitectura>. Flujos: /pipeline, /analisis, /bugfix, /ideas, /retro-kit.`;
     if (Array.isArray(cfg.SDKS) && cfg.SDKS.length) msg += ` SDKs declarados: ${cfg.SDKS.map((s) => s && s.nombre).filter(Boolean).join(", ")} (node kit.js sdk list; flujo end-to-end: /pipeline --sdk <nombre> "idea").`;
     if (cfg._source === "ps1") msg += " AVISO: pipeline.config.ps1 es el formato antiguo; ejecuta 'node kit.js migrate'.";
     const m = C.readJson(path.join(root, ".github", "kit-manifest.json"), null) || C.readJson(path.join(root, ".pipeline", "kit-manifest.json"), null);

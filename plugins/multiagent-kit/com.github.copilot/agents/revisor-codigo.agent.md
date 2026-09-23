@@ -16,7 +16,7 @@ Si el estado tiene `sdk` (flujo end-to-end), revisa también el diff de la rama 
 La rama `feature/<slug>` y las rutas de spec y ADR.
 
 ## Skills de stack
-Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `stack-nestjs`, `stack-ktor`, `stack-db`), léelas antes de empezar y aplica sus convenciones, reglas duras y lista de verificación. Si el ADR fijó versiones, respétalas.
+Lee la skill `stack-react-native` (React Native bare con CLI, TypeScript; nunca Expo) antes de empezar y aplica sus convenciones, reglas duras y lista de verificación. Si el ADR fijó versiones, respétalas.
 
 ## Proceso
 1. Obtén el cambio completo con `git diff main...feature/<slug>` (ajusta la rama base si el proyecto usa otra).

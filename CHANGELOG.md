@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0 — kit para el trabajo: React Native bare y entrega por pull request
+- **Alcance**: solo React Native bare (`@react-native-community/cli`, TypeScript, sin Expo). Se retiran las skills `stack-android`, `stack-nestjs`, `stack-ktor` y `stack-db`; el arquitecto propone variantes dentro de RN bare y todos los agentes aplican `stack-react-native`.
+- **El flujo termina en el PR**: nuevo `kit pr --feature <slug> --base <rama>` (comprueba compuertas aprobadas y commiteadas, escribe `docs/reviews/<slug>-pr.md`, `git push -u` y `gh pr create`; si `gh` falla deja la rama subida, y si el push falla, la rama local, siempre con el motivo). El release-manager y la skill `metodo-pr` sustituyen a staging/`metodo-deploy`. El orquestador pregunta la rama base al iniciar cada pipeline y bugfix (`pr_base` en el estado) y la rama `feature/*` se crea desde ella.
+- **Retirado**: `kit staging`, `kit smoke`, `kit prod`, proveedores de staging (docker/compose/supabase/comando), `/deploy-staging`, `/promote-prod`, plantillas `staging/`, docs de Supabase y staging. La plantilla `pipeline.config.json` queda con comandos, sub-repos, SDKs, ramas protegidas (con `develop` y `release`) y límites.
+- `kit check` comprueba `gh` (autenticado), Java/adb y Xcode en macOS (avisos, no bloqueos). `kit epica` considera una HU terminada con `PR: CREADO|RAMA SUBIDA` o rama fusionada.
+- Se mantienen: ticket de Jira en ramas y commits (exigido por el hook), SDKs del equipo, épicas, modo rápido, lecciones, doctor, modo usuario por defecto y comando global `kit`.
+
 ## 1.6.0 — nada del kit en los proyectos: comando global `kit`
 - **Modo `usuario` por defecto**: `init` deja en el proyecto solo `pipeline.config.json`, `AGENTS.md` y `.pipeline/` (en `.git/info/exclude`). Las plantillas de documentos se leen del plugin (`kit plantilla <spec|adr|seguridad|arquitectura>`; una copia en `docs/` del proyecto tiene prioridad), `staging/` se crea solo al usar `kit staging` con `docker`.
 - **Comando global `kit`** en `~/.multiagent-kit/bin` (se añade al PATH del usuario en Windows, macOS y Linux): `kit check`, `kit status`, `kit epica status`… desde cualquier proyecto, sin `kit.js`. `node kit.js` sigue funcionando en los modos `repo`/`local`.

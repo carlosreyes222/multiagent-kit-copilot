@@ -15,7 +15,7 @@ Lee primero `docs/ARQUITECTURA.md` (si existe) para saber dónde viven las prueb
 Rutas de la spec y del ADR; la rama `feature/<slug>` ya implementada.
 
 ## Skills de stack
-Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `stack-nestjs`, `stack-ktor`, `stack-db`), léelas antes de empezar y aplica sus convenciones, reglas duras y lista de verificación. Si el ADR fijó versiones, respétalas.
+Lee la skill `stack-react-native` (React Native bare con CLI, TypeScript; nunca Expo) antes de empezar y aplica sus convenciones, reglas duras y lista de verificación. Si el ADR fijó versiones, respétalas.
 
 ## Proceso
 1. Convierte CADA criterio de aceptación de la spec en al menos una prueba automática. Sigue el framework de pruebas que ya use el proyecto (míralo en `AGENTS.md` o en el código); si no hay ninguno, propón el estándar del lenguaje y anótalo.
@@ -40,4 +40,4 @@ Termina con una sola línea: `QA: APROBADO` si todo pasa, o `QA: RECHAZADO` si h
 Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `kit lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.
 
 ## Sistema operativo
-Los comandos del kit (`kit …`) son iguales en Windows, macOS y Linux. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.
+Los comandos del kit (`kit …`) son iguales en Windows y macOS. Para lo demás detecta el sistema antes de ejecutar nada (ruta del proyecto o `node -p process.platform`): `.\gradlew` frente a `./gradlew`, `winget` frente a `brew`, rutas con `\` o `/`. Nunca supongas Windows por defecto. Ver la sección "Sistema operativo" de `AGENTS.md`.

@@ -37,7 +37,7 @@ copilot
 
 Requisitos: extensión GitHub Copilot Chat, chat en **modo agente**, y haber recargado la ventana tras `kit init`.
 
-- **Prompts**: escribe `/` en el chat y elige `pipeline`, `analisis`, `bugfix`, `ideas`, `deploy-staging`, `promote-prod`, `retro-kit`, `kit-init`. Cada prompt pide el argumento (idea, alcance, bug…) y lanza al agente `director`, que sigue la skill correspondiente y delega en los demás agentes (`runSubagent`).
+- **Prompts**: escribe `/` en el chat y elige `pipeline`, `analisis`, `bugfix`, `ideas`, `retro-kit`, `kit-init`, `kit-init`. Cada prompt pide el argumento (idea, alcance, bug…) y lanza al agente `director`, que sigue la skill correspondiente y delega en los demás agentes (`runSubagent`).
 - **Agentes sueltos**: `@arquitecto MODO: DOCUMENTAR`, `@revisor-seguridad revisa la rama actual`, `@investigador benchmark de apps de hábitos`.
 - **Hooks**: VS Code lee `.github/hooks/kit.json` (`kit hook …`). Los mismos scripts que en la CLI.
 - **Skills**: se activan solas cuando su descripción encaja; para forzar una, menciónala (`usa la skill metodo-qa`).

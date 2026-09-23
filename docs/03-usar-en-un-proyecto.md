@@ -15,7 +15,7 @@ Dentro de Copilot: `/kit-init` (o en la terminal, si ya tienes el comando global
 
 | Archivo | Para qué |
 |---|---|
-| `pipeline.config.json` | Comandos de instalar/build/test/lint, **proveedor de staging** (`docker`, `compose`, `supabase`, `comando`, `ninguno`), smoke, sub-repos, SDKs, límites. Lo único que rellenas. Ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md). |
+| `pipeline.config.json` | Comandos de instalar/build/test/lint (viene con los de una app RN: `npm ci`, `tsc --noEmit`, `npm test`, `npm run lint`), sub-repos, SDKs, ramas protegidas, límites. Lo único que rellenas. |
 | `AGENTS.md` | Contexto del proyecto que leen todos los agentes. Si quieres compartirlo con el equipo, quítalo del exclude y versiónalo. |
 | `.pipeline/` | Estado del pipeline, manifiesto del kit, SDKs sincronizados, historial. |
 
@@ -25,12 +25,10 @@ Lo que los agentes producen (`docs/specs`, `docs/adr`, `docs/reviews`, `docs/epi
 
 | Dónde | Qué |
 |---|---|
-| `~/.multiagent-kit/bin/` | El comando **`kit`** (`kit check`, `kit status`, `kit staging`…). `init` lo añade al PATH del usuario (Windows: variable de entorno; macOS/Linux: tu `.zshrc`/`.bashrc`); abre una terminal nueva la primera vez. |
+| `~/.multiagent-kit/bin/` | El comando **`kit`** (`kit check`, `kit status`, `kit pr`…). `init` lo añade al PATH del usuario (Windows: variable de entorno; macOS/Linux: tu `.zshrc`/`.bashrc`); abre una terminal nueva la primera vez. |
 | `~/.multiagent-kit/` | Caché de versión y `lecciones.md` compartidas entre proyectos. |
 | Plugin | Plantillas de spec, ADR, revisión de seguridad y arquitectura (`kit plantilla <spec|adr|seguridad|arquitectura>` dice la ruta). Si un proyecto quiere una plantilla propia, la pone en `docs/…/_PLANTILLA*.md` y tiene prioridad. |
 | `~/.copilot/{agents,skills,hooks}` y `User/prompts` de VS Code | Agentes, skills, hooks y prompts del kit (ver [08](08-superficies-copilot.md)). |
-
-Los archivos de `staging/` (Dockerfile, compose, `.env.staging`) ya no se copian por defecto: `kit staging` los crea desde la plantilla la primera vez **solo** si `STAGING_PROVIDER` es `docker`.
 
 Si un archivo tuyo ya existía (por ejemplo tu propio `AGENTS.md`), no se toca y la versión del kit queda al lado como `.kit` solo cuando la plantilla cambió.
 
@@ -45,7 +43,7 @@ Si un archivo tuyo ya existía (por ejemplo tu propio `AGENTS.md`), no se toca y
 /pipeline "Quiero que los usuarios puedan restablecer su contraseña por correo"
 ```
 
-Los agentes no reescriben tu código: el arquitecto explora solo los módulos que la feature toca (y a partir de la primera feature, `docs/ARQUITECTURA.md`), y el implementador modifica únicamente los archivos del plan del ADR, en una rama `feature/*`.
+Los agentes no reescriben tu código: el arquitecto explora solo los módulos que la feature toca (y a partir de la primera feature, `docs/ARQUITECTURA.md`), y el implementador modifica únicamente los archivos del plan del ADR, en una rama `feature/*` creada desde la rama base que le indiques al empezar (`develop`, `release_xx`…). Al final tienes un PR abierto contra esa base.
 
 ## 3.3 Proyecto vacío, solo con la idea
 
@@ -59,7 +57,7 @@ copilot
 /pipeline "Una app para registrar los gastos del hogar con categorías y resumen mensual"
 ```
 
-No hace falta rellenar `pipeline.config.json`. El pipeline detecta que no hay código y: el product-owner escribe la spec y tú la apruebas; el arquitecto propone **dos stacks** en `docs/adr/0000-stack.md` y **tú eliges**; el implementador hace el bootstrap y rellena `pipeline.config.json` y `AGENTS.md`; y sigue como en cualquier proyecto.
+No hace falta rellenar `pipeline.config.json`. El pipeline detecta que no hay código y: el product-owner escribe la spec y tú la apruebas; el arquitecto propone **dos variantes de stack dentro de React Native bare** (navegación, estado, red, persistencia) en `docs/adr/0000-stack.md` y **tú eliges**; el implementador hace el bootstrap con `npx @react-native-community/cli@latest init` y rellena `pipeline.config.json` y `AGENTS.md`; y sigue como en cualquier proyecto.
 
 ## 3.4 Comandos dentro de Copilot
 
@@ -72,12 +70,10 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | `/pipeline continuar <slug>` | Retoma un pipeline interrumpido |
 | `/pipeline continuar <epica>` · `/pipeline --epica "idea grande"` | Retoma la siguiente HU de una idea partida en varias (`docs/epicas/<nombre>.md`) · fuerza la partición en HU (ver [04 §4.7](04-flujo-y-compuertas.md)) |
 | `/pipeline --rapido "idea"` | Cambio pequeño (tamaño S): sin ADR y sin revisor de código, con QA y seguridad; queda registrado como compuertas reducidas. El product-owner estima `TAMAÑO: S|M|L` en cada spec y el orquestador te propone el modo rápido si es S |
-| `/pipeline --sdk <nombre> "idea"` | Feature que nace en un SDK del equipo y termina integrada en este proyecto ([14](14-sdks-y-end-to-end.md)) |
+| `/pipeline --sdk <nombre> "idea"` | Feature que nace en un SDK del equipo y termina integrada en este proyecto ([12](12-sdks-y-end-to-end.md)) |
 | `/analisis "alcance o pregunta"` | Análisis de solo lectura (arquitectura, calidad, seguridad) con hallazgos priorizados en `docs/analisis/` |
-| `/bugfix "descripción o traza"` | Reproducir → prueba roja → corregir en `fix/*` → QA → revisiones → staging. `--solo-diagnostico` para solo investigar; `--urgente` para hotfix con compuertas reducidas y registradas |
+| `/bugfix "descripción o traza"` | Reproducir → prueba roja → corregir en `fix/*` → QA → revisiones → PR. `--solo-diagnostico` para solo investigar; `--urgente` para hotfix con compuertas reducidas y registradas |
 | `/ideas ["dirección"]` | Ideas equilibradas (producto + mercado + técnicas) priorizadas. `--producto`, `--mercado` (benchmark web con el investigador) o `--tecnico` |
-| `/deploy-staging [slug]` | Solo desplegar la rama actual a staging y correr smoke tests |
-| `/promote-prod` | Ver el estado de las compuertas para producción |
 | `/retro-kit` | Retrospectiva del kit en este proyecto → `docs/kit-feedback/<fecha>.md` |
 | `/kit-init` | Inicializar o actualizar el proyecto |
 | `@director …` / `copilot --agent director` | El orquestador: entiende cualquiera de los comandos anteriores |
@@ -91,7 +87,7 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | Entender, auditar, saber si algo está listo | `/analisis "módulo o pregunta"` |
 | Investigar un bug sin corregirlo | `/bugfix --solo-diagnostico "…"` |
 | Corregir un bug con todas las garantías | `/bugfix "…"` |
-| Hotfix urgente en producción | `/bugfix --urgente "…"` (te pedirá confirmar qué compuertas se omiten) |
+| Hotfix urgente | `/bugfix --urgente "…"` (te pedirá confirmar qué compuertas se omiten; el PR sale igual) |
 | Que el equipo te proponga mejoras o nuevas funciones | `/ideas` (equilibrado), `/ideas --producto "para familias"`, `/ideas --tecnico` |
 | Ver qué hacen productos parecidos y qué funciones adoptar | `/ideas --mercado "apps de hábitos para niños"` o `@investigador benchmark de …` |
 | Una tarea puntual de un rol | `@arquitecto …`, `@revisor-seguridad …`, `@tester …` |
@@ -103,10 +99,8 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 
 | Comando | Qué hace |
 |---|---|
-| `kit check` | Verifica Node ≥ 18, Git, Copilot CLI, Docker/Supabase según proveedor, y la configuración |
-| `kit staging --feature <slug>` | Build + tests + desplegar a staging con el proveedor configurado |
-| `kit smoke` | Smoke tests contra staging |
-| `kit prod` | Promover a producción (pide escribir `PRODUCCION`) |
+| `kit check` | Verifica Node ≥ 18, Git, Copilot CLI, `gh`, toolchain Android/iOS (aviso) y la configuración |
+| `kit pr --feature <slug> --base <rama>` | Comprueba compuertas, sube la rama y abre el pull request con `gh` (lo ejecuta el release-manager; si `gh` falla, sube la rama y deja la descripción en `docs/reviews/<slug>-pr.md`) |
 | `kit init` | Re-ejecutar la inicialización (sin sobrescribir lo tuyo) |
 | `kit update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
 | `kit migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
@@ -116,8 +110,8 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | `kit update --limpiar` / `--plugin` | Borra las copias `.kit` ya revisadas / actualiza el propio plugin (Copilot) si GitHub tiene versión nueva |
 | `kit state reset` | Cierra la feature actual (la archiva en `.pipeline/historial.jsonl`) y deja el estado limpio para la siguiente |
 | `kit lecciones [add "…"]` | Lecciones reutilizables entre proyectos (`~/.multiagent-kit/lecciones.md`); las escribe `/retro-kit` y las leen los agentes |
-| `kit sdk api <nombre>` · `sdk publish <nombre> --version X.Y.Z` | Breaking changes de la API pública del SDK frente a la rama base · versión definitiva del SDK y dependencia del padre (paso humano). Ver [14](14-sdks-y-end-to-end.md) |
-| `kit sdk list\|sync\|pack\|status` | SDKs del equipo declarados en `SDKS`: sincronizar (ruta local o clon por rama), empaquetar versión de trabajo y enlazarla en el padre (ver [14](14-sdks-y-end-to-end.md)) |
+| `kit sdk api <nombre>` · `sdk publish <nombre> --version X.Y.Z` | Breaking changes de la API pública del SDK frente a la rama base · versión definitiva del SDK y dependencia del padre (paso humano). Ver [12](12-sdks-y-end-to-end.md) |
+| `kit sdk list\|sync\|pack\|status` | SDKs del equipo declarados en `SDKS`: sincronizar (ruta local o clon por rama), empaquetar versión de trabajo y enlazarla en el padre (ver [12](12-sdks-y-end-to-end.md)) |
 | `kit status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
 | `kit state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
 
@@ -128,7 +122,7 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | Modo | Qué queda en el proyecto | Qué ve git | Cuándo |
 |---|---|---|---|
 | `usuario` (por defecto) | `pipeline.config.json`, `AGENTS.md`, `.pipeline/` — todo en `.git/info/exclude` | **Nada** | Siempre que trabajes tú solo con el kit, incluidos repositorios ajenos o del trabajo. Comando `kit`, plantillas y permisos globales. |
-| `local` | Además copias de `kit.js`, plantillas de `docs/`, `staging/` y `.github/` (agentes, skills, prompts, hooks) — todo en `.git/info/exclude` | **Nada** | Quieres las copias a mano en el proyecto sin versionarlas |
+| `local` | Además copias de `kit.js`, plantillas de `docs/` y `.github/` (agentes, skills, prompts, hooks) — todo en `.git/info/exclude` | **Nada** | Quieres las copias a mano en el proyecto sin versionarlas |
 | `repo` | Lo mismo que `local`, versionado | Todo, se commitea | El equipo entero adopta el kit o el cloud agent de github.com necesita los agentes en el repo y quiere exactamente los mismos archivos en el repo |
 
 **Proyecto existente en modo `repo`/`local`**: `kit doctor` te avisa de cuántos archivos del kit hay copiados y `kit doctor --fix --usuario` (o `kit init --modo usuario`) los retira — solo los que siguen idénticos a lo que el kit copió; lo que editaste se conserva y se avisa. Los que estaban versionados quedan como borrados en `git status`: revisa y haz commit. `pipeline.config.json` y `AGENTS.md` siguen versionados si ya lo estaban (son del proyecto). Cambiar de vuelta: `kit init --modo repo` vuelve a copiar todo.

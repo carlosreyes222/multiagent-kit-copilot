@@ -34,14 +34,20 @@ module.exports = async function check() {
   else test("Copilot CLI", "copilot --version", hint("copilot"));
 
   if (cfg._source === "ps1") C.log.warn("El proyecto usa pipeline.config.ps1 (formato antiguo). Ejecuta: node kit.js migrate");
-  if (["docker", "compose"].includes(cfg.STAGING_PROVIDER)) {
+  if (C.FLAVOR === "copilot") {
+    C.log.step("Entrega por PR y toolchain React Native");
+    if (C.which("gh")) { const g = C.run("gh auth status", { ignoreFailure: true, quiet: true }); if (g.code === 0) C.log.ok("gh CLI autenticado (el kit abrirá los PR)"); else C.log.warn("gh CLI instalado pero sin sesión (gh auth login): el kit subirá la rama y dejará la descripción del PR"); }
+    else C.log.warn("gh CLI no instalado (winget install GitHub.cli / brew install gh): el kit subirá la rama y tú abres el PR");
+    for (const [name, cmd] of [["Java (Android)", "java -version"], ["adb", "adb --version"]]) { const r = C.run(cmd, { ignoreFailure: true, quiet: true }); if (r.code === 0) C.log.ok(`${name}: ${(r.out || "").trim().split(/\r?\n/).filter((l) => !/^Picked up/.test(l))[0] || "ok"}`); else C.log.warn(`${name} no encontrado (solo necesario para builds Android locales)`); }
+    if (process.platform === "darwin") { const r = C.run("xcodebuild -version", { ignoreFailure: true, quiet: true }); if (r.code === 0) C.log.ok("Xcode: " + r.out.trim().split(/\r?\n/)[0]); else C.log.warn("Xcode no encontrado (solo para builds iOS)"); }
+  } else if (["docker", "compose"].includes(cfg.STAGING_PROVIDER)) {
     test("Docker", "docker --version", hint("docker"));
     C.log.step("Docker en ejecución");
     const r = C.run("docker info", { ignoreFailure: true, quiet: true });
     if (r.code === 0) C.log.ok("Docker responde"); else { C.log.fail("Docker no está corriendo. Abre Docker Desktop y espera a que diga 'Engine running'."); ok = false; }
   } else C.log.warn(`Proveedor de staging '${cfg.STAGING_PROVIDER}': Docker no es necesario.`);
 
-  if (cfg.STAGING_PROVIDER === "supabase") {
+  if (C.FLAVOR === "claude" && cfg.STAGING_PROVIDER === "supabase") {
     C.log.step("Supabase CLI (proveedor de staging = supabase)");
     test("Supabase CLI", "supabase --version", hint("supabase"));
     if (!cfg.SUPABASE_STAGING_REF || !cfg.SUPABASE_PROD_REF) { C.log.fail("SUPABASE_STAGING_REF / SUPABASE_PROD_REF vacíos en pipeline.config.json (ver docs/10-supabase.md)"); ok = false; }
@@ -82,8 +88,8 @@ module.exports = async function check() {
 
   C.log.step("Configuración del proyecto");
   if (!String(cfg.TEST_CMD || "").trim()) C.log.warn("TEST_CMD está vacío en pipeline.config.json — el agente tester no podrá correr pruebas.");
-  if (!String(cfg.PROD_DEPLOY_CMD || "").trim() && cfg.STAGING_PROVIDER !== "supabase") C.log.warn("PROD_DEPLOY_CMD está vacío — node kit.js prod solo simulará el despliegue.");
-  if (!String(cfg.SMOKE_CMD || "").trim()) C.log.warn("SMOKE_CMD está vacío — el smoke solo probará la salud; define un comando de smoke del proyecto.");
+  if (C.FLAVOR === "claude" && !String(cfg.PROD_DEPLOY_CMD || "").trim() && cfg.STAGING_PROVIDER !== "supabase") C.log.warn("PROD_DEPLOY_CMD está vacío — kit prod solo simulará el despliegue.");
+  if (C.FLAVOR === "claude" && !String(cfg.SMOKE_CMD || "").trim()) C.log.warn("SMOKE_CMD está vacío — el smoke solo probará la salud; define un comando de smoke del proyecto.");
   const over = C.docLimits(root, cfg);
   if (over.length) { C.log.warn("Documentos por encima del límite:"); over.forEach((o) => C.log.warn("  " + o)); }
 

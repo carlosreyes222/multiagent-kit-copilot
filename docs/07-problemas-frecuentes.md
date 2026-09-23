@@ -13,12 +13,8 @@
 | Un commit del agente queda bloqueado | Lint o tests fallan (compuerta de commit) | Es lo esperado: el agente corrige. Para saltarla puntualmente: variable de entorno `PIPELINE_SKIP_GATE=1` |
 | `git push` bloqueado en `main` | Hook de ramas protegidas | Trabaja en `feature/*` y abre un PR; para merge hace falta `VEREDICTO: APROBADO` |
 | El agente dice "Denied by preToolUse hook (hook errored)" | El hook falló (Node antiguo, `kit.js` ausente) | `node --version` (≥ 18); prueba a mano: `echo '{"toolName":"bash","toolArgs":"{\\"command\\":\\"git status\\"}"}' \| kit hook protect-main` |
-| `kit prod` dice PROMOCIÓN BLOQUEADA | Falta staging, smoke o seguridad | El mensaje indica cuál; ejecuta el paso que falta |
 | El cloud agent no ejecuta los hooks | Solo lee `.github/hooks/*.json` del repo, con `bash` | Haz commit de `.github/hooks/kit.json` y `kit.js`; Node viene en `ubuntu-latest` |
 | El cloud agent no encuentra el plugin | El sandbox no trae plugins instalados | `.github/copilot/settings.json` con `enabledPlugins` lo instala; si no, las skills y agentes ya están copiados en `.github/` y los hooks avisan y permiten |
-| `docker: error during connect` | Docker Desktop cerrado | Ábrelo y espera *Engine running* |
-| Staging no responde 200 en 60 s | `HEALTH_PATH` o `CONTAINER_CMD` incorrectos | `docker compose -f staging/docker-compose.staging.yml logs`; ajusta `pipeline.config.json` |
-| Staging Docker no tiene sentido para mi proyecto (móvil, Supabase, juego) | `STAGING_PROVIDER` incorrecto | Ver [11-staging-por-proveedor.md](11-staging-por-proveedor.md) y [10-supabase.md](10-supabase.md) |
 | Los informes o `ARQUITECTURA.md` son enormes | Límites no respetados | `kit status` avisa; pide `@arquitecto MODO: DOCUMENTAR` para resumir; límites en `pipeline.config.json` |
 | El investigador dice que no tiene búsqueda web | Tools `web` no disponibles (cloud agent no los tiene; red corporativa) | Usa `/ideas --mercado` desde la CLI o VS Code; el informe queda marcado "sin verificar" |
 | Actualicé el plugin y no cambia nada en VS Code | Los archivos del proyecto son copias | `kit update` y commit (ver [06](06-actualizar-el-kit.md)) |
@@ -30,6 +26,10 @@
 | Un pipeline nuevo hereda veredictos o `sdk` de la feature anterior | Estado no cerrado | `kit state reset` |
 | `kit` no se reconoce como comando | La terminal se abrió antes de que `init` añadiera `~/.multiagent-kit/bin` al PATH | Abre una terminal nueva; si sigue, añade esa carpeta al PATH a mano o usa `node "$HOME/.multiagent-kit/bin/kit-launcher.js" <comando>` |
 | Un agente busca `docs/specs/_PLANTILLA.md` y no existe | Proyecto en modo usuario: las plantillas viven en el plugin | Es normal; `kit plantilla spec` da la ruta. Si el agente insiste, actualiza el plugin (skills antiguas) |
+| `kit pr` dice `PR: RAMA SUBIDA (gh …)` | `gh` no instalado o sin sesión | `winget install GitHub.cli` / `brew install gh` y `gh auth login`; mientras tanto abre el PR con `docs/reviews/<slug>-pr.md` |
+| `kit pr` dice `PR: RAMA LOCAL (push falló …)` | Sin permisos, sin remoto o la rama remota tiene commits nuevos | Resuelve la causa (permisos, `git pull --rebase` si procede) y repite `kit pr`; nunca `--force` |
+| El kit avisa "proyecto Expo" y se detiene | El kit es solo para RN bare (CLI) | Usa el kit de Claude o migra el proyecto a bare |
 
 ---
 Anterior: [06-actualizar-el-kit.md](06-actualizar-el-kit.md) · Siguiente: [08-superficies-copilot.md](08-superficies-copilot.md) · [Índice](../README.md)
+

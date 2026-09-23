@@ -1,22 +1,18 @@
-# 12. Skills de stack y skills externas
+# 10. Skills de stack y skills externas
 
-## 12.1 Skills de stack del kit
+## 10.1 Skills de stack del kit
 
-Copilot ya sabe Kotlin, Compose, React Native, TypeScript y SQL. Lo que no puede saber es **cómo trabajas tú**, **qué salió el mes pasado** ni **qué mira un revisor en tu contexto**. Las skills de stack (`skills/stack-*/SKILL.md` en el plugin, copiadas a `.github/skills/` en cada proyecto) fijan eso en una o dos pantallas:
+Copilot ya sabe React Native y TypeScript. Lo que no puede saber es **cómo trabaja tu equipo**, **qué salió el mes pasado** ni **qué mira un revisor en tu contexto**. Este kit lleva una sola skill de stack, y todos los agentes la aplican:
 
 | Skill | Cubre | Convenciones fijadas |
 |---|---|---|
-| `stack-android` | Kotlin + Jetpack Compose | MVVM + UDF; Route/Screen stateless; módulos según tamaño; librerías a elección del arquitecto; JUnit + Turbine + compose-ui-test |
-| `stack-react-native` | React Native bare, TypeScript | Bare (CLI), sin Expo; TS estricto; estado/navegación a elección del arquitecto; Jest + RNTL |
-| `stack-nestjs` | Backend TypeScript | NestJS + Prisma; módulos por feature; DTOs validados; JWT corto; e2e con Supertest |
-| `stack-ktor` | Backend Kotlin | Ktor; rutas delgadas; datos/DI a elección del arquitecto; `testApplication` |
-| `stack-db` | PostgreSQL, Supabase, MongoDB, Firestore | Tabla de elección; reglas por base; seguridad (RLS, reglas, roles) |
+| `stack-react-native` | React Native **bare** (CLI), TypeScript | Sin Expo (ni `expo-*`, `expo-router`, EAS); TS estricto; React Navigation; estado/red/persistencia a elección del arquitecto en el ADR de stack; Jest + RNTL; verificación en emulador para cambios de UI |
 
 Copilot activa una skill cuando su descripción encaja; el arquitecto las lee al proponer stack y `AGENTS.md` de cada proyecto lista cuáles aplican. Cada una lleva la sección **Antes de proponer versiones o APIs** con las URLs oficiales que el arquitecto y el implementador deben consultar antes de fijar versiones: así "lo nuevo que salga" entra por la documentación oficial, no por la memoria del modelo.
 
 Para cambiar una convención global, edita la skill en el plugin y publica versión ([06](06-actualizar-el-kit.md)). Para una convención de un solo proyecto, escríbela en `AGENTS.md`; prevalece sobre la skill.
 
-## 12.2 Skills de terceros
+## 10.2 Skills de terceros
 
 Las skills son un formato abierto (`SKILL.md`), así que las mismas que se usan con Claude Code sirven en Copilot. Tres formas de instalarlas:
 
@@ -39,7 +35,7 @@ copilot plugin install <plugin>@<marketplace>
 
 Copilot también lee `.claude-plugin/marketplace.json`, así que los marketplaces publicados para Claude Code suelen funcionar. Y el marketplace integrado `awesome-copilot` (`copilot plugin marketplace browse awesome-copilot`) trae agentes, skills e instrucciones mantenidos por GitHub.
 
-## 12.3 Recomendadas por stack
+## 10.3 Recomendadas por stack
 
 | Stack | Fuente | Instalar |
 |---|---|---|
@@ -51,9 +47,9 @@ Copilot también lee `.claude-plugin/marketplace.json`, así que los marketplace
 
 Instala solo lo que uses: cada skill añade contexto a cada sesión. Las skills `metodo-*` del kit mandan en el pipeline; si una skill externa contradice una convención del kit, prevalece el kit y `AGENTS.md`.
 
-## 12.4 Dónde no instalar
+## 10.4 Dónde no instalar
 
 No ejecutes `copilot skill add` ni `npx skills add` dentro de este repositorio del kit: aquí no tiene efecto sobre ningún proyecto y `.agents/` y `.claude/` están ignorados por git.
 
 ---
-Anterior: [11-staging-por-proveedor.md](11-staging-por-proveedor.md) · Siguiente: [13-diferencias-con-claude.md](13-diferencias-con-claude.md) · [Índice](../README.md)
+Anterior: · Siguiente: [11-diferencias-con-claude.md](11-diferencias-con-claude.md) · [Índice](../README.md)

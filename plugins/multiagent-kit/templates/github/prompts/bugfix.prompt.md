@@ -1,6 +1,6 @@
 ---
 name: bugfix
-description: "Reproducir un bug con una prueba roja, corregirlo en fix/*, validar con QA y revisiones, y desplegar a staging. Modificadores --solo-diagnostico y --urgente."
+description: "Reproducir un bug con una prueba roja, corregirlo en fix/*, validar con QA y revisiones, y abrir el PR. Modificadores --solo-diagnostico y --urgente."
 agent: director
 argument-hint: "descripción o traza del bug [--solo-diagnostico | --urgente]"
 ---

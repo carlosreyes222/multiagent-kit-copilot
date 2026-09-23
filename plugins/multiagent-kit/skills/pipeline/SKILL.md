@@ -1,6 +1,6 @@
 ---
 name: pipeline
-description: Orquesta el flujo multiagente completo de una feature — ideación → spec → arquitectura → implementación → QA → revisión de código y seguridad → staging → documentación de arquitectura — con compuertas entre etapas. Funciona también en un proyecto vacío (propone stack y crea el esqueleto). Uso — /pipeline "descripción de la idea" · /pipeline --sdk <nombre> "idea" (feature que nace en un SDK del equipo y termina en este proyecto)
+description: Orquesta el flujo multiagente completo de una feature React Native — ideación → spec → arquitectura → implementación → QA → revisión de código y seguridad → pull request → documentación de arquitectura — con compuertas entre etapas. Funciona también en un proyecto vacío (propone stack y crea el esqueleto). Uso — /pipeline "descripción de la idea" · /pipeline --sdk <nombre> "idea" (feature que nace en un SDK del equipo y termina en este proyecto)
 disable-model-invocation: true
 ---
 
@@ -14,10 +14,11 @@ Cada etapa la hace un **agente personalizado del kit** (`product-owner`, `arquit
 1. Si los argumentos incluyen `--rapido`, aplica la sección "Modo rápido". Si incluyen `--sdk <nombre>`, aplica además la sección "Flujo end-to-end con un SDK" de abajo. Deriva un slug en kebab-case de la idea (máx. 4 palabras, ej. `login-biometrico`). Confírmalo al usuario en una línea y continúa.
 2. Comprueba que estás en un repositorio git y que `pipeline.config.json` existe (si no, indica al usuario que ejecute `/kit-init` y detente).
 3. **Detecta el modo**:
-   - **PROYECTO NUEVO** si no hay código fuente aparte de los archivos del kit (solo `pipeline.config.json`, `AGENTS.md`, `kit.js`, `docs/`, `staging/`, `.github/`) o si `BUILD_CMD` y `TEST_CMD` están vacíos y no existe `docs/ARQUITECTURA.md`.
+   - **PROYECTO NUEVO** si no hay código fuente aparte de los archivos del kit (solo `pipeline.config.json`, `AGENTS.md`, `docs/`, `.pipeline/`) o si `BUILD_CMD` y `TEST_CMD` están vacíos y no existe `docs/ARQUITECTURA.md`.
    - **PROYECTO EXISTENTE** en cualquier otro caso. Si `TEST_CMD` está vacío en un proyecto existente, avisa de que el tester no podrá ejecutar pruebas y pregunta si continuar.
-4. Si `AGENTS.md` lista skills de stack, indícalo a cada agente al delegar ("aplica stack-android y stack-db").
-5. Registra el inicio con el script (nunca editando el JSON a mano): `kit state feature=<slug> type=feature mode=<nuevo|existente> stage=spec`.
+4. Indica a cada agente al delegar que aplique la skill `stack-react-native` (React Native bare, nunca Expo).
+5. **Rama base del PR**: pregunta al usuario (una sola vez) contra qué rama se abrirá el pull request (`develop`, `release_xx`, `main`…); si el estado ya tiene `pr_base` y el usuario no dice otra cosa, reutilízala. Regístrala: `kit state pr_base=<rama>`. La rama `feature/<slug>` se crea **desde esa base** (`git checkout <base> && git pull && git checkout -b feature/<slug>`).
+6. Registra el inicio con el script (nunca editando el JSON a mano): `kit state feature=<slug> type=feature mode=<nuevo|existente> stage=spec`.
 
 ## Etapa 1 — Ideación → Spec
 Delega al agente **product-owner** con la idea y el slug. Espera `SPEC: docs/specs/<slug>.md` — o `EPICA: docs/epicas/<nombre>.md` si la idea es demasiado grande (ver "Épicas"; si los argumentos traen `--epica`, indícale `MODO: EPICA`).
@@ -40,19 +41,17 @@ Lanza **al mismo tiempo** al **revisor-codigo** y al **revisor-seguridad** sobre
 - Si alguno es RECHAZADO: vuelve a la Etapa 3 con los informes correspondientes y, tras corregir, repite Etapas 4 y 5. Máximo 2 iteraciones.
 - Si ambos APROBADOS: continúa.
 
-## Etapa 6 — Staging
-Delega al **release-manager**. Espera `STAGING: LISTO` o `STAGING: FALLÓ`.
-Si falló por código, vuelve a la Etapa 3; si falló por infraestructura (Docker, puertos), reporta al usuario y detente.
+## Etapa 6 — Pull request
+Delega al **release-manager** con el slug y la **rama base** elegida en el Paso 0. Verifica compuertas, sube la rama y abre el PR con `kit pr`. Espera `PR: CREADO <url>`, `PR: RAMA SUBIDA (<motivo>)` o `PR: RAMA LOCAL (<motivo>)`. En los dos últimos casos, transmite al usuario el motivo y el paso manual que queda; no reintentes con fuerza ni cambies la base. Si el bloqueo es por informes o commits pendientes, vuelve a la etapa que corresponda.
 
 ## Etapa 7 — Documentación de arquitectura (obligatoria)
 Delega al **arquitecto** indicándole `MODO: DOCUMENTAR` con el slug. Actualizará `docs/ARQUITECTURA.md` para reflejar el estado real tras la feature (módulos nuevos o cambiados, decisiones vigentes, deuda) y, si cambió alguna convención, `AGENTS.md`. Espera `ARQUITECTURA: ACTUALIZADA`. Esta etapa no se salta: es lo que permite que los siguientes pipelines no tengan que releer todo el proyecto.
 
 ## Etapa 8 — Entrega al humano
 Presenta un resumen final con:
-- Rama, spec, ADR, `docs/ARQUITECTURA.md` y los cuatro informes (`docs/reviews/<slug>-{qa,codigo,seguridad,release}.md`).
-- URL de staging para que el usuario pruebe manualmente.
-- El comando exacto para promover: `kit prod`
-**Nunca ejecutes `kit prod` tú mismo.** La promoción a producción es siempre una acción humana.
+- Rama, spec, ADR, `docs/ARQUITECTURA.md` y los informes (`docs/reviews/<slug>-{qa,codigo,seguridad,pr}.md`).
+- Estado del PR (URL, o rama subida/local con el motivo) y la rama base.
+- Lo que queda en manos del equipo: revisión del PR, merge y tren de release. **El kit no despliega ni fusiona.**
 
 ## Épicas: una idea partida en varias HU
 - **Detección**: si el product-owner responde `EPICA: docs/epicas/<nombre>.md` en vez de `SPEC:` (la idea no cabe en una feature), muéstrale al usuario la lista de HU propuestas con su orden y dependencias. **COMPUERTA HUMANA**: aprueba la partición o pide cambios. Luego continúa con la primera HU: `kit state reset`, `kit state feature=<slug-hu> epica=<nombre> …` y el pipeline normal desde la Etapa 1 (spec de esa HU). Si había ticket, cada HU lleva el suyo si el usuario lo da; si no, hereda el de la épica.

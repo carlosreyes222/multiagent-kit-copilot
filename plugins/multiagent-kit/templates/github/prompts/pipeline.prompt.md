@@ -1,6 +1,6 @@
 ---
 name: pipeline
-description: "Flujo multiagente completo de una feature: spec → arquitectura → código → QA → revisiones → staging → arquitectura viva, con compuertas."
+description: "Flujo multiagente completo de una feature: spec → arquitectura → código → QA → revisiones → pull request → arquitectura viva, con compuertas."
 agent: director
 argument-hint: "descripción de la idea, 'continuar <slug>', '--rapido idea', '--epica idea grande', 'continuar <epica>' o '--sdk <nombre> idea'"
 ---

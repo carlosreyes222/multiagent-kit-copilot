@@ -7,9 +7,9 @@ description: "Reglas del kit multiagente (compuertas, ramas, secretos, estado) p
 - Antes de tocar código lee `AGENTS.md` y `docs/ARQUITECTURA.md` (si existe). No explores todo el repositorio: ubica los módulos por el mapa de arquitectura.
 - Todo cambio va en una rama `feature/<slug>` o `fix/<slug>`. Está prohibido `git commit`, `git push` o `git merge` sobre `main`/`master`; el hook `.github/hooks/kit.json` lo bloquea.
 - Antes de cada commit deben pasar `LINT_CMD` y `TEST_CMD` de `pipeline.config.json` (compuerta de commit).
-- Los informes de QA, código, seguridad y release viven en `docs/reviews/<slug>-{qa,codigo,seguridad,release}.md` y terminan con una línea de veredicto exacta (`QA:`, `CODIGO:`, `VEREDICTO:`, `STAGING:`). Respeta los límites de líneas de `pipeline.config.json`.
+- Los informes de QA, código, seguridad y PR viven en `docs/reviews/<slug>-{qa,codigo,seguridad,pr}.md` y terminan con una línea de veredicto exacta (`QA:`, `CODIGO:`, `VEREDICTO:`, `PR:`). Respeta los límites de líneas de `pipeline.config.json`.
 - El estado del pipeline se cambia solo con `kit state clave=valor`; nunca se edita `.pipeline/state.json`.
-- Producción: nunca ejecutes `kit prod`, `scripts/prod.js`, `supabase db push` ni `supabase functions deploy`. Solo una persona promueve.
+- Entrega: el flujo termina en el pull request (`kit pr`, lo ejecuta el release-manager). Nunca hagas merge ni despliegues; ramas `feature/*` y `fix/*` desde la rama base acordada, con ticket en mayúsculas y commits `<tipo>: TICKET descripción`.
 - Secretos: no leas ni edites `.env*` (salvo `.env.example`), `*.jks`, `*.keystore`, `*.p12`, `*.pem` ni `google-services.json`.
-- Comandos destructivos prohibidos: `git push --force`, `git reset --hard`, `rm -rf`, `docker system prune`, `docker volume rm`, `docker compose down -v`.
-- Sistema operativo: los comandos del kit (`kit …`) son iguales en todos los sistemas; para el resto detecta Windows o macOS/Linux antes de ejecutar (`.\gradlew` / `./gradlew`, `winget` / `brew`). No supongas Windows.
+- Comandos destructivos prohibidos: `git push --force`, `git reset --hard`, `rm -rf`, `git rebase` sobre ramas compartidas.
+- Sistema operativo: los comandos del kit (`kit …`) son iguales en Windows y macOS; para el resto detecta Windows o macOS/Linux antes de ejecutar (`.\gradlew` / `./gradlew`, `winget` / `brew`). No supongas Windows.

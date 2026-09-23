@@ -16,7 +16,7 @@ Si el estado tiene `sdk` (flujo end-to-end), revisa también el diff de la rama 
 La rama `feature/<slug>`, la spec y el ADR (incluida su sección de riesgos de seguridad).
 
 ## Skills de stack
-Si `AGENTS.md` lista skills de stack (`stack-android`, `stack-react-native`, `stack-nestjs`, `stack-ktor`, `stack-db`), léelas antes de empezar y aplica sus convenciones, reglas duras y lista de verificación. Si el ADR fijó versiones, respétalas.
+Lee la skill `stack-react-native` (React Native bare con CLI, TypeScript; nunca Expo) antes de empezar y aplica sus convenciones, reglas duras y lista de verificación. Si el ADR fijó versiones, respétalas.
 
 ## Lista de verificación
 - **Secretos**: credenciales, tokens o claves en código, configs o commits (`git log -p` sobre la rama).
