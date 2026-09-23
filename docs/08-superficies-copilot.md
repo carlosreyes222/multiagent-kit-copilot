@@ -45,7 +45,7 @@ Requisitos: extensión GitHub Copilot Chat, chat en **modo agente**, y haber rec
 
 ## 8.4 Cloud agent (github.com)
 
-El cloud agent trabaja en un sandbox de GitHub Actions: clona el repo, ejecuta `copilot-setup-steps.yml`, hace los cambios y abre un PR. Lee `AGENTS.md`, `.github/agents`, `.github/skills`, `.github/hooks` (solo `bash`) e instala el plugin si `.github/copilot/settings.json` lo habilita. No tiene búsqueda web ni pregunta nada: las compuertas humanas del pipeline se convierten en **revisión del PR**. Detalle y flujo con issues en [09-cloud-agent-y-github.md](09-cloud-agent-y-github.md).
+No se usa con este kit: el cloud agent solo lee agentes y skills que estén dentro del repositorio, y este kit no deja nada del kit en el repo por decisión de diseño. Las reglas del repositorio en GitHub (rulesets, revisiones obligatorias) siguen siendo la barrera final del PR ([09](09-cloud-agent-y-github.md)).
 
 ## 8.5 Lo que cambia respecto al terminal de Claude Code
 

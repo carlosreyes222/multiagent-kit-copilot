@@ -2,7 +2,7 @@
 
 Un equipo de agentes de GitHub Copilot para apps **React Native bare** (CLI, TypeScript, sin Expo) que lleva una idea desde la especificación hasta un **pull request** listo para revisar: spec aprobada por ti, ADR, código en rama con el ticket de Jira, QA, revisión de código y de seguridad, y el PR abierto contra la rama base que indiques. El merge, el tren de release y el despliegue siguen siendo del equipo. Es el hermano del kit [`multiagent-kit`](https://github.com/carlosreyes222/multiagent-kit) de Claude Code, recortado para el trabajo: mismos agentes y compuertas, sin staging ni producción.
 
-Funciona en **Copilot CLI** (terminal) y **VS Code** (agent mode, `@agentes`, `/prompts`); el cloud agent de github.com solo con el modo `repo`. Se distribuye como **plugin de Copilot** con marketplace propio; `kit init` deja en el proyecto solo `pipeline.config.json`, `AGENTS.md` y `.pipeline/` (fuera de git) e instala el comando global `kit`.
+Funciona en **Copilot CLI** (terminal) y **VS Code** (agent mode, `@agentes`, `/prompts`). Se distribuye como **plugin de Copilot** con marketplace propio. **Nada del kit queda en el repositorio**: agentes, skills, prompts y hooks se instalan en tu perfil de usuario; en el proyecto solo quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/` (fuera de git) y los documentos que producen los agentes, que sí se versionan y van en el PR.
 
 ```
 idea ──► product-owner ──► arquitecto ──► implementador ──► tester ──► revisor-codigo ┐
@@ -23,7 +23,7 @@ idea ──► product-owner ──► arquitecto ──► implementador ──
 | 6 | [Actualizar el kit](docs/06-actualizar-el-kit.md) | Publicar versiones y recibirlas en todos los proyectos |
 | 7 | [Problemas frecuentes](docs/07-problemas-frecuentes.md) | Cuando algo no funciona |
 | 8 | [Copilot CLI, VS Code y cloud agent](docs/08-superficies-copilot.md) | Qué funciona en cada superficie y cómo se usa el kit en cada una |
-| 9 | [Cloud agent y GitHub](docs/09-cloud-agent-y-github.md) | Asignar issues a Copilot, `copilot-setup-steps`, rulesets, code review automático |
+| 9 | [GitHub: reglas y pull request](docs/09-cloud-agent-y-github.md) | Rulesets como barrera final, el PR que abre el kit, qué pasa cuando la revisión pide cambios |
 | 10 | [Skill de stack y skills externas](docs/10-skills-y-plugins-externos.md) | React Native bare: convenciones del equipo; skills de terceros recomendadas |
 | 11 | [Diferencias con el kit de Claude Code](docs/11-diferencias-con-claude.md) | Qué cambia y por qué; cómo mantener los dos kits |
 | 12 | [SDKs del equipo y flujo end-to-end](docs/12-sdks-y-end-to-end.md) | SDK propio (npm, Android/Maven, iOS) como contexto y `/pipeline --sdk` de extremo a extremo con versión de trabajo local |
@@ -55,7 +55,7 @@ multiagent-kit-copilot/
 │   ├── skills/                         ← /pipeline, /analisis, /bugfix, /ideas, /retro-kit, /kit-init, metodo-*, stack-react-native
 │   ├── com.github.copilot/agents/      ← director + 8 agentes (*.agent.md)
 │   ├── scripts/                        ← Node.js: init/update, hooks, pr, sdk, epica, doctor, estado
-│   └── templates/                      ← config, AGENTS.md, plantillas de docs y .github/ (modo repo)
+│   └── templates/                      ← config, AGENTS.md, plantillas de docs, prompts e instrucciones de VS Code (van al perfil)
 ├── docs/                               ← estas guías
 └── CHANGELOG.md
 ```

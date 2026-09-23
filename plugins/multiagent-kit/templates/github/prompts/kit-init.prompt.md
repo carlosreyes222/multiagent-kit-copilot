@@ -1,9 +1,8 @@
 ---
 name: kit-init
-description: "Inicializa o actualiza este proyecto para el kit multiagente (pipeline.config.json, AGENTS.md, kit.js, .github/)."
+description: "Inicializa o actualiza este proyecto para el kit multiagente (pipeline.config.json, AGENTS.md, .pipeline/; agentes y skills en tu perfil de usuario)."
 agent: director
-argument-hint: "repo | local | usuario"
+argument-hint: "(sin argumentos)"
 ---
-Modo elegido: ${input:modo:repo (versionado), local (solo este clon) o usuario (perfil, nada en el repo)}
 
-Ejecuta el comando `kit-init` del kit siguiendo la skill `kit-init` (en `.github/skills/` del proyecto o en `~/.copilot/skills/`). Si `kit.js` ya existe, usa `kit update`.
+Ejecuta el comando `kit-init` del kit siguiendo la skill `kit-init` (en `~/.copilot/skills/`). Si el proyecto ya está inicializado (`.pipeline/kit.json`), usa `kit update`.

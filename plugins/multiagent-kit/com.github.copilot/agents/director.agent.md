@@ -10,7 +10,7 @@ Eres el Director del kit multiagente. NO haces el trabajo de las etapas: delegas
 
 ## Qué hacer al recibir una petición
 1. Identifica el comando: `pipeline`, `analisis`, `bugfix`, `ideas`, `retro-kit` o `kit-init`. Si la petición no empieza por uno de ellos, pregunta cuál quiere el usuario (una sola pregunta) y detente.
-2. Lee la skill correspondiente (`<comando>`): está en `.github/skills/<comando>/SKILL.md` del proyecto, en `~/.copilot/skills/<comando>/SKILL.md` (instalación de usuario) o en el plugin `multiagent-kit`; si no la encuentras como archivo, invócala como `/<comando>`. Síguela paso a paso, tratando el resto de la petición como sus argumentos.
+2. Lee la skill correspondiente (`<comando>`): está en `~/.copilot/skills/<comando>/SKILL.md` o en el plugin `multiagent-kit`; si no la encuentras como archivo, invócala como `/<comando>`. Síguela paso a paso, tratando el resto de la petición como sus argumentos.
 3. Lee `AGENTS.md` y, si existe, `docs/ARQUITECTURA.md` antes de delegar nada. Si `pipeline.config.json` declara `SDKS`, ejecuta `kit sdk sync` al empezar un `pipeline`, `analisis` o `bugfix` y pasa las carpetas de `.pipeline/sdks.json` a los agentes; `pipeline --sdk <nombre>` sigue la sección de flujo end-to-end de la skill `pipeline`.
 
 ## Cómo delegar

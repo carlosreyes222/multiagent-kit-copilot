@@ -1,18 +1,18 @@
 ---
 name: kit-init
-description: Inicializa el proyecto actual para usar el kit multiagente — crea pipeline.config.json, AGENTS.md, kit.js, .github/ (agentes, skills, prompts, hooks, instrucciones) y plantillas sin sobrescribir nada que ya exista. Uso — /kit-init
+description: Inicializa el proyecto actual para usar el kit multiagente — deja pipeline.config.json, AGENTS.md y .pipeline/ (fuera de git) e instala agentes, skills, prompts y hooks en tu perfil de usuario y el comando global `kit`. Nada del kit queda en el repositorio. Uso — /kit-init
 disable-model-invocation: true
 allowed-tools: ["read", "search", "execute"]
 ---
 
 Inicializa este proyecto para el kit multiagente.
 
-0. **Modo**: por defecto `usuario` (recomendado; no preguntes salvo que el usuario mencione al equipo, el repo o el cloud agent): en el proyecto solo quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/`, excluidos de git; agentes, skills, prompts y hooks van al perfil (`~/.copilot/…` y prompts de usuario de VS Code), el comando global `kit` y las plantillas son por máquina. Alternativas si las pide: `repo` (copias en `.github/` versionadas; necesario para el cloud agent de github.com) o `local` (las mismas copias, excluidas de git). Pásalo como `--modo <usuario|repo|local>`. Si el proyecto ya estaba en `repo`/`local` y el usuario quiere limpiarlo: `kit doctor --fix --usuario` retira las copias.
+0. **Nada del kit en el repositorio**: este kit solo tiene un modo. En el proyecto quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/`, excluidos de git; agentes, skills, prompts y hooks van al perfil (`~/.copilot/…` y prompts de usuario de VS Code); el comando global `kit` y las plantillas son por máquina. Lo único que se versiona es lo que producen los agentes (`docs/specs`, `docs/adr`, `docs/reviews`, `docs/epicas`, `docs/ARQUITECTURA.md`). No preguntes por modos. Si el proyecto tiene copias de una versión antigua (`.github/agents`, `kit.js`…), `kit doctor --fix --usuario` las retira.
 
 1. Si `kit.js` ya existe en el proyecto, ejecuta `kit init --modo <modo>` (o `kit update`, que recuerda el modo) y salta al paso 3.
    Si no, localiza el plugin instalado: busca el archivo `scripts/cli.js` dentro de `~/.copilot/installed-plugins/*/multiagent-kit/` (en Windows `%USERPROFILE%\.copilot\installed-plugins`). Si no existe, el plugin no está instalado: indica al usuario `copilot plugin install multiagent-kit@carlos-kits-copilot` y detente. Si el usuario indica una ruta local del plugin (desarrollo), úsala.
 2. Ejecuta: `node "<ruta>/scripts/cli.js" init --modo <modo>` (funciona igual en Windows, macOS y Linux; requiere Node ≥ 18). Convierte solo un `pipeline.config.ps1` antiguo a `pipeline.config.json`.
-3. Muestra al usuario la salida: qué se creó, qué se fusionó y qué ya existía (los `.kit` que debe revisar). Los archivos de `.github/` que copia el kit se refrescan con `kit update` mientras no los edites (se comprueba con `.github/kit-manifest.json`); para personalizar, crea otros al lado.
+3. Muestra al usuario la salida: qué se creó, qué se fusionó y qué ya existía (los `.kit` que debe revisar). El perfil de usuario (`~/.copilot/…`, prompts de VS Code) se refresca con `kit update` mientras no lo edites; para personalizar, crea archivos al lado.
 4. Lee `pipeline.config.json` y, mirando el código del proyecto (package.json, *.csproj, pyproject.toml, project.godot…), PROPÓN valores concretos para `INSTALL_CMD`, `BUILD_CMD`, `TEST_CMD`, `LINT_CMD`, `BASE_IMAGE` y `CONTAINER_CMD`. No los escribas sin confirmación: preséntalos y pregunta si los aplicas.
 5. Si el proyecto está vacío (solo la idea), dile al usuario que no necesita rellenar los comandos: `/pipeline "su idea"` propondrá el stack y creará el esqueleto.
 6. Si `AGENTS.md` acaba de crearse, ofrece rellenar la descripción del proyecto a partir de lo que ves en el código.

@@ -9,7 +9,7 @@ cd C:\ruta\a\tu\proyecto     # debe ser un repositorio git (git init si no lo es
 copilot
 ```
 
-Dentro de Copilot: `/kit-init` (o en la terminal, si ya tienes el comando global: `kit init`).
+Dentro de Copilot: `/kit-init` (o en la terminal, si ya tienes el comando global: `kit init`). No hay modos que elegir: nada del kit se copia al repositorio.
 
 **En el proyecto solo quedan tres cosas**, y las tres van a `.git/info/exclude` (privado de tu clon, nunca se suben):
 
@@ -115,17 +115,14 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | `kit status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
 | `kit state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
 
-## 3.7 Modos de instalación: usuario (por defecto), local o repo
+## 3.7 Nada del kit en el repositorio
 
-`kit init --modo usuario|local|repo` (`/kit-init` lo pregunta). Elige según de quién sea el repositorio:
+Este kit tiene un solo modo. En el proyecto quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/`, los tres en `.git/info/exclude`; agentes, skills, prompts y hooks viven en tu perfil (`~/.copilot/{agents,skills,hooks}` y `User/prompts` de VS Code) y valen para todos los repositorios del PC. **Lo único que se versiona es lo que producen los agentes**: `docs/specs`, `docs/adr`, `docs/reviews`, `docs/epicas` y `docs/ARQUITECTURA.md`, que forman parte de la entrega y el PR los enlaza. `--modo repo|local` no existe aquí (si lo pasas, se ignora con aviso).
 
-| Modo | Qué queda en el proyecto | Qué ve git | Cuándo |
-|---|---|---|---|
-| `usuario` (por defecto) | `pipeline.config.json`, `AGENTS.md`, `.pipeline/` — todo en `.git/info/exclude` | **Nada** | Siempre que trabajes tú solo con el kit, incluidos repositorios ajenos o del trabajo. Comando `kit`, plantillas y permisos globales. |
-| `local` | Además copias de `kit.js`, plantillas de `docs/` y `.github/` (agentes, skills, prompts, hooks) — todo en `.git/info/exclude` | **Nada** | Quieres las copias a mano en el proyecto sin versionarlas |
-| `repo` | Lo mismo que `local`, versionado | Todo, se commitea | El equipo entero adopta el kit o el cloud agent de github.com necesita los agentes en el repo y quiere exactamente los mismos archivos en el repo |
+Consecuencia: el cloud agent de github.com no puede usar el kit (necesita los agentes dentro del repo). Los agentes se usan desde Copilot CLI y VS Code en tu máquina.
 
-**Proyecto existente en modo `repo`/`local`**: `kit doctor` te avisa de cuántos archivos del kit hay copiados y `kit doctor --fix --usuario` (o `kit init --modo usuario`) los retira — solo los que siguen idénticos a lo que el kit copió; lo que editaste se conserva y se avisa. Los que estaban versionados quedan como borrados en `git status`: revisa y haz commit. `pipeline.config.json` y `AGENTS.md` siguen versionados si ya lo estaban (son del proyecto). Cambiar de vuelta: `kit init --modo repo` vuelve a copiar todo.
+**Proyecto con copias de una versión anterior** (`.github/agents`, `.github/skills`, `kit.js`, plantillas): `kit doctor` las detecta y `kit doctor --fix --usuario` las retira si siguen idénticas a lo que el kit copió; lo que editaste se conserva y se avisa. Las que estaban versionadas quedan como borradas en `git status`: revisa y haz commit.
+
 
 ---
 Anterior: [02-publicar-en-github.md](02-publicar-en-github.md) · Siguiente: [04-flujo-y-compuertas.md](04-flujo-y-compuertas.md) · [Índice](../README.md)

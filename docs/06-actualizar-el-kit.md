@@ -2,17 +2,9 @@
 
 ## 6.1 Qué vive dónde
 
-| En el plugin (fuente de verdad) | Copia gestionada en cada proyecto (`kit update`) | Tuyo en cada proyecto (nunca se sobrescribe) |
+| En el plugin (se actualiza con `copilot plugin update`) | En tu perfil (lo refresca `kit update`) | En el proyecto |
 |---|---|---|
-| `com.github.copilot/agents/` — director + 8 agentes | `.github/agents/` | `pipeline.config.json` |
-| `skills/` — comandos, `metodo-*`, `stack-*` | `.github/skills/` | `AGENTS.md`, `.github/copilot-instructions.md` |
-| `templates/github/prompts/` | `.github/prompts/` | `.github/copilot/settings.json` |
-| `templates/github/hooks/kit.json` | `.github/hooks/kit.json` | `.github/workflows/copilot-setup-steps.yml` |
-| `templates/github/instructions/` | `.github/instructions/kit.instructions.md` | |
-| `templates/kit.js` | `kit.js` | `.gitignore`, `.dockerignore` (se fusionan) |
-| `scripts/` — init/update, hooks, pr, sdk, epica, doctor, estado | (no se copian: `kit.js` los llama en el plugin) | |
-
-A diferencia del kit de Claude Code, aquí **sí** hay copias en el proyecto, porque VS Code y el cloud agent solo leen lo que está en el repositorio. Por eso actualizar tiene dos pasos: el plugin (una vez por PC) y los archivos gestionados (una vez por proyecto, y se hace commit para todo el equipo).
+| `com.github.copilot/agents/*.agent.md`, `skills/*/SKILL.md`, `scripts/*.js`, `templates/` | `~/.copilot/agents`, `~/.copilot/skills`, `~/.copilot/hooks/multiagent-kit.json`, lanzador de hooks; prompts, agentes y `kit.instructions.md` en `User/prompts` de VS Code; comando `kit` en `~/.multiagent-kit/bin` | `pipeline.config.json`, `AGENTS.md`, `.pipeline/` (fuera de git) y los documentos que producen los agentes (versionados) |
 
 ## 6.2 Publicar una versión nueva (tú, en el repositorio del kit)
 
@@ -41,7 +33,7 @@ kit update
 git add .github kit.js ; git commit -m "kit: actualizar a 1.1.0"
 ```
 
-En modo `usuario`, `update` refresca también los archivos del perfil (`~/.copilot/…` y prompts de VS Code). `update` sobrescribe un archivo gestionado **solo si no lo has modificado** desde la última copia (lo comprueba con los hashes de `.github/kit-manifest.json`). Si lo tocaste, deja la versión nueva al lado como `.kit` y te lo dice. Al abrir `copilot`, el hook de inicio avisa cuando los archivos del proyecto son de una versión anterior al plugin; `kit version` lo muestra también.
+`update` refresca los archivos del perfil (`~/.copilot/…` y prompts de VS Code) y sobrescribe uno **solo si no lo has modificado** desde la última copia (hashes en `~/.copilot/multiagent-kit-manifest.json`). Si lo tocaste, deja la versión nueva al lado como `.kit` y te lo dice. Al abrir `copilot`, el hook de inicio avisa cuando los archivos del proyecto son de una versión anterior al plugin; `kit version` lo muestra también.
 
 ## 6.4 Personalizar sin perder las actualizaciones
 

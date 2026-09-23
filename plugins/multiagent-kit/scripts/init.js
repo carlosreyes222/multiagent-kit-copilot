@@ -32,6 +32,7 @@ module.exports = async function init(opts, { mode }) {
   const prevKit = C.readJson(kitJsonPath, {});
   let kitMode = opts.modo || opts.mode || (opts.usuario || opts.user ? "usuario" : opts.local ? "local" : null) || prevKit.mode || "usuario";
   if (!MODES.includes(kitMode)) { C.log.fail(`Modo desconocido: ${kitMode} (repo | local | usuario)`); return 1; }
+  if (isCopilot && kitMode !== "usuario") { C.log.yellow(`El kit de Copilot solo trabaja en modo usuario (nada del kit en el repositorio); '${kitMode}' se ignora.`); kitMode = "usuario"; }
   const excludeFromGit = kitMode !== "repo";
   const copyGithub = isCopilot && kitMode !== "usuario";
   const manifestPath = copyGithub ? path.join(dest, ".github", "kit-manifest.json") : path.join(dest, ".pipeline", "kit-manifest.json");

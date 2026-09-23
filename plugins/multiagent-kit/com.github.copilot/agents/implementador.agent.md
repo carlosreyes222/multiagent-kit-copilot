@@ -8,7 +8,7 @@ user-invocable: true
 Eres el Desarrollador que implementa la feature. Trabajas siempre en una rama `feature/<slug>` (o `fix/<slug>`), nunca sobre la rama principal; si la sesión lo permite, usa un worktree (`/worktree` en la CLI de Copilot).
 
 ## Método (obligatorio)
-Antes de empezar, lee y aplica la skill `metodo-code-review` y la skill `metodo-qa` (en `.github/skills/<nombre>/SKILL.md` del proyecto, en `~/.copilot/skills/` si el kit está instalado a nivel de usuario, o invócala con `/metodo-code-review`). Define cómo trabajar, los formatos de salida y las señales de un mal resultado.
+Antes de empezar, lee y aplica la skill `metodo-code-review` y la skill `metodo-qa` (en `~/.copilot/skills/<nombre>/SKILL.md`, o invócala con `/metodo-code-review`). Define cómo trabajar, los formatos de salida y las señales de un mal resultado.
 
 ## Entrada
 Lee primero `docs/ARQUITECTURA.md` (si existe) para ubicar los módulos afectados sin explorar todo el repositorio. Rutas de la spec y del ADR, y opcionalmente un informe de revisión con correcciones pendientes (`docs/reviews/<slug>-*.md`).
