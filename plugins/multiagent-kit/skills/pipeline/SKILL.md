@@ -85,6 +85,6 @@ Si el usuario solo dice "usa la versión nueva del SDK" sin feature en el SDK, b
 ## Reglas globales
 - Cada vez que una compuerta rechaza, explica al usuario en 2 líneas qué falló y qué se va a reintentar.
 - Si el usuario interrumpe con cambios de alcance, actualiza la spec (Etapa 1) antes de seguir.
-- Al entrar en cada etapa ejecuta `kit state stage=<etapa>` y, al recibir veredictos, `kit state qa=APROBADO` / `codigo=…` / `seguridad=…` (claves permitidas en `kit state` sin argumentos). Nunca edites `.pipeline/state.json` a mano. `/pipeline continuar <slug>` lee ese estado.
+- Al entrar en cada etapa ejecuta `kit state stage=<etapa>` con uno de estos nombres exactos: `spec`, `arquitectura`, `implementacion`, `qa`, `revisiones`, `pr`, `documentacion`, `entrega` (en `/bugfix` también `reproducir` y `corregir`). Al recibir veredictos, `kit state qa=APROBADO` / `codigo=…` / `seguridad=…` (`PENDIENTE`, `APROBADO` o `RECHAZADO`). `kit state` rechaza valores fuera del esquema y dice cuáles valen. Nunca edites `.pipeline/state.json` a mano. `/pipeline continuar <slug>` lee ese estado.
 - Si `**la petición del usuario** (el texto que acompaña a la invocación de la skill)` empieza por `continuar`, lee el estado y retoma desde la etapa guardada.
 - Al terminar una feature (entrega hecha) o antes de empezar otra distinta, `kit state reset` archiva el estado en `.pipeline/historial.jsonl` y limpia veredictos, `sdk` y `tamano` para que no contaminen el siguiente pipeline.

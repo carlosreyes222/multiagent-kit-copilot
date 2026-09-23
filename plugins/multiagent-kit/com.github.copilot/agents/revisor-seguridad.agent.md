@@ -36,8 +36,8 @@ Informe ≤ `MAX_LINES_INFORME` líneas; evidencia en archivo:línea; sin repeti
 ## Salida
 Escribe `docs/reviews/<slug>-seguridad.md` usando la plantilla que indica `kit plantilla seguridad` (la del proyecto en `docs/reviews/_PLANTILLA-seguridad.md` si existe; si no, la del plugin en `<pluginRoot>/templates/docs/reviews/_PLANTILLA-seguridad.md`, con `pluginRoot` en `.pipeline/kit.json`). Cada hallazgo con severidad (CRÍTICA/ALTA/MEDIA/BAJA), evidencia (archivo:línea) y corrección concreta. CRÍTICA o ALTA = bloqueante.
 
-El archivo DEBE contener una línea exacta, al inicio de una línea, con una de estas dos formas:
-`VEREDICTO: APROBADO` o `VEREDICTO: RECHAZADO`
-Los scripts de despliegue la leen literalmente.
+El archivo DEBE contener, cada una al inicio de su línea:
+- `COMMIT: <sha>` — el commit revisado (`git log -1 --format=%h` en la rama). `kit pr` bloquea el PR si después cambió código fuera de `docs/`.
+- Una sola línea de veredicto: `VEREDICTO: APROBADO` o `VEREDICTO: RECHAZADO`. La plantilla trae `VEREDICTO: RECHAZADO` de partida: **sustitúyela**, no añadas otra; dos veredictos distintos cuentan como no aprobado. `kit pr` y el hook de merge la leen literalmente.
 
-Termina tu respuesta con esa misma línea.
+Termina tu respuesta con esa misma línea de veredicto.

@@ -49,24 +49,45 @@
 | `release-manager` | Comprueba compuertas, sube la rama y abre el PR (`kit pr`); nunca fusiona ni despliega | no |
 | `investigador` | Benchmark externo (web, repos, tiendas, reseñas) de productos similares; propone funcionalidades adaptadas con fuente | no |
 
-Cada agente lee al empezar su skill de método (`metodo-spec`, `metodo-adr`, `metodo-code-review`, `metodo-qa`, `metodo-deploy`), que fija procedimiento, severidades y formato de los informes; y las skills de stack que `AGENTS.md` liste. Los agentes viven en el plugin (`plugins/multiagent-kit/com.github.copilot/agents/`) y `kit init` los copia a `.github/agents/` del proyecto. No fijan modelo: heredan el de la sesión (puedes añadir `model:` en el frontmatter, p. ej. `claude-sonnet-4.6` o `gpt-5.4`, y publicar una versión nueva). Ver [08-superficies-copilot.md](08-superficies-copilot.md) para cómo se delegan en cada superficie.
+Cada agente lee al empezar su skill de método (`metodo-spec`, `metodo-adr`, `metodo-code-review`, `metodo-qa`, `metodo-pr`), que fija procedimiento, severidades y formato de los informes; y la skill `stack-react-native`. Los agentes viven en el plugin (`plugins/multiagent-kit/com.github.copilot/agents/`) y `kit init` / `kit update` los instalan en tu perfil (`~/.copilot/agents/` y la carpeta `User/prompts` de VS Code), no en el proyecto. No fijan modelo: heredan el de la sesión (puedes añadir `model:` en el frontmatter, p. ej. `claude-sonnet-4.6` o `gpt-5.4`, y publicar una versión nueva). Ver [08-superficies-copilot.md](08-superficies-copilot.md) para cómo se delegan en cada superficie.
 
 ## 4.3 Las compuertas, en detalle
 
 1. **Humana, tras la spec.** Nada se construye sin que apruebes qué se va a construir.
 2. **Humana, al elegir stack** (solo proyecto vacío). Es la decisión más cara de deshacer.
-3. **Commit.** El hook `commit-gate` (`.github/hooks/kit.json` → `kit hook commit-gate`) ejecuta `LINT_CMD` y `TEST_CMD` antes de cada `git commit`; si fallan, el commit se bloquea y el agente recibe el error para corregirlo. Se desactiva con `GATE_TESTS_ON_COMMIT = false` en `pipeline.config.json`.
-4. **Ramas protegidas y secretos.** El hook `protect-main` bloquea comandos destructivos (`git push --force`, `git reset --hard`, `rm -rf`…), la lectura o edición de `.env*`, keystores y `google-services.json`, y bloquea `git commit` y `git push` en `main`/`master`/`develop`/`release` (lista en `PROTECTED_BRANCHES`; añade las ramas de release del equipo) y bloquea `git merge` a ellas si `docs/reviews/<slug>-seguridad.md` no dice `VEREDICTO: APROBADO`.
-5. **Revisiones.** QA, código y seguridad deben estar APROBADOS y commiteados para que el release-manager abra el PR (`kit pr` lo vuelve a comprobar).
+3. **Commit.** El hook `commit-gate` (`~/.copilot/hooks/multiagent-kit.json` → lanzador → `scripts/hook.js commit-gate`) ejecuta `LINT_CMD` y `TEST_CMD` antes de cada `git commit` del agente, también si lo lanza como `git -C <carpeta> commit`, `cd <carpeta> && git commit` o dentro de `pwsh -Command "…"`. Los commits en un sub-repositorio del proyecto (`SUB_REPOS`) pasan por los comandos del padre; los de un SDK declarado, por su `lint`/`test`. Si fallan, el commit se bloquea y el agente recibe las últimas líneas del error. Se desactiva con `GATE_TESTS_ON_COMMIT = false` en `pipeline.config.json`.
+4. **Ramas protegidas, destructivos y secretos.** El hook `protect-main` analiza cada comando con un parser de shell que entiende sh, cmd y PowerShell (el terminal de VS Code en Windows), así que evalúa igual `git push origin main`, `git -C . push origin main`, `bash -c "…"`, `pwsh -Command "…"`, `cmd /c "…"` o `$(…)`. Ver la tabla de abajo.
+5. **Revisiones.** QA, código y seguridad deben estar APROBADOS, con **un solo veredicto** por informe, y commiteados. Cada informe declara `COMMIT: <sha>` del código que revisó; si después de ese commit cambió algo fuera de `docs/`, `kit pr` bloquea y hay que repetir esa revisión.
 6. **Pull request.** `kit pr` sube la rama y abre el PR contra la rama base acordada; nunca fusiona. El merge, el tren de release y el despliegue son del equipo, con las reglas del repositorio en GitHub como barrera final.
 
-Los hooks solo actúan en proyectos que tienen `pipeline.config.json`; en tus otros proyectos no interfieren. En el cloud agent corren igual (Node viene preinstalado en Ubuntu); además, protege `main` con un ruleset del repositorio, que es la barrera que ningún agente puede saltar (ver [09](09-cloud-agent-y-github.md)).
+**Qué bloquea `protect-main`** (a los agentes; tú, desde tu terminal, no pasas por el hook):
 
-El estado del pipeline (`.pipeline/state.json`, esquema v2) lo escriben solo los scripts: los agentes usan `kit state clave=valor` y tú lo consultas con `kit status`.
+| Grupo | Ejemplos bloqueados | Permitido |
+|---|---|---|
+| Ramas protegidas (`PROTECTED_BRANCHES`, admite `release_*`) | `git commit` estando en una; `git push` a una (`origin main`, `HEAD:main`, `:develop`, `--delete`, `--all`, `--mirror`); `git branch -D/-f` sobre una; `git merge` a una sin `VEREDICTO: APROBADO` | `git push -u origin feature/…`, `git push` desde la feature |
+| Forzados y descartes | `git push --force/-f/--force-with-lease/+rama`, `git reset --hard`, `git clean -f…`, `git checkout -- .`, `git restore .`, `git switch -f` | `git checkout -- src/archivo.ts`, `git restore --staged .`, `git clean -n` |
+| Borrados recursivos | `rm -rf/-fr/-r`, `Remove-Item -Recurse` (y `ri`/`rm`/`del -r`), `rd /s`, `del /s`, `find -delete`, `xargs rm -rf`, `rimraf`, `[System.IO.Directory]::Delete` | `rm archivo`, `Remove-Item archivo -Force` |
+| Merge fuera del kit | `gh pr merge`, merge por `gh api`, `gh repo delete/archive/rename` | `gh pr create`, `gh pr view` |
+| Secretos y firma | leer, copiar, escribir o versionar `.env*` (salvo `.env.example/.sample/.template`), `*.jks`, `*.keystore`, `*.p12`, `*.p8`, `*.pem`, `*.key`, `*.mobileprovision`, `google-services.json`, `GoogleService-Info.plist`, `keystore.properties`, `~/.gradle/gradle.properties` — con las herramientas de leer/editar de VS Code y la CLI y también por terminal (`cat`, `type`, `Get-Content`, `cp`, `>`, `<`, `git add`, `git show HEAD:.env`, `curl -F file=@.env`…) | `echo ".env" >> .gitignore`, `cat .env.example` |
+| Pasos humanos | `kit sdk publish` | — |
+| Nomenclatura (con ticket registrado) | rama `feature/*`/`fix/*` sin el ticket; commit que no empieza por `<tipo>: <TICKET>` (lee también `-F archivo` y heredocs) | `git commit --amend --no-edit` |
+
+Si `pipeline.config.json` no es JSON válido, el hook **falla cerrado**: los agentes no ejecutan comandos (salvo `kit doctor/check/status` y `git status/diff/log`) hasta que lo corrijas, y el aviso aparece al abrir la sesión. Es una defensa en profundidad, no la barrera final: un script que el agente escriba y ejecute no pasa por el hook. La barrera final son las reglas del repositorio en GitHub (ver [09](09-cloud-agent-y-github.md)).
+
+Los hooks solo actúan en proyectos que tienen `pipeline.config.json`; en tus otros proyectos no interfieren.
+
+El estado del pipeline (`.pipeline/state.json`, esquema v2) lo escriben solo los scripts: los agentes usan `kit state clave=valor` y tú lo consultas con `kit status`. Cada escritura toma un lock y reemplaza el archivo de forma atómica, así que el revisor de código y el de seguridad pueden registrar su veredicto a la vez sin pisarse. `kit state` rechaza claves y valores fuera del esquema (`qa=APROBAD`, `feature=../x`…). Si el archivo se corrompe, se guarda como `state.json.corrupto-<fecha>` y el estado sigue limpio.
 
 ## 4.4 La rama base y el pull request
 
-Al iniciar cada `/pipeline` o `/bugfix` el orquestador te pregunta contra qué rama irá el PR (`develop`, `release_xx`, `main`…) y la guarda en el estado (`pr_base`). La rama `feature/*` se crea desde esa base actualizada. Al cerrar, `kit pr --feature <slug> --base <rama>` comprueba que QA, código (salvo modo rápido) y seguridad están aprobados y commiteados y la rama limpia; escribe `docs/reviews/<slug>-pr.md` (título `<tipo>: TICKET …`, documentos enlazados, commits, cómo probar); hace `git push -u origin <rama>` y abre el PR con `gh pr create`. Resultado en la última línea: `PR: CREADO <url>`; `PR: RAMA SUBIDA (motivo)` si `gh` no está o falló (abres el PR con la descripción); `PR: RAMA LOCAL (motivo)` si el push no fue posible (sin remoto, permisos, rama remota con commits nuevos). Nunca `--force`, nunca cambio de base, nunca merge.
+Al iniciar cada `/pipeline` o `/bugfix` el orquestador te pregunta contra qué rama irá el PR (`develop`, `release_xx`, `main`…) y la guarda en el estado (`pr_base`). La rama `feature/*` se crea desde esa base actualizada. Al cerrar, `kit pr --feature <slug> --base <rama>`:
+
+1. Actualiza `origin/<base>` y compara contra ella: si la base no existe (ni en origin ni en local) bloquea sin hacer push; si la rama va por detrás o habrá conflictos, avisa.
+2. Comprueba que QA, código (salvo modo rápido) y seguridad están aprobados con un solo veredicto, commiteados, y que el código no cambió después del `COMMIT:` de cada informe; y que la rama está limpia.
+3. Escribe `docs/reviews/<slug>-pr.md` (título `<tipo>: TICKET …`, documentos enlazados, commits propios frente a la base, cómo probar) y lo commitea.
+4. Hace `git push -u origin <rama>` y abre el PR con `gh pr create`; si ya hay un PR **abierto** para la rama, lo reutiliza (uno cerrado o fusionado no cuenta).
+
+Resultado en la última línea y en el código de salida: `PR: CREADO <url>` (0); `PR: RAMA SUBIDA (motivo)` si `gh` no está o falló (2: abres el PR con la descripción); `PR: RAMA LOCAL (motivo)` si el push no fue posible (2: sin remoto, permisos, rama remota con commits nuevos); `PR BLOQUEADO` con la lista de motivos (1). `git` y `gh` se invocan sin shell: un título de spec con `$(…)`, comillas invertidas o `&` nunca se ejecuta. Nunca `--force`, nunca cambio de base, nunca merge.
 
 ## 4.5 Nomenclatura de ramas y commits
 

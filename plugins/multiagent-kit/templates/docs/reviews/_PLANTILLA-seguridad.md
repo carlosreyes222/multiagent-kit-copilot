@@ -3,9 +3,10 @@
 **Rama:** `feature/<slug>` · **Revisor:** revisor-seguridad · **Fecha:** <AAAA-MM-DD>
 
 VEREDICTO: RECHAZADO
+COMMIT: <sha revisado>
 
-> La línea anterior debe ser exactamente `VEREDICTO: APROBADO` o `VEREDICTO: RECHAZADO`.
-> Los scripts `scripts/prod.js` y el hook de merge la leen literalmente.
+> Sustituye la línea de veredicto por `VEREDICTO: APROBADO` o `VEREDICTO: RECHAZADO` (una sola en todo el informe) y
+> `<sha revisado>` por `git log -1 --format=%h`. `kit pr` y el hook de merge las leen literalmente.
 
 ## Resumen
 Una frase con el estado general.

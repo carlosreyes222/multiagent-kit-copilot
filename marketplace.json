@@ -1,18 +1,26 @@
 {
   "name": "carlos-kits-copilot",
-  "owner": { "name": "Carlos Reyes" },
+  "owner": {
+    "name": "Carlos Reyes"
+  },
   "metadata": {
     "description": "Kits de Carlos para GitHub Copilot",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "multiagent-kit",
-      "description": "Equipo de agentes con compuertas: spec → arquitectura → código → QA → revisiones → staging → producción humana. Comandos /pipeline, /analisis, /bugfix, /ideas.",
-      "version": "2.0.0",
+      "description": "Equipo de agentes con compuertas para React Native bare: spec → arquitectura → código → QA → revisiones de código y seguridad → pull request. Comandos /pipeline, /analisis, /bugfix, /ideas.",
+      "version": "2.1.0",
       "source": "./plugins/multiagent-kit",
       "license": "MIT",
-      "keywords": ["multiagent", "pipeline", "staging", "security"]
+      "keywords": [
+        "multiagent",
+        "pipeline",
+        "react-native",
+        "pull-request",
+        "security"
+      ]
     }
   ]
 }

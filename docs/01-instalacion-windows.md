@@ -33,7 +33,7 @@ Requiere una suscripción a Copilot (individual, Business o Enterprise). En Busi
 
 ## 1.4 VS Code (opcional, para trabajar con `@agentes` y `/prompts`)
 
-Instala VS Code y la extensión **GitHub Copilot Chat**. Con eso VS Code lee `.github/agents`, `.github/skills`, `.github/prompts` y `.github/hooks` del proyecto, que es lo que `kit init` copia. No hace falta instalar el plugin para VS Code: el plugin es para la CLI y el cloud agent.
+Instala VS Code y la extensión **GitHub Copilot Chat**. Es donde usarás el kit a diario (`/pipeline`, `@arquitecto`…); los comandos `kit …` se ejecutan en su terminal integrada (PowerShell en Windows, zsh en macOS). `kit init` instala en tu perfil lo que VS Code necesita: agentes, prompts y `kit.instructions.md` en `User/prompts`, skills en `~/.copilot/skills` y hooks en `~/.copilot/hooks`. VS Code no instala el plugin: los hooks y el comando `kit` usan el que instala la CLI en el paso siguiente, así que la CLI hace falta aunque solo trabajes en VS Code.
 
 ## 1.5 Instalar el plugin del kit
 

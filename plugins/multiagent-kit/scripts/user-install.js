@@ -19,32 +19,8 @@ function vscodePromptsDir() {
   return path.join(h, ".config", "Code", "User", "prompts");
 }
 
-const LAUNCHER = `#!/usr/bin/env node
-// Lanzador de hooks del kit multiagente instalado a nivel de usuario. Generado por 'node kit.js init --modo usuario'.
-// Localiza el plugin instalado y reenvía el evento; si no hay plugin, permite (exit 0) para no bloquear otros proyectos.
-"use strict";
-const fs = require("fs"), path = require("path"), os = require("os"), { spawnSync } = require("child_process");
-function isPlugin(d) {
-  if (!d || !fs.existsSync(path.join(d, "scripts", "hook.js"))) return false;
-  for (const rel of ["plugin.json", ".claude-plugin/plugin.json"]) { const m = path.join(d, rel);
-    if (fs.existsSync(m)) { try { return JSON.parse(fs.readFileSync(m, "utf8")).name === "multiagent-kit"; } catch { return false; } } }
-  return false;
-}
-function* walk(dir, depth) {
-  if (depth < 0 || !fs.existsSync(dir)) return;
-  let es = []; try { es = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
-  for (const e of es) { if (!e.isDirectory()) continue; const p = path.join(dir, e.name); if (isPlugin(p)) yield p; else yield* walk(p, depth - 1); }
-}
-let plugin = isPlugin(process.env.KIT_PLUGIN_ROOT) ? process.env.KIT_PLUGIN_ROOT : null;
-if (!plugin) {
-  const h = os.homedir(); let best = 0;
-  for (const b of [process.env.COPILOT_HOME && path.join(process.env.COPILOT_HOME, "installed-plugins"), path.join(h, ".copilot", "installed-plugins"), path.join(h, ".claude", "plugins")].filter(Boolean))
-    for (const p of walk(b, 5)) { const t = fs.statSync(p).mtimeMs; if (t > best) { best = t; plugin = p; } }
-}
-if (!plugin) process.exit(0);
-const r = spawnSync(process.execPath, [path.join(plugin, "scripts", "hook.js"), process.argv[2] || ""], { stdio: "inherit", env: process.env });
-process.exit(r.status == null ? 0 : r.status);
-`;
+// Lanzador de hooks: siempre el plugin de Copilot, empezando por la ruta de este plugin (ver launcher-src.js).
+const LAUNCHER = require("./launcher-src").hookLauncher({ preferred: C.PLUGIN_ROOT });
 
 function installUser({ update }) {
   const home = copilotHome();

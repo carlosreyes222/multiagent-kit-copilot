@@ -24,10 +24,11 @@ Aplica estas reglas en cualquier trabajo sobre React Native. Son la capa de conv
 | `BUILD_CMD` | `cd android && .\gradlew assembleDebug` (Windows) · `cd android && ./gradlew assembleDebug` (macOS/Linux) |
 | `TEST_CMD` | `npm test -- --ci` |
 | `LINT_CMD` | `npx tsc --noEmit && npm run lint` |
-| `STAGING_PROVIDER` | `comando` — `STAGING_DEPLOY_CMD` instala el APK en un emulador/dispositivo (`adb install -r android/app/build/outputs/apk/debug/app-debug.apk`) o lo sube a Firebase App Distribution; `SMOKE_CMD` puede ser un flujo de Maestro (`maestro test .maestro/smoke.yaml`) |
-| `PROD_DEPLOY_CMD` | build de release firmado (`.\gradlew bundleRelease`) + subida a la pista interna de Play; el arquitecto lo fija en el ADR |
+| `PROTECTED_BRANCHES` | `["main", "develop", "release_*"]` (admite comodín `*`) |
 
-El keystore de release y `google-services.json` no se copian a imágenes ni a `docs/` (están en `.dockerignore`); las claves de firma se leen de variables de entorno.
+El kit termina en el PR: el build firmado, la distribución (Firebase App Distribution, pistas de Play/TestFlight) y el tren de release son del equipo, fuera del kit.
+
+Los agentes no leen ni editan secretos ni material de firma: `.env*` (salvo `.env.example`), `*.jks`, `*.keystore`, `*.p12`, `*.p8`, `*.pem`, `*.mobileprovision`, `google-services.json`, `GoogleService-Info.plist`, `keystore.properties` y `~/.gradle/gradle.properties` (el hook lo bloquea también por terminal). Las claves de firma se leen de variables de entorno o del `gradle.properties` de usuario, nunca del repositorio.
 
 ## 2. Antes de proponer versiones o APIs: consulta lo último
 

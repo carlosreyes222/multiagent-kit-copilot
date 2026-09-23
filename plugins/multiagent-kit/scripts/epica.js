@@ -77,7 +77,8 @@ function verdict(root, slug, kind) {
   if (!fs.existsSync(f)) return "";
   const t = fs.readFileSync(f, "utf8");
   if (kind === "release") return /^\s*STAGING:\s*(LISTO|MANUAL)/m.test(t) ? "APROBADO" : /^\s*STAGING:\s*FALL/m.test(t) ? "RECHAZADO" : "PENDIENTE";
-  return /^\s*(QA|CODIGO|VEREDICTO):\s*APROBADO/m.test(t) ? "APROBADO" : /^\s*(QA|CODIGO|VEREDICTO):\s*RECHAZADO/m.test(t) ? "RECHAZADO" : "PENDIENTE";
+  const v = C.textVerdict(t, "(?:QA|C[OÓ]DIGO|VEREDICTO)");
+  return v === "CONTRADICTORIO" ? "PENDIENTE" : v;
 }
 function gitOk(root, args) { const r = spawnSync("git", ["-C", root].concat(args), { encoding: "utf8" }); return r.status === 0 ? (r.stdout || "").trim() : null; }
 function diskState(root, slug, state) {
@@ -100,7 +101,7 @@ function diskState(root, slug, state) {
   if (v.release === "APROBADO") estado = "terminada";
   if (merged) { estado = "terminada"; detalle = `${branch} → ${mainBranch}`; }
   // el estado vivo manda si el pipeline está en esta HU ahora mismo
-  if (state && state.feature === slug && state.stage && !merged && v.release !== "APROBADO") estado = ({ spec: "spec", arquitectura: "arquitectura", implementacion: "implementacion", qa: "qa", revisiones: "revisiones", staging: "staging", documentacion: "documentacion", entrega: "terminada", reproducir: "qa", corregir: "implementacion" })[state.stage] || estado;
+  if (state && state.feature === slug && state.stage && !merged && v.release !== "APROBADO") estado = ({ spec: "spec", arquitectura: "arquitectura", implementacion: "implementacion", qa: "qa", revisiones: "revisiones", pr: "revisiones", staging: "staging", documentacion: "documentacion", entrega: "terminada", reproducir: "qa", corregir: "implementacion" })[state.stage] || estado;
   const pendientes = [];
   if (estado !== "terminada") {
     if (!has(`docs/specs/${slug}.md`)) pendientes.push("spec");

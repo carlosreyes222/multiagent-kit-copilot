@@ -34,7 +34,11 @@ Sigue la sección "Prueba roja" de `metodo-qa`: evidencia original, reproducció
 ## Salida
 Escribe `docs/reviews/<slug>-qa.md` con: tabla criterio → prueba → estado (PASA/FALLA), lista de bugs encontrados (con pasos para reproducir) y qué quedó sin cubrir.
 
-Termina con una sola línea: `QA: APROBADO` si todo pasa, o `QA: RECHAZADO` si hay fallos.
+El informe DEBE contener, cada una al inicio de su línea:
+- `COMMIT: <sha>` — el de `git rev-parse --short HEAD` **después** de commitear tus pruebas (el código que probaste). `kit pr` bloquea el PR si después de ese commit cambió algo fuera de `docs/`.
+- Una sola línea de veredicto: `QA: APROBADO` o `QA: RECHAZADO`. En una nueva iteración reescribe el informe entero; no añadas otro veredicto debajo (dos veredictos distintos cuentan como no aprobado).
+
+Termina tu respuesta con esa misma línea de veredicto.
 
 ## Lecciones de otros proyectos
 Si existe `~/.multiagent-kit/lecciones.md` (la ruta exacta la muestra `kit lecciones`; el hook de inicio de sesión la anuncia), léelo antes de empezar y aplica lo que corresponda a este stack (versiones que fallaron, comandos que sí funcionan en Windows/macOS, trampas conocidas). Si descubres algo reutilizable en otro proyecto, dilo en tu resumen final con el prefijo `LECCIÓN:` para que `/retro-kit` lo registre.

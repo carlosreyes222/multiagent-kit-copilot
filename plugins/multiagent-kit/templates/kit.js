@@ -25,11 +25,9 @@ process.env.KIT_PROJECT_DIR = PROJECT;
 
 function isPlugin(dir) {
   if (!dir || !fs.existsSync(path.join(dir, "scripts", "common.js"))) return false;
-  for (const rel of ["plugin.json", ".claude-plugin/plugin.json"]) {
-    const m = path.join(dir, rel);
-    if (fs.existsSync(m)) { try { return JSON.parse(fs.readFileSync(m, "utf8")).name === "multiagent-kit"; } catch { return false; } }
-  }
-  return false;
+  // Solo el plugin de Copilot (plugin.json en la raíz); el de Claude Code se llama igual pero usa .claude-plugin/
+  const m = path.join(dir, "plugin.json");
+  try { return JSON.parse(fs.readFileSync(m, "utf8")).name === "multiagent-kit"; } catch { return false; }
 }
 function* walk(dir, depth) {
   if (depth < 0 || !fs.existsSync(dir)) return;
@@ -38,7 +36,7 @@ function* walk(dir, depth) {
   for (const e of entries) {
     if (!e.isDirectory()) continue;
     const p = path.join(dir, e.name);
-    // Claude Code instala en ~/.claude/plugins/cache/<marketplace>/<plugin>/<versión>/; Copilot en installed-plugins/<marketplace>/<plugin>/
+    // Copilot instala en installed-plugins/<marketplace>/<plugin>/
     if (isPlugin(p)) yield p;
     else yield* walk(p, depth - 1);
   }
@@ -53,7 +51,6 @@ function findPluginRoot() {
   const bases = [
     process.env.COPILOT_HOME && path.join(process.env.COPILOT_HOME, "installed-plugins"),
     path.join(home, ".copilot", "installed-plugins"),
-    path.join(home, ".claude", "plugins"),
   ].filter(Boolean);
   let best = null, bestTime = 0;
   for (const b of bases) for (const p of walk(b, 5)) {

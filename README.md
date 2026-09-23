@@ -45,6 +45,32 @@ copilot plugin install multiagent-kit@carlos-kits-copilot
 #    revisión del equipo, merge y tren de release, fuera del kit
 ```
 
+## Dónde se usa cada cosa
+
+- **VS Code** (chat en modo agente): los flujos del día a día, `/pipeline`, `/bugfix`, `/analisis`, `/ideas` y `@agente …`.
+- **Terminal** (la integrada de VS Code sirve, PowerShell o zsh): los comandos de Node.js del kit, `kit check`, `kit status`, `kit doctor`, `kit update`, `kit epica …`, `kit sdk …`.
+- **Copilot CLI**: instalar y actualizar el plugin, que VS Code y el comando `kit` usan aunque no abras la CLI.
+
+## Qué protege el kit
+
+Los hooks revisan cada comando y cada lectura o edición de los agentes en VS Code y en la CLI, con un parser que entiende sh, cmd y PowerShell. Bloquean:
+
+- push y commit en ramas protegidas (admite `release_*`) y los push forzados;
+- borrados recursivos y descartes de trabajo;
+- `gh pr merge`;
+- la lectura, copia o versionado de secretos y material de firma de Android e iOS;
+- commits y ramas sin el ticket de Jira.
+
+`kit pr` solo abre el PR si cada informe tiene un único veredicto APROBADO y revisó el código actual. Detalle en [04 §4.3](docs/04-flujo-y-compuertas.md). Son una defensa en profundidad: la barrera final son las reglas del repositorio en GitHub ([09](docs/09-cloud-agent-y-github.md)).
+
+## Desarrollo del kit
+
+```bash
+npm test        # node --test: hooks, compuerta de commit, estado concurrente, kit pr, lanzadores (Node ≥ 18, sin dependencias)
+```
+
+GitHub Actions repite las pruebas en Windows, macOS y Linux en cada push y PR (`.github/workflows/test.yml`). Antes de publicar una versión: [06 §6.2](docs/06-actualizar-el-kit.md).
+
 ## Estructura del repositorio
 
 ```
@@ -54,8 +80,10 @@ multiagent-kit-copilot/
 │   ├── plugin.json                     ← manifiesto Agent Plugins 1.0 (versión)
 │   ├── skills/                         ← /pipeline, /analisis, /bugfix, /ideas, /retro-kit, /kit-init, metodo-*, stack-react-native
 │   ├── com.github.copilot/agents/      ← director + 8 agentes (*.agent.md)
-│   ├── scripts/                        ← Node.js: init/update, hooks, pr, sdk, epica, doctor, estado
+│   ├── scripts/                        ← Node.js: init/update, hooks, pr, sdk, epica, doctor, estado, lanzadores
 │   └── templates/                      ← config, AGENTS.md, plantillas de docs, prompts e instrucciones de VS Code (van al perfil)
+├── test/                               ← pruebas del kit (npm test); no forman parte del plugin
+├── .github/workflows/test.yml          ← CI de las pruebas (Windows, macOS, Linux)
 ├── docs/                               ← estas guías
 └── CHANGELOG.md
 ```

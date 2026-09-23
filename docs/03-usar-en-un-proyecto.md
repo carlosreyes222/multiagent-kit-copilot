@@ -61,7 +61,7 @@ No hace falta rellenar `pipeline.config.json`. El pipeline detecta que no hay c�
 
 ## 3.4 Comandos dentro de Copilot
 
-En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prompts (`/pipeline` y rellenas la idea) o pidiéndoselo a `@director`. Ver [08-superficies-copilot.md](08-superficies-copilot.md).
+En **VS Code** (la superficie habitual) se invocan como prompts (`/pipeline` y rellenas la idea) o pidiéndoselo a `@director`; en la **CLI**, como skills (`/pipeline …`). Los comandos `kit …` de §3.6 son de Node.js y van en la terminal (la integrada de VS Code sirve). Ver [08-superficies-copilot.md](08-superficies-copilot.md).
 
 | Comando | Qué hace |
 |---|---|
@@ -91,16 +91,17 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | Que el equipo te proponga mejoras o nuevas funciones | `/ideas` (equilibrado), `/ideas --producto "para familias"`, `/ideas --tecnico` |
 | Ver qué hacen productos parecidos y qué funciones adoptar | `/ideas --mercado "apps de hábitos para niños"` o `@investigador benchmark de …` |
 | Una tarea puntual de un rol | `@arquitecto …`, `@revisor-seguridad …`, `@tester …` |
-| Que Copilot lo haga en la nube a partir de un issue | Asignar el issue a Copilot en github.com (ver [09](09-cloud-agent-y-github.md)) |
 
 `/analisis` e `/ideas` nunca tocan código: escriben en `docs/analisis/` y `docs/ideas/`. Los bugs corregidos dejan su causa raíz en `docs/RETRO.md`, que `/ideas` lee para proponer mejoras que ataquen causas recurrentes.
 
-## 3.6 Comandos en la terminal (fuera de Copilot; iguales en Windows y macOS)
+## 3.6 Comandos en la terminal (fuera del chat; iguales en Windows y macOS)
+
+Son scripts de Node.js: funcionan igual en PowerShell, cmd, Git Bash o zsh, y en la terminal integrada de VS Code. Desde cualquier carpeta del proyecto.
 
 | Comando | Qué hace |
 |---|---|
 | `kit check` | Verifica Node ≥ 18, Git, Copilot CLI, `gh`, toolchain Android/iOS (aviso) y la configuración |
-| `kit pr --feature <slug> --base <rama>` | Comprueba compuertas, sube la rama y abre el pull request con `gh` (lo ejecuta el release-manager; si `gh` falla, sube la rama y deja la descripción en `docs/reviews/<slug>-pr.md`) |
+| `kit pr --feature <slug> --base <rama>` | Comprueba compuertas (veredicto único y aprobado, informes commiteados y del código actual), sube la rama y abre el pull request con `gh`. Lo ejecuta el release-manager. Sale con 0 si abrió el PR, 2 si solo subió la rama (o no pudo) con el motivo, 1 si está bloqueado. `--sin-push` solo comprueba |
 | `kit init` | Re-ejecutar la inicialización (sin sobrescribir lo tuyo) |
 | `kit update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
 | `kit migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
@@ -113,7 +114,7 @@ En la **CLI** se invocan como skills (`/pipeline …`); en **VS Code** como prom
 | `kit sdk api <nombre>` · `sdk publish <nombre> --version X.Y.Z` | Breaking changes de la API pública del SDK frente a la rama base · versión definitiva del SDK y dependencia del padre (paso humano). Ver [12](12-sdks-y-end-to-end.md) |
 | `kit sdk list\|sync\|pack\|status` | SDKs del equipo declarados en `SDKS`: sincronizar (ruta local o clon por rama), empaquetar versión de trabajo y enlazarla en el padre (ver [12](12-sdks-y-end-to-end.md)) |
 | `kit status` | Estado del pipeline y compuertas; avisa de documentos demasiado largos |
-| `kit state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano) |
+| `kit state clave=valor` | Actualiza el estado (lo usan los agentes; nunca se edita el JSON a mano). Rechaza claves y valores fuera del esquema y admite escrituras simultáneas |
 
 ## 3.7 Nada del kit en el repositorio
 

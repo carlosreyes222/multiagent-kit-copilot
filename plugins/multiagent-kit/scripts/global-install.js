@@ -12,56 +12,8 @@ const R = require("./remote");
 
 function binDir() { return path.join(R.kitHome(), "bin"); }
 
-// Lanzador global: igual que templates/kit.js pero sin proyecto fijo (lo busca desde el cwd hacia arriba).
-const LAUNCHER = `#!/usr/bin/env node
-// Comando global del kit multiagente. Generado por 'kit init'; se regenera en cada update. No editar.
-"use strict";
-const fs = require("fs"), path = require("path"), os = require("os"), { spawnSync } = require("child_process");
-function isPlugin(dir) {
-  if (!dir || !fs.existsSync(path.join(dir, "scripts", "common.js"))) return false;
-  for (const rel of ["plugin.json", ".claude-plugin/plugin.json"]) { const m = path.join(dir, rel);
-    if (fs.existsSync(m)) { try { return JSON.parse(fs.readFileSync(m, "utf8")).name === "multiagent-kit"; } catch { return false; } } }
-  return false;
-}
-function* walk(dir, depth) {
-  if (depth < 0 || !fs.existsSync(dir)) return;
-  let es = []; try { es = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
-  for (const e of es) { if (!e.isDirectory()) continue; const p = path.join(dir, e.name); if (isPlugin(p)) yield p; else yield* walk(p, depth - 1); }
-}
-function projectKitJson() {
-  let d = process.cwd();
-  for (;;) { const f = path.join(d, ".pipeline", "kit.json"); if (fs.existsSync(f)) { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return null; } } const p = path.dirname(d); if (p === d) return null; d = p; }
-}
-function findPlugin() {
-  if (isPlugin(process.env.KIT_PLUGIN_ROOT)) return process.env.KIT_PLUGIN_ROOT;
-  const home = os.homedir();
-  let best = null, bestTime = 0;
-  const bases = [process.env.COPILOT_HOME && path.join(process.env.COPILOT_HOME, "installed-plugins"), path.join(home, ".copilot", "installed-plugins"), path.join(home, ".claude", "plugins")].filter(Boolean);
-  for (const b of bases) for (const p of walk(b, 5)) { const t = fs.statSync(p).mtimeMs; if (t > bestTime) { best = p; bestTime = t; } }
-  if (best) return best;
-  const kj = projectKitJson();
-  return kj && isPlugin(kj.pluginRoot) ? kj.pluginRoot : null;
-}
-const [cmd = "help", ...rest] = process.argv.slice(2);
-const plugin = findPlugin();
-if (cmd === "hook") {
-  if (!plugin) process.exit(0);
-  const r = spawnSync(process.execPath, [path.join(plugin, "scripts", "hook.js"), rest[0] || ""], { stdio: "inherit", env: process.env });
-  process.exit(r.status == null ? 0 : r.status);
-}
-if (!plugin) {
-  console.error("No encuentro el plugin multiagent-kit instalado en este PC.");
-  console.error("  Claude Code:  /plugin marketplace add carlosreyes222/multiagent-kit  ->  /plugin install multiagent-kit@carlos-kits");
-  console.error("  Copilot CLI:  copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot  ->  copilot plugin install multiagent-kit@carlos-kits-copilot");
-  process.exit(1);
-}
-if (cmd === "help" || cmd === "--help" || cmd === "-h") {
-  const t = fs.readFileSync(path.join(plugin, "templates", "kit.js"), "utf8").split("\\n").filter((l) => /^\\/\\/   node kit\\.js/.test(l)).map((l) => l.replace(/^\\/\\/   node kit\\.js/, "  kit"));
-  console.log("Kit multiagente — comandos (desde cualquier carpeta de un proyecto inicializado):\\n" + t.join("\\n"));
-  process.exit(0);
-}
-require(path.join(plugin, "scripts", "cli.js")).main(cmd, rest).then((code) => process.exit(code || 0), (e) => { console.error("\\n" + (e && e.message ? e.message : e)); process.exit(1); });
-`;
+// Lanzador global: localiza el plugin del sabor del proyecto (ver launcher-src.js); lleva dentro la ruta de este plugin.
+const LAUNCHER = require("./launcher-src").globalLauncher({ preferred: C.PLUGIN_ROOT, flavor: C.FLAVOR });
 
 function installBin() {
   const dir = binDir();

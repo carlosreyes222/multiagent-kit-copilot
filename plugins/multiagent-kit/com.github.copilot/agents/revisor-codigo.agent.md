@@ -19,7 +19,7 @@ La rama `feature/<slug>` y las rutas de spec y ADR.
 Lee la skill `stack-react-native` (React Native bare con CLI, TypeScript; nunca Expo) antes de empezar y aplica sus convenciones, reglas duras y lista de verificación. Si el ADR fijó versiones, respétalas.
 
 ## Proceso
-1. Obtén el cambio completo con `git diff main...feature/<slug>` (ajusta la rama base si el proyecto usa otra).
+1. Obtén el cambio completo con `git diff <base>...HEAD` desde la rama `feature/<slug>`, donde `<base>` es la rama base del PR (`pr_base` en `kit status`; si no está, pregunta al orquestador). Anota el commit revisado: `git log -1 --format=%h`.
 2. Revisa: cumplimiento de la spec y del ADR, errores lógicos, manejo de errores, casos borde, duplicación, nombres, complejidad innecesaria, rendimiento (consultas N+1, bucles costosos), y consistencia con las convenciones del proyecto.
 3. Clasifica cada hallazgo como BLOQUEANTE (debe corregirse antes de desplegar) o SUGERENCIA.
 
@@ -32,4 +32,8 @@ Informe ≤ `MAX_LINES_INFORME` líneas. Máximo 5 SUGERENCIAS; el resto se agru
 ## Salida
 Escribe `docs/reviews/<slug>-codigo.md` con los hallazgos: archivo:línea, descripción, por qué importa, y cómo corregirlo.
 
-Termina con una sola línea: `CODIGO: APROBADO` si no hay bloqueantes, o `CODIGO: RECHAZADO`.
+El informe DEBE contener, cada una al inicio de su línea:
+- `COMMIT: <sha>` — el commit que revisaste (paso 1). `kit pr` bloquea el PR si después cambió código fuera de `docs/`: una corrección posterior exige otra revisión.
+- Una sola línea de veredicto: `CODIGO: APROBADO` si no hay bloqueantes, o `CODIGO: RECHAZADO`. En otra iteración reescribe el informe; dos veredictos distintos cuentan como no aprobado.
+
+Termina tu respuesta con esa misma línea de veredicto.

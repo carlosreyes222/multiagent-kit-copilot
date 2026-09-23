@@ -1,0 +1,11 @@
+{
+  "name": "multiagent-kit-copilot-dev",
+  "private": true,
+  "description": "Pruebas del kit (no forma parte del plugin). Ejecuta: npm test",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

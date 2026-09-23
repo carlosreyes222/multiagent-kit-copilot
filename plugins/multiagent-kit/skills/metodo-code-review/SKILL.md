@@ -44,7 +44,7 @@ En el informe de seguridad las severidades son CRÍTICA/ALTA (bloqueantes), MEDI
 
 ## 5. Formato del informe (`docs/reviews/<slug>-codigo.md` o `-seguridad.md`)
 
-1. Veredicto en la primera línea útil (`CODIGO: APROBADO|RECHAZADO` o `VEREDICTO: APROBADO|RECHAZADO` en seguridad).
+1. Veredicto en la primera línea útil (`CODIGO: APROBADO|RECHAZADO` o `VEREDICTO: APROBADO|RECHAZADO` en seguridad), una sola vez en todo el informe, y debajo `COMMIT: <sha>` con el commit revisado (`git log -1 --format=%h`). `kit pr` bloquea si hay veredictos contradictorios o si el código cambió después de ese commit.
 2. Resumen en 3 líneas: qué se revisó (rama, número de archivos), qué está bien, qué bloquea.
 3. Hallazgos ordenados por severidad, con el formato anterior.
 4. Tabla criterio de aceptación → cumplido / no / sin prueba.

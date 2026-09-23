@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.1.0 — hooks que no se saltan, PR ligado al código revisado y pruebas del kit
+Después de actualizar: `copilot plugin update multiagent-kit@carlos-kits-copilot` y `kit update` (regenera el lanzador de hooks y el comando `kit`), y recarga VS Code.
+- **Hooks reescritos con un parser de shell** (sh, cmd y PowerShell) en lugar de expresiones sobre el texto crudo. La versión 2.0.0 dejaba pasar 62 de los 90 comandos peligrosos de la nueva batería de pruebas. Ahora se bloquean:
+  - opciones globales de git: `git -C dir push origin main`, `git -c k=v commit`, `git --no-pager push origin HEAD:main`;
+  - envoltorios: `bash -c`, `sh -lc`, `pwsh -Command`, `-EncodedCommand`, `cmd /c`, `sudo`, `$(…)`, `(…)`, `{ … }`;
+  - push de todas las ramas (`--all`, `--mirror`) y push forzado con `+rama` o `-uf`;
+  - descartes de trabajo: `git clean -f`, `git checkout -- .`, `git restore .`, `git switch -f`, `git branch -D/-f` sobre una rama protegida;
+  - borrados recursivos en las tres shells: `rm -fr`/`-r`, `Remove-Item -r`, `ri`, `rd /s`, `del /s`, `find -delete`, `xargs rm`, `rimraf`;
+  - `gh pr merge` y el merge por `gh api`;
+  - la lectura de secretos por terminal (`cat`, `type`, `Get-Content`, `cp`, `>`, `<`, `git add`, `git show HEAD:.env`, `curl -F @.env`…).
+- **VS Code**: reconoce `run_in_terminal`, `read_file`, `create_file`, `replace_string_in_file`, `multi_replace_string_in_file`, `insert_edit_into_file` y `apply_patch`, y responde también con `hookSpecificOutput`. En Copilot CLI se evalúa además `write_bash`.
+- **Secretos de iOS y firma**: `GoogleService-Info.plist`, `*.p8`, `*.mobileprovision`, `*.key`, `keystore.properties` y `~/.gradle/gradle.properties`, además de los que ya había.
+- **Falla cerrado**: con `pipeline.config.json` ilegible, los agentes solo pueden diagnosticar (`kit doctor/check/status`, `git status/diff/log`); `session-start` lo avisa. Antes el hook fallaba abierto y desactivaba todas las protecciones.
+- **Compuerta de commit**: se aplica también a `git -C dir commit`, `cd dir && git commit` y a los sub-repositorios del proyecto (`SUB_REPOS`, que antes se la saltaban).
+- **`PROTECTED_BRANCHES` admite comodín** (`release_*`); la plantilla lo incluye.
+- **Estado seguro con agentes en paralelo**: lock y escritura atómica en `.pipeline/state.json` (antes el revisor de código y el de seguridad podían perder un veredicto). Un JSON corrupto se aparta como `state.json.corrupto-<fecha>`. `kit state` valida los valores (veredictos, etapas, slug sin `..`, ticket, rama base). `kit status` muestra las compuertas del PR en lugar de `staging_ok/smoke_ok`.
+- **`kit pr`**:
+  - invoca git y gh sin shell, así que un título de spec con `$(…)` o `&` ya no puede ejecutarse;
+  - exige un único veredicto por informe (dos distintos, p. ej. el `RECHAZADO` de la plantilla más un `APROBADO`, cuentan como no aprobado);
+  - bloquea si el código cambió después del `COMMIT: <sha>` que declara cada informe (los informes sin esa línea solo generan un aviso);
+  - hace `git fetch` de la base y la compara con `origin/<base>`: bloquea si la base no existe y avisa si la rama va por detrás o habrá conflictos;
+  - solo reutiliza un PR **abierto**;
+  - códigos de salida: 0 = creado, 2 = entrega parcial, 1 = bloqueado.
+- **Agentes**: tester, revisor-codigo y revisor-seguridad escriben `COMMIT: <sha>` y un único veredicto; el revisor de código compara contra `pr_base` y no contra `main` fijo; release-manager y `metodo-pr` conocen los nuevos bloqueos y los códigos de salida. La plantilla de seguridad ya no menciona `prod.js`.
+- **Lanzadores sin mezclar kits**: con los kits de Claude Code y de Copilot instalados, el comando `kit` y el lanzador de hooks elegían el plugin `multiagent-kit` más reciente de cualquiera de los dos. Ahora `scripts/launcher-src.js` los genera con la ruta del plugin que los instaló y eligen por sabor: los hooks de Copilot solo usan el plugin de Copilot, y `kit` usa el del proyecto (`AGENTS.md` o `CLAUDE.md`). Entre varias instalaciones gana la versión más alta, no la fecha.
+- `session-start` ya no borra el `mode` de `.pipeline/kit.json`, y con eso desaparece el aviso "falta kit.js" en modo usuario.
+- **Restos de la 2.0 retirados**: descripciones y palabras clave de `plugin.json` y `marketplace.json` (staging, Android, NestJS, Ktor), la tabla de staging/producción de `stack-react-native` y las ramas protegidas por defecto (ahora `main, master, develop, release`).
+- **Pruebas del kit**: `npm test` (`node --test`, sin dependencias) con 287 casos (hooks en formato VS Code y CLI, compuerta de commit, estado concurrente, `kit pr` contra un origin local, lanzadores con los dos kits) y GitHub Actions en Windows, macOS y Linux. `KIT_TEST_PLUGIN=<ruta>` ejecuta la batería contra otra copia del plugin.
+- Documentación: reparto VS Code (flujos) / terminal (`kit`), tabla de lo que bloquea el hook, problemas frecuentes nuevos, publicación con `npm test`, sincronización con el kit de Claude (lanzador compartido) y retirada de las referencias a `.github/` y al cloud agent.
+
 ## 2.0.0 — kit para el trabajo: React Native bare y entrega por pull request
 - **Alcance**: solo React Native bare (`@react-native-community/cli`, TypeScript, sin Expo). Se retiran las skills `stack-android`, `stack-nestjs`, `stack-ktor` y `stack-db`; el arquitecto propone variantes dentro de RN bare y todos los agentes aplican `stack-react-native`.
 - **El flujo termina en el PR**: nuevo `kit pr --feature <slug> --base <rama>` (comprueba compuertas aprobadas y commiteadas, escribe `docs/reviews/<slug>-pr.md`, `git push -u` y `gh pr create`; si `gh` falla deja la rama subida, y si el push falla, la rama local, siempre con el motivo). El release-manager y la skill `metodo-pr` sustituyen a staging/`metodo-deploy`. El orquestador pregunta la rama base al iniciar cada pipeline y bugfix (`pr_base` en el estado) y la rama `feature/*` se crea desde ella.

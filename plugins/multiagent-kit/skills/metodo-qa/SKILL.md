@@ -46,7 +46,7 @@ Tras la corrección, la misma prueba debe pasar sin cambios, y se añaden varian
 
 ## 5. Formato del informe (`docs/reviews/<slug>-qa.md`)
 
-1. Primera línea útil: `QA: APROBADO` o `QA: RECHAZADO`.
+1. Primera línea útil: `QA: APROBADO` o `QA: RECHAZADO` (una sola en todo el informe) y debajo `COMMIT: <sha>` con el commit probado, tras commitear las pruebas (`git rev-parse --short HEAD`).
 2. Tabla: criterio → prueba(s) → PASA / FALLA / SIN PRUEBA.
 3. Bugs encontrados (§3), ordenados por severidad.
 4. Bordes cubiertos y bordes que quedaron fuera, con motivo.

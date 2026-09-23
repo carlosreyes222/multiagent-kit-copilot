@@ -5,7 +5,7 @@
     "TEST_DB_CMD": "Opcional: levantar dependencias de prueba (mock server, etc.). Vacío = el tester no levanta nada.",
     "SUB_REPOS": "Sub-repositorios con su propio .git dentro del proyecto (monorepos con app + librerías).",
     "SDKS": "SDKs del equipo que esta app consume. Cada entrada: nombre · tipo (npm|android|ios|comando) · paquete · ruta y/o repo (+ rama) · build/test/lint · publicar/enlazar · destino. Ej: {\"nombre\":\"core\",\"tipo\":\"npm\",\"paquete\":\"@bcp/core-sdk\",\"ruta\":\"../core-sdk\",\"repo\":\"https://github.com/bcp/core-sdk.git\",\"rama\":\"develop\"}",
-    "PROTECTED_BRANCHES": "Ramas donde los agentes nunca hacen commit, push ni merge. Añade las de release del equipo (p. ej. \"release_*\" no admite comodín: lista los nombres).",
+    "PROTECTED_BRANCHES": "Ramas donde los agentes nunca hacen commit, push ni merge. Admite comodín * para las de release del equipo (p. ej. \"release_*\").",
     "compuertas": "GATE_TESTS_ON_COMMIT: lint + tests antes de cada commit del agente. MAX_LINES_*: límites de tamaño de documentos; kit status avisa si se superan.",
     "entrega": "El flujo termina en el pull request (kit pr). La rama base se pregunta en cada pipeline y queda en el estado (pr_base)."
   },
@@ -20,7 +20,8 @@
     "main",
     "master",
     "develop",
-    "release"
+    "release",
+    "release_*"
   ],
   "GATE_TESTS_ON_COMMIT": true,
   "MAX_LINES_ARQUITECTURA": 300,
