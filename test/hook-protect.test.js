@@ -240,6 +240,7 @@ describe("protect-main: herramientas de lectura y edición", () => {
   }
 });
 
+// Solo el kit de Copilot (el del trabajo) exige el ticket en ramas y commits; en el de Claude todo esto se permite.
 describe("protect-main: ticket de Jira registrado", () => {
   let dir;
   before(() => { dir = H.makeProject({}, { branch: "feature/ABC-123-login" }); H.writeState(dir, { feature: "ABC-123-login", ticket: "ABC-123" }); });
@@ -260,14 +261,14 @@ describe("protect-main: ticket de Jira registrado", () => {
   ];
   for (const [cmd, deny] of cases) {
     test(`${deny ? "bloquea" : "permite"}: ${cmd.split("\n")[0]}`, () => {
-      assert.strictEqual(H.runHook("protect-main", H.vscodeBash(cmd, dir)).code, deny ? 2 : 0);
+      assert.strictEqual(H.runHook("protect-main", H.vscodeBash(cmd, dir)).code, deny && H.FLAVOR === "copilot" ? 2 : 0);
     });
   }
   test("git commit -F lee el mensaje del archivo", () => {
     fs.writeFileSync(path.join(dir, "msg-ok.txt"), "feat: ABC-123 login\n");
     fs.writeFileSync(path.join(dir, "msg-mal.txt"), "feat: login\n");
     assert.strictEqual(H.runHook("protect-main", H.vscodeBash("git commit -F msg-ok.txt", dir)).code, 0);
-    assert.strictEqual(H.runHook("protect-main", H.vscodeBash("git commit -F msg-mal.txt", dir)).code, 2);
+    assert.strictEqual(H.runHook("protect-main", H.vscodeBash("git commit -F msg-mal.txt", dir)).code, H.FLAVOR === "copilot" ? 2 : 0);
   });
 });
 
@@ -289,6 +290,26 @@ describe("protect-main: configuración ilegible (falla cerrado)", () => {
   test("session-start avisa del error", () => {
     const r = H.runHook("session-start", { cwd: dir });
     assert.strictEqual(r.code, 0);
-    assert.match(JSON.parse(r.stdout).additionalContext, /no es JSON válido/);
+    const msg = H.FLAVOR === "copilot" ? JSON.parse(r.stdout).additionalContext : r.stdout;
+    assert.match(msg, /no es JSON válido/);
   });
+});
+
+// Eventos en el formato de Claude Code (Bash, Read, Write, Edit, MultiEdit): el hook es el mismo en los dos kits.
+describe("protect-main: formato de Claude Code", () => {
+  let dir;
+  before(() => { dir = H.makeProject({}, { branch: "feature/x" }); });
+  after(() => H.rm(dir));
+  const ev = (tool_name, tool_input) => ({ hook_event_name: "PreToolUse", tool_name, tool_input, cwd: dir });
+  const cases = [
+    ["Read .env", () => ev("Read", { file_path: path.join(dir, ".env") }), true],
+    ["Write .env", () => ev("Write", { file_path: ".env", content: "x" }), true],
+    ["Edit keystore", () => ev("Edit", { file_path: "android/app/release.keystore", old_string: "a", new_string: "b" }), true],
+    ["MultiEdit .env", () => ev("MultiEdit", { file_path: ".env", edits: [] }), true],
+    ["Bash push a main", () => ev("Bash", { command: "git push origin main" }), true],
+    ["Bash kit prod", () => ev("Bash", { command: "kit prod" }), true],
+    ["Read de código", () => ev("Read", { file_path: "src/a.ts" }), false],
+    ["Bash npm test", () => ev("Bash", { command: "npm test" }), false],
+  ];
+  for (const [name, mk, deny] of cases) test(`${deny ? "bloquea" : "permite"}: ${name}`, () => assert.strictEqual(H.runHook("protect-main", mk()).code, deny ? 2 : 0));
 });

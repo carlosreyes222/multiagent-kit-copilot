@@ -170,12 +170,13 @@ module.exports = async function init(opts, { mode }) {
   C.writeJson(manifestPath, { version: C.VERSION, mode: kitMode, updatedAt: C.nowIso(), files, templates });
   C.writeJson(kitJsonPath, { pluginRoot: C.PLUGIN_ROOT, version: C.VERSION, projectFilesVersion: C.VERSION, mode: kitMode, initializedAt: prevKit.initializedAt || C.nowIso(), updatedAt: C.nowIso() });
   excludeList.add(".pipeline/");
-  // Copilot: documentos de trabajo de los agentes fuera de git (solo docs/ARQUITECTURA.md se versiona); se archivan en el
-  // perfil al cerrar cada feature (kit state reset)
-  if (isCopilot) C.WORK_DOCS.forEach((w) => excludeList.add(w));
+  // Documentos de trabajo de los agentes fuera de git (solo docs/ARQUITECTURA.md se versiona); se archivan en el perfil al
+  // cerrar cada feature (kit state reset). En modo repo también: lo del kit se comparte, los informes de cada feature no.
+  C.WORK_DOCS.forEach((w) => excludeList.add(w));
 
   // --- .git/info/exclude (modo local y usuario) ---
-  if (excludeFromGit) {
+  if (!excludeFromGit) for (const k of [...excludeList]) if (!C.WORK_DOCS.includes(k)) excludeList.delete(k);
+  {
     const gitDir = path.join(dest, ".git");
     if (fs.existsSync(gitDir) && fs.statSync(gitDir).isDirectory()) {
       const exPath = path.join(gitDir, "info", "exclude");

@@ -1,7 +1,7 @@
 // Diagnóstico completo del kit en este PC y este proyecto, con el arreglo de cada cosa. Uso:
 //   node kit.js doctor          -> revisa y propone
 //   node kit.js doctor --fix    -> aplica los arreglos seguros (permisos, kit.js, .kit idénticos, locks de git antiguos,
-//                                  exclusión de git de los documentos de trabajo en el kit de Copilot)
+//                                  exclusión de git de los documentos de trabajo)
 // Complementa a `check` (herramientas) : doctor mira el kit en sí — versiones, modo, hooks vivos, permisos, restos.
 "use strict";
 const fs = require("fs");
@@ -83,8 +83,8 @@ module.exports = async function doctor(opts) {
     if (t.status === 0) bad("kit.js / pipeline.config.json están versionados en git aunque el modo es " + mode + ".", "git rm --cached kit.js pipeline.config.json (quedan en disco, excluidos)");
   }
 
-  // 2b. Documentos de trabajo (Copilot): solo docs/ARQUITECTURA.md se versiona; el resto, fuera de git y archivado al cerrar
-  if (isCopilot && fs.existsSync(path.join(root, ".git"))) {
+  // 2b. Documentos de trabajo: solo docs/ARQUITECTURA.md se versiona; el resto, fuera de git y archivado al cerrar
+  if (root && fs.existsSync(path.join(root, ".git"))) {
     C.log.step("Documentos de trabajo (specs, ADR, informes, épicas…)");
     const ex = path.join(root, ".git", "info", "exclude");
     const exTxt = fs.existsSync(ex) ? fs.readFileSync(ex, "utf8").split(/\r?\n/) : [];

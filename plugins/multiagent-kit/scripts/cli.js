@@ -40,8 +40,7 @@ async function main(cmd, argv) {
       console.log(`${p}\n`); console.log(fs.readFileSync(p, "utf8")); return 0;
     }
     case "archivo": {
-      // Documentos de features cerradas de este proyecto (kit de Copilot): kit archivo [slug]
-      if (C.FLAVOR !== "copilot") { console.error("'archivo' es del kit de Copilot."); return 1; }
+      // Documentos de features cerradas de este proyecto: kit archivo [slug]
       const fs = require("fs");
       const root = C.requireProjectRoot();
       const base = C.archiveRoot(root);
@@ -58,7 +57,7 @@ async function main(cmd, argv) {
       if (!list.length) { C.log.plain("(vacío: las features se archivan al cerrarlas con kit state reset)"); return 0; }
       list.map((f) => C.readJson(path.join(C.archiveDir(root, f), "archivo.json"), { feature: f }))
         .sort((a, b) => String(b.archivado_at).localeCompare(String(a.archivado_at)))
-        .forEach((a) => console.log(`  ${String(a.archivado_at || "").slice(0, 10)}  ${a.feature.padEnd(40)} ${a.pr_url || a.pr_estado || ""}`));
+        .forEach((a) => console.log(`  ${String(a.archivado_at || "").slice(0, 10)}  ${a.feature.padEnd(40)} ${a.pr_url || a.pr_estado || a.promoted_tag || (a.staging_ok ? "staging ok" : "")}`));
       return 0;
     }
     case "version": {
@@ -69,7 +68,7 @@ async function main(cmd, argv) {
       return 0;
     }
     default:
-      console.error(`Comando desconocido: ${cmd}. Usa: check | ${C.FLAVOR === "claude" ? "staging | smoke | prod" : "pr"} | status | state | init | update | migrate | sdk | epica | plantilla | doctor | lecciones${C.FLAVOR === "copilot" ? " | archivo" : ""} | version`);
+      console.error(`Comando desconocido: ${cmd}. Usa: check | ${C.FLAVOR === "claude" ? "staging | smoke | prod" : "pr"} | status | state | init | update | migrate | sdk | epica | plantilla | doctor | lecciones | archivo | version`);
       return 1;
   }
 }

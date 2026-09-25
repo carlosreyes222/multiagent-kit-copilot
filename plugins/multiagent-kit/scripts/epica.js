@@ -70,7 +70,7 @@ function create(root, name, titulo, extra = {}) {
   return load(root, name);
 }
 // Épica completa (todas las HU terminadas o descartadas): se copia al archivo del perfil y, si no está versionada, sale del
-// proyecto (kit de Copilot: documentos de trabajo fuera de git). Devuelve la ruta del archivo o "".
+// proyecto (documentos de trabajo fuera de git). Devuelve la ruta del archivo o "".
 function archiveIfComplete(root, name) {
   if (!load(root, name)) return "";
   const { p } = status(root, name, { quiet: true });
@@ -96,7 +96,7 @@ function verdict(root, slug, kind) {
 function gitOk(root, args) { const r = spawnSync("git", ["-C", root].concat(args), { encoding: "utf8" }); return r.status === 0 ? (r.stdout || "").trim() : null; }
 function diskState(root, slug, state) {
   // cerrada con `kit state reset`: sus documentos ya están en el archivo del perfil
-  if (C.FLAVOR === "copilot" && C.isArchived(root, slug)) return { estado: "terminada", detalle: "archivada", pendientes: [], branch: "", merged: false };
+  if (C.isArchived(root, slug)) return { estado: "terminada", detalle: "archivada", pendientes: [], branch: "", merged: false };
   const has = (p) => fs.existsSync(path.join(root, p));
   const branchList = gitOk(root, ["branch", "--list", `feature/${slug}`, `fix/${slug}`]) || "";
   const branch = branchList.replace(/^\*?\s*/gm, "").split(/\r?\n/).filter(Boolean)[0] || "";

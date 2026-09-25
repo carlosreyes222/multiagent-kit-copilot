@@ -8,6 +8,9 @@ const { spawnSync } = require("child_process");
 // KIT_TEST_PLUGIN: probar otra copia del plugin (p. ej. una versión anterior, para comparar)
 const PLUGIN = process.env.KIT_TEST_PLUGIN ? path.resolve(process.env.KIT_TEST_PLUGIN) : path.resolve(__dirname, "..", "plugins", "multiagent-kit");
 const SCRIPTS = path.join(PLUGIN, "scripts");
+// Estas pruebas son las mismas en los dos kits: FLAVOR ("claude" | "copilot") marca lo que cambia entre ellos.
+const FLAVOR = fs.existsSync(path.join(PLUGIN, "plugin.json")) ? "copilot" : "claude";
+const CONTEXT_FILE = FLAVOR === "claude" ? "CLAUDE.md" : "AGENTS.md";
 
 // Entorno limpio y determinista para git y para los scripts del kit
 const ENV = Object.assign({}, process.env, {
@@ -37,7 +40,7 @@ function makeProject(config = {}, { branch, versionedDocs } = {}) {
   if (!versionedDocs) fs.appendFileSync(path.join(dir, ".git", "info", "exclude"), "\n" + WORK_DOCS.map((w) => "/" + w).join("\n") + "\n");
   const cfg = Object.assign({ PROTECTED_BRANCHES: ["main", "develop", "release_*"], LINT_CMD: "", TEST_CMD: "", GATE_TESTS_ON_COMMIT: true }, config);
   fs.writeFileSync(path.join(dir, "pipeline.config.json"), JSON.stringify(cfg, null, 2));
-  fs.writeFileSync(path.join(dir, "AGENTS.md"), "# proyecto\n");
+  fs.writeFileSync(path.join(dir, CONTEXT_FILE), "# proyecto\n");
   fs.writeFileSync(path.join(dir, ".gitignore"), ".pipeline/\n");
   git(dir, "add", ".");
   git(dir, "commit", "-q", "-m", "init");
@@ -70,4 +73,4 @@ function runKit(dir, args, { env } = {}) {
 process.on("exit", () => { try { fs.rmSync(ENV.KIT_HOME, { recursive: true, force: true }); } catch { /* sin permiso */ } });
 function rm(dir) { try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5 }); } catch { /* Windows: archivo aún abierto */ } }
 
-module.exports = { WORK_DOCS, PLUGIN, SCRIPTS, ENV, tmpDir, git, makeProject, writeState, vscodeBash, cliBash, cliPowershell, vscodeTool, cliTool, runHook, runKit, rm };
+module.exports = { FLAVOR, CONTEXT_FILE, WORK_DOCS, PLUGIN, SCRIPTS, ENV, tmpDir, git, makeProject, writeState, vscodeBash, cliBash, cliPowershell, vscodeTool, cliTool, runHook, runKit, rm };

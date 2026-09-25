@@ -212,7 +212,7 @@ function resetState(root) {
   });
 }
 
-// --- Documentos de trabajo de los agentes (kit de Copilot) -----------------------------------------
+// --- Documentos de trabajo de los agentes (los dos kits) -------------------------------------------
 // Solo docs/ARQUITECTURA.md (y su detalle) se versiona. Specs, ADR, informes, épicas, análisis, ideas y feedback del kit
 // son de trabajo: viven en el proyecto fuera de git (.git/info/exclude) y al cerrar la feature se archivan en el perfil,
 // en ~/.multiagent-kit/archivo/<proyecto>/<slug>/, para consultarlos después (retro, auditoría) sin ensuciar el repo.

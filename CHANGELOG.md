@@ -9,7 +9,7 @@ Después de actualizar: `copilot plugin update multiagent-kit@carlos-kits-copilo
 - **`kit doctor`**: sección "Documentos de trabajo" — exclusiones que faltan (`--fix` las añade), documentos versionados (propone `git rm -r --cached …`; no lo hace solo) y features con PR entregado sin archivar.
 - **Pipeline**: la documentación de arquitectura pasa a la Etapa 6, **antes** del PR, y el orquestador commitea `docs/ARQUITECTURA.md` en la rama: llega en el mismo PR (antes quedaba sin commitear después de abrirlo). El PR es la Etapa 7.
 - Agentes y skills (`release-manager`, `metodo-pr`, `pipeline`, `bugfix`, instrucciones del kit, `retro-kit`) y guías 03, 04, 05 y 09 actualizados a la nueva política.
-- Pruebas: 297 casos; `KIT_HOME` temporal y `KIT_NO_PATH` para que `npm test` nunca toque tu perfil ni tu PATH.
+- Pruebas: 305 casos, la misma batería que el kit de Claude (scripts y pruebas idénticos en los dos repos; cada prueba sabe qué es propio de cada kit, p. ej. el ticket o `kit pr`), incluidos eventos en formato de Claude Code; `KIT_HOME` temporal y `KIT_NO_PATH` para que `npm test` nunca toque tu perfil ni tu PATH.
 
 ## 2.1.0 — hooks que no se saltan, PR ligado al código revisado y pruebas del kit
 Después de actualizar: `copilot plugin update multiagent-kit@carlos-kits-copilot` y `kit update` (regenera el lanzador de hooks y el comando `kit`), y recarga VS Code.

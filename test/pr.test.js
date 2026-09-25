@@ -45,7 +45,19 @@ function writeReport(dir, kind, txt) {
 }
 const commitAll = (dir, msg) => { H.git(dir, "add", "."); H.git(dir, "commit", "-q", "-m", msg); };
 
-describe("kit pr", () => {
+// kit pr solo existe en el kit de Copilot; en el de Claude el flujo sigue con staging y producción.
+describe("kit pr en el kit de Claude", { skip: H.FLAVOR !== "claude" }, () => {
+  test("no existe: indica el flujo de staging", () => {
+    const dir = H.makeProject({}, { branch: "feature/x" });
+    try {
+      const r = H.runKit(dir, ["pr", "--feature", "x", "--base", "develop"]);
+      assert.strictEqual(r.code, 1);
+      assert.match(r.out, /kit de Copilot/);
+    } finally { H.rm(dir); }
+  });
+});
+
+describe("kit pr", { skip: H.FLAVOR !== "copilot" }, () => {
   let ctx;
   beforeEach(() => { ctx = null; });
   afterEach(() => { if (ctx) { H.rm(ctx.dir); H.rm(ctx.origin); } });

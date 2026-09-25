@@ -64,11 +64,11 @@ describe("kit state", () => {
     assert.strictEqual(hist.pop().feature, "ABC-1-algo");
     assert.strictEqual(readState(dir).feature, "");
   });
-  test("kit status muestra las compuertas del PR, no las de staging", () => {
+  test("kit status muestra las compuertas de su flujo (PR en Copilot, staging/producción en Claude)", () => {
     H.runKit(dir, ["state", "feature=ABC-1-algo"]);
     const r = H.runKit(dir, ["status"]);
-    assert.match(r.out, /Compuertas para el PR/);
-    assert.doesNotMatch(r.out, /staging_ok/);
+    if (H.FLAVOR === "copilot") { assert.match(r.out, /Compuertas para el PR/); assert.doesNotMatch(r.out, /staging_ok =/); }
+    else { assert.match(r.out, /Compuertas para producción/); assert.match(r.out, /staging_ok = /); }
   });
 });
 
