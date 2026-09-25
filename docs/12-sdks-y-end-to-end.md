@@ -24,7 +24,7 @@ En `pipeline.config.json` del proyecto padre:
 | `paquete` | npm/android/ios | npm: nombre del paquete · android: `grupo:artefacto` · ios: nombre del pod o del paquete Swift |
 | `ruta` | una de las dos | Carpeta local del SDK, relativa al proyecto (p. ej. `../core-sdk`). Si existe, se usa tal cual |
 | `repo` | una de las dos | URL git. Si no hay `ruta` (o no existe), se clona en `.pipeline/sdks/<nombre>` (fuera de git) |
-| `rama` | no | Rama a usar (`main` por defecto). Se puede cambiar puntualmente con `kit sdk sync <nombre> --rama x` |
+| `rama` | no | Rama que se descarga y actualiza (`main` por defecto), p. ej. `"rama": "develop"`. Debe ser un nombre de rama válido (sin espacios, `..` ni caracteres especiales); `kit check`/`kit doctor` avisan si no. Se puede cambiar puntualmente con `kit sdk sync <nombre> --rama x`. Con `ruta` (carpeta local tuya) el kit no cambia de rama: solo informa en cuál está |
 | `build`, `test`, `lint` | no | Comandos que se ejecutan **dentro del SDK**. `build` antes de empaquetar; `test`/`lint` los usa la compuerta de commit cuando el agente hace commit en el SDK |
 | `publicar`, `enlazar` | tipo `comando` | `publicar` corre en el SDK (recibe `SDK_VERSION`, `SDK_DIR`, `PROJECT_DIR`); `enlazar` corre en el padre. En npm/android/ios `publicar` sustituye el paso por defecto |
 | `destino` | no | `package.json` o `Podfile` concreto del padre si no es el de la raíz (en monorepos el kit busca hasta 3 niveles) |
@@ -32,12 +32,15 @@ En `pipeline.config.json` del proyecto padre:
 
 `kit check` valida las entradas.
 
+**Cada cuánto se actualizan.** Al empezar un flujo (`/pipeline`, `/analisis`, `/bugfix`) el orquestador ejecuta `kit sdk sync --auto`: clona el SDK si aún no está y, si ya está, **solo va a la red si pasaron `SDK_SYNC_DIAS` días** (7 por defecto, en `pipeline.config.json`) desde la última actualización o si cambiaste la `rama`. El resto de veces dice `al día (sincronizado hace N días)` y sigue sin esperar. Para traer lo último en cualquier momento: `kit sdk sync` (todos) o `kit sdk sync <nombre>`; también puedes pedírselo al orquestador ("usa la última versión del SDK"). `SDK_SYNC_DIAS: 0` vuelve al comportamiento anterior (actualizar siempre).
+
 ## 12.2 Comandos
 
 | Comando | Qué hace |
 |---|---|
 | `kit sdk list` | SDKs declarados, origen y estado |
-| `kit sdk sync [nombre] [--rama x]` | Localiza la carpeta o clona/actualiza el repo en la rama declarada (`fetch` + `pull --ff-only`; si el clon tiene cambios sin commit no toca nada). Sin nombre: todos |
+| `kit sdk sync [nombre] [--rama x]` | Localiza la carpeta o clona/actualiza **ya** el repo en la rama declarada (`fetch` + `pull --ff-only`; si el clon tiene cambios sin commit no toca nada). Sin nombre: todos |
+| `kit sdk sync --auto` | Lo que usan los flujos: igual, pero salta los SDKs sincronizados en los últimos `SDK_SYNC_DIAS` días en la misma rama |
 | `kit sdk pack <nombre> [--feature slug]` | Versión de trabajo + publicar en local + actualizar la dependencia del padre (ver abajo) |
 | `kit sdk api <nombre> [--base]` | Breaking changes de la API pública frente a la rama base (§12.4) |
 | `kit sdk publish <nombre> --version X.Y.Z` | Versión definitiva y enlace del padre a la versión publicada; paso humano (§12.5) |

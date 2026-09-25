@@ -313,3 +313,25 @@ describe("protect-main: formato de Claude Code", () => {
   ];
   for (const [name, mk, deny] of cases) test(`${deny ? "bloquea" : "permite"}: ${name}`, () => assert.strictEqual(H.runHook("protect-main", mk()).code, deny ? 2 : 0));
 });
+
+describe("session-start", () => {
+  test("en VS Code (Copilot) el contexto va también en hookSpecificOutput", { skip: H.FLAVOR !== "copilot" }, () => {
+    const dir = H.makeProject({}, { branch: "feature/x" });
+    try {
+      const r = H.runHook("session-start", { hookEventName: "SessionStart", cwd: dir, source: "new" });
+      const j = JSON.parse(r.stdout);
+      assert.strictEqual(j.hookSpecificOutput.hookEventName, "SessionStart");
+      assert.match(j.hookSpecificOutput.additionalContext, /activo/);
+      assert.strictEqual(j.additionalContext, j.hookSpecificOutput.additionalContext);
+    } finally { H.rm(dir); }
+  });
+  test("sin proyecto: dice desde dónde buscó y pide comprobar con kit version antes de reinicializar", () => {
+    const dir = H.tmpDir("kit-sin-proyecto-");
+    try {
+      const r = H.runHook("session-start", { hookEventName: "SessionStart", cwd: dir });
+      const msg = H.FLAVOR === "copilot" ? JSON.parse(r.stdout).additionalContext : r.stdout;
+      assert.match(msg, /no encontré pipeline\.config\.json/);
+      assert.match(msg, /kit version/);
+    } finally { H.rm(dir); }
+  });
+});

@@ -430,10 +430,10 @@ function commitGate(a, root, cfg) {
   }
 }
 
-async function sessionStart(root) {
+async function sessionStart(root, a) {
   let msg;
   if (!root) {
-    msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} instalado, pero este proyecto no está inicializado. Si el usuario quiere usarlo aquí, ejecuta ${C.FLAVOR === "claude" ? "/multiagent-kit:init" : "/kit-init"}.`;
+    msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} instalado, pero no encontré pipeline.config.json desde ${a && a.cwd ? a.cwd : process.cwd()} hacia arriba. Antes de concluir que el proyecto no está inicializado, ejecuta 'kit version' en la terminal de la carpeta del repositorio (los archivos del kit están fuera de git y la búsqueda del editor no los muestra). Si de verdad no lo está: ${C.FLAVOR === "claude" ? "/multiagent-kit:init" : "/kit-init"}.`;
   } else {
     const kitJson = path.join(root, ".pipeline", "kit.json");
     const prev = C.readJson(kitJson, {});
@@ -459,7 +459,8 @@ async function sessionStart(root) {
       if (fs.existsSync(R.lessonsPath())) msg += ` Lecciones de otros proyectos en ${R.lessonsPath()} (los agentes deben leerlas al empezar).`;
     } catch { /* sin red: no molestar */ }
   }
-  if (C.FLAVOR === "copilot") process.stdout.write(JSON.stringify({ additionalContext: msg }) + "\n");
+  // Copilot CLI lee additionalContext; VS Code, hookSpecificOutput.additionalContext (sin él, VS Code no inyecta el contexto)
+  if (C.FLAVOR === "copilot") process.stdout.write(JSON.stringify({ additionalContext: msg, hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: msg } }) + "\n");
   else process.stdout.write(msg + "\n");
 }
 
@@ -468,7 +469,7 @@ async function main() {
   const evt = readEvent();
   const a = normalize(evt);
   const root = C.findProjectRoot(a.cwd);
-  if (name === "session-start") return sessionStart(root);
+  if (name === "session-start") return sessionStart(root, a);
   if (!root) return; // proyectos sin kit: no interferir
   let cfg = null;
   try { cfg = C.loadConfig(root); } catch { cfg = null; }

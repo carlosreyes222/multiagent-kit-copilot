@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.0 — SDKs una vez por semana, rama validada y detección del proyecto
+Después de actualizar el plugin: `kit update`.
+- **SDKs: actualización semanal.** Al empezar un flujo el orquestador usa `kit sdk sync --auto`: clona el SDK si falta y, si ya está, solo va a la red cuando pasaron `SDK_SYNC_DIAS` días (7 por defecto, en `pipeline.config.json`) o cambió la `rama`. `kit sdk sync [nombre]` sigue actualizando siempre, y `SDK_SYNC_DIAS: 0` vuelve a actualizar en cada flujo.
+- **SDKs: `rama` validada.** La rama de cada SDK (`main` por defecto) y `--rama` se validan como nombre de rama antes de llegar a git; un valor con espacios, `..` o caracteres de shell se rechaza (`kit check`/`kit doctor` lo avisan).
+- **"Proyecto no inicializado" por error.** Los agentes comprueban la inicialización con `kit version` en la terminal en lugar de buscar archivos: `pipeline.config.json` y `.pipeline/` están excluidos de git y la búsqueda de VS Code no los muestra. El aviso de `session-start` dice desde qué carpeta buscó y pide esa comprobación antes de proponer reinicializar.
+- **VS Code**: `session-start` devuelve también `hookSpecificOutput.additionalContext`, el formato que VS Code espera; antes el contexto del kit (versión, SDKs, avisos) no llegaba al chat de VS Code.
+
 ## 2.2.0 — solo la arquitectura en git; specs, ADR e informes se archivan en tu perfil
 Después de actualizar: `copilot plugin update multiagent-kit@carlos-kits-copilot` y, en cada proyecto, `kit update` (añade las exclusiones) y `kit doctor`.
 - **Documentos de trabajo fuera de git.** Solo `docs/ARQUITECTURA.md` (y `docs/detalle/`) se versiona. `docs/specs/`, `docs/adr/`, `docs/reviews/`, `docs/epicas/`, `docs/analisis/`, `docs/ideas/`, `docs/kit-feedback/` y `docs/RETRO.md` van a `.git/info/exclude` (`kit init`/`update`, o `kit doctor --fix`). Ya no ensucian el historial ni el diff del PR con documentos que solo sirven mientras dura la feature.

@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "Kits de Carlos para GitHub Copilot",
-    "version": "2.2.0"
+    "version": "2.3.0"
   },
   "plugins": [
     {
       "name": "multiagent-kit",
       "description": "Equipo de agentes con compuertas para React Native bare: spec → arquitectura → código → QA → revisiones de código y seguridad → pull request. Comandos /pipeline, /analisis, /bugfix, /ideas.",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "source": "./plugins/multiagent-kit",
       "license": "MIT",
       "keywords": [

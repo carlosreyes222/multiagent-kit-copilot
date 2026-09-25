@@ -4,7 +4,7 @@
     "comandos": "INSTALL_CMD: npm ci (o yarn install) · BUILD_CMD: npx tsc --noEmit (o cd android && ./gradlew assembleDebug) · TEST_CMD: npm test -- --ci · LINT_CMD: npm run lint. Prefiere scripts de package.json, que valen igual en Windows y macOS.",
     "TEST_DB_CMD": "Opcional: levantar dependencias de prueba (mock server, etc.). Vacío = el tester no levanta nada.",
     "SUB_REPOS": "Sub-repositorios con su propio .git dentro del proyecto (monorepos con app + librerías).",
-    "SDKS": "SDKs del equipo que esta app consume. Cada entrada: nombre · tipo (npm|android|ios|comando) · paquete · ruta y/o repo (+ rama) · build/test/lint · publicar/enlazar · destino. Ej: {\"nombre\":\"core\",\"tipo\":\"npm\",\"paquete\":\"@bcp/core-sdk\",\"ruta\":\"../core-sdk\",\"repo\":\"https://github.com/bcp/core-sdk.git\",\"rama\":\"develop\"}",
+    "SDKS": "SDKs del equipo que esta app consume. Se actualizan como mucho cada SDK_SYNC_DIAS días (7 por defecto) al empezar un flujo; kit sdk sync fuerza. Cada entrada: nombre · tipo (npm|android|ios|comando) · paquete · ruta y/o repo (+ rama) · build/test/lint · publicar/enlazar · destino. Ej: {\"nombre\":\"core\",\"tipo\":\"npm\",\"paquete\":\"@bcp/core-sdk\",\"ruta\":\"../core-sdk\",\"repo\":\"https://github.com/bcp/core-sdk.git\",\"rama\":\"develop\"}",
     "PROTECTED_BRANCHES": "Ramas donde los agentes nunca hacen commit, push ni merge. Admite comodín * para las de release del equipo (p. ej. \"release_*\").",
     "compuertas": "GATE_TESTS_ON_COMMIT: lint + tests antes de cada commit del agente. MAX_LINES_*: límites de tamaño de documentos; kit status avisa si se superan.",
     "entrega": "El flujo termina en el pull request (kit pr). La rama base se pregunta en cada pipeline y queda en el estado (pr_base)."

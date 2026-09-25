@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "multiagent-kit",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Kit multiagente para GitHub Copilot (CLI y VS Code) y apps React Native bare: ideación → spec → arquitectura → implementación → QA → revisión de código y seguridad → pull request. Incluye /pipeline, /analisis, /bugfix, /ideas, skills de método y de stack, hooks de ramas protegidas, secretos y compuerta de commit.",
   "author": {
     "name": "Carlos Reyes",

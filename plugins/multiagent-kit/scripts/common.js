@@ -71,7 +71,7 @@ const DEFAULTS = {
   STAGING_DEPLOY_CMD: "", PROD_DEPLOY_CMD: "", SUB_REPOS: [],
   PROTECTED_BRANCHES: FLAVOR === "copilot" ? ["main", "master", "develop", "release"] : ["main", "master", "produccion", "release"],
   GATE_TESTS_ON_COMMIT: true, MAX_LINES_ARQUITECTURA: 300, MAX_LINES_INFORME: 100, MAX_LINES_ADR: 150,
-  SDKS: [],
+  SDKS: [], SDK_SYNC_DIAS: 7,
 };
 
 // Lee un pipeline.config.ps1 antiguo (solo asignaciones simples) para migrar o para compatibilidad.

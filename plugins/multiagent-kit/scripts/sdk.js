@@ -2,6 +2,8 @@
 // Se declaran en pipeline.config.json → "SDKS". Uso:
 //   node kit.js sdk list                          -> SDKs declarados y dónde están
 //   node kit.js sdk sync [nombre|--all] [--rama x] -> localiza el SDK (ruta local) o lo clona/actualiza desde GitHub en .pipeline/sdks/<nombre>
+//   node kit.js sdk sync --auto                   -> igual, pero solo los que no se sincronizaron en los últimos SDK_SYNC_DIAS días
+//                                                    (7 por defecto) o cambiaron de rama; lo usan los flujos al empezar
 //   node kit.js sdk pack <nombre> [--feature s]   -> versión de trabajo X.Y.Z-local.N, build, publicar en local y actualizar la dependencia del padre
 //   node kit.js sdk api <nombre> [--base]         -> compara la API pública con la de la rama base (breaking changes); --base la reguarda
 //   node kit.js sdk publish <nombre> --version X.Y.Z -> (persona) versión definitiva en el SDK + commit, dependencia del padre a X.Y.Z, sin tgz local
@@ -39,7 +41,14 @@ function validate(s) {
   if (!s.ruta && !s.repo) errs.push("indica 'ruta' (carpeta local) o 'repo' (URL git)");
   if (["npm", "android", "ios"].includes(s.tipo) && !s.paquete) errs.push("'paquete' obligatorio (npm: nombre del paquete; android: grupo:artefacto; ios: nombre del pod o del paquete Swift)");
   if (s.tipo === "comando" && !s.publicar) errs.push("tipo 'comando' requiere 'publicar' (y normalmente 'enlazar')");
+  if (s.rama !== undefined && s.rama !== "") { const e = ramaError(s.rama); if (e) errs.push(`'rama' no válida (${e})`); }
   return errs;
+}
+// Nombre de rama seguro para git (sin espacios, .., ~^:?*[\\, ni empezar por -): se pasa a comandos de git.
+function ramaError(r) {
+  if (typeof r !== "string" || !r.trim()) return "vacía";
+  if (r.startsWith("-")) return "no puede empezar por -";
+  return C.stateValueError("pr_base", r);
 }
 function find(cfg, name) {
   const s = declared(cfg).find((x) => x.nombre === name);
@@ -93,7 +102,7 @@ function sync(root, s, ramaOpt) {
   const branch = C.currentBranch(dir) || "(sin rama)";
   const commit = git(dir, "rev-parse --short HEAD").out.trim() || "";
   const version = readVersion(s, dir).version || "";
-  record(root, s.nombre, { tipo: s.tipo, paquete: s.paquete || "", dir, origin, rama, branch, commit, version });
+  record(root, s.nombre, { tipo: s.tipo, paquete: s.paquete || "", dir, origin, rama, branch, commit, version, synced_at: C.nowIso() });
   C.log.ok(`${path.relative(root, dir) || "."}  ·  rama ${branch}  ·  ${commit}${version ? "  ·  v" + version : ""}`);
   if (branch === rama && s.tipo !== "comando") { try { snapshotApi(root, s, dir, `rama ${rama}`); } catch (e) { C.log.warn("No pude guardar la API base: " + e.message); } }
   else if (s.tipo !== "comando" && !fs.existsSync(apiBasePath(root, s.nombre))) C.log.warn(`Sin API base (estás en ${branch}, no en ${rama}); 'node kit.js sdk api ${s.nombre} --base' la guarda desde aquí.`);
@@ -522,10 +531,28 @@ module.exports = async function sdk(opts) {
     return 0;
   }
   if (sub === "sync") {
-    const targets = !name || name === "--all" || opts.all ? list : [find(cfg, name)];
+    const nm = name || (typeof opts.auto === "string" ? opts.auto : undefined); // `sdk sync --auto core`
+    const targets = !nm || nm === "--all" || opts.all ? list : [find(cfg, nm)];
     if (!targets.length) { C.log.warn("No hay SDKs declarados."); return 0; }
-    for (const s of targets) { const errs = validate(s); if (errs.length) { C.log.fail(`${s.nombre}: ${errs.join("; ")}`); continue; } sync(root, s, opts.rama); }
-    return 0;
+    if (opts.rama !== undefined) { const e = ramaError(opts.rama); if (e) { C.log.fail(`--rama no válida '${opts.rama}': ${e}`); return 1; } }
+    const dias = Number(cfg.SDK_SYNC_DIAS) >= 0 ? Number(cfg.SDK_SYNC_DIAS) : 7;
+    const reg = getRegistry(root).sdks;
+    let code = 0;
+    for (const s of targets) {
+      const errs = validate(s);
+      if (errs.length) { C.log.fail(`${s.nombre}: ${errs.join("; ")}`); code = 1; continue; }
+      // --auto (flujos): no ir a la red si se sincronizó hace menos de SDK_SYNC_DIAS días en la misma rama
+      if (opts.auto && !opts.rama) {
+        const r = reg[s.nombre], rama = s.rama || "main";
+        const edad = r && r.synced_at ? (Date.now() - Date.parse(r.synced_at + (/[zZ]|[+-]\d\d:?\d\d$/.test(r.synced_at) ? "" : "Z"))) / 86400000 : Infinity;
+        if (r && r.rama === rama && r.dir && fs.existsSync(r.dir) && edad < dias) {
+          C.log.ok(`${s.nombre}: al día (sincronizado hace ${edad < 1 ? "menos de un día" : Math.floor(edad) + " día(s)"}, rama ${rama}; se actualiza cada ${dias} días o con 'kit sdk sync ${s.nombre}')`);
+          continue;
+        }
+      }
+      try { sync(root, s, opts.rama); } catch (e) { C.log.fail(`${s.nombre}: ${e.message}`); code = 1; }
+    }
+    return code;
   }
   if (sub === "pack") {
     if (!name) { C.log.fail("Uso: node kit.js sdk pack <nombre> [--feature slug]"); return 1; }
