@@ -211,6 +211,66 @@ function resetState(root) {
     return prev;
   });
 }
+
+// --- Documentos de trabajo de los agentes (kit de Copilot) -----------------------------------------
+// Solo docs/ARQUITECTURA.md (y su detalle) se versiona. Specs, ADR, informes, épicas, análisis, ideas y feedback del kit
+// son de trabajo: viven en el proyecto fuera de git (.git/info/exclude) y al cerrar la feature se archivan en el perfil,
+// en ~/.multiagent-kit/archivo/<proyecto>/<slug>/, para consultarlos después (retro, auditoría) sin ensuciar el repo.
+const WORK_DOCS = ["docs/specs/", "docs/adr/", "docs/reviews/", "docs/epicas/", "docs/analisis/", "docs/ideas/", "docs/kit-feedback/", "docs/RETRO.md"];
+function kitHome() { return process.env.KIT_HOME || path.join(os.homedir(), ".multiagent-kit"); }
+function projectKey(root) { return path.basename(path.resolve(root)).replace(/[^A-Za-z0-9._-]/g, "_") || "proyecto"; }
+function archiveRoot(root) { return path.join(kitHome(), "archivo", projectKey(root)); }
+function archiveDir(root, slug) { return path.join(archiveRoot(root), String(slug)); }
+// ¿La feature ya se cerró y archivó? (la épica la cuenta como terminada)
+function isArchived(root, slug) { return !!slug && fs.existsSync(path.join(archiveDir(root, slug), "archivo.json")); }
+// Mueve (copia + borra) un archivo; si no se puede borrar el original (bloqueado en Windows) lo deja y avisa.
+function moveFile(src, dst) {
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.copyFileSync(src, dst);
+  try { fs.unlinkSync(src); return true; } catch { return false; }
+}
+// Archiva los documentos de trabajo de una feature. Los que estén versionados en git no se mueven (se copian): quitarlos
+// del repo es decisión del equipo (kit doctor lo avisa). Devuelve { dir, movidos, copiados, noBorrados }.
+function archiveFeatureDocs(root, slug, extra = {}) {
+  const res = { dir: archiveDir(root, slug), movidos: [], copiados: [], noBorrados: [] };
+  if (!slug || stateValueError("feature", slug)) return res;
+  const cands = [`docs/specs/${slug}.md`, `docs/adr/${slug}.md`, `.pipeline/pr/${slug}.json`, `.pipeline/pr-body-${slug}.md`];
+  const rev = path.join(root, "docs", "reviews");
+  if (fs.existsSync(rev)) for (const f of fs.readdirSync(rev)) if (f.startsWith(slug + "-") && !f.startsWith("_")) cands.push(`docs/reviews/${f}`);
+  const existing = cands.filter((rel) => fs.existsSync(path.join(root, rel)));
+  if (!existing.length && !extra.force) return res;
+  const tracked = new Set();
+  if (existing.length) {
+    const r = spawnSync("git", ["ls-files", "--", ...existing], { cwd: root, encoding: "utf8" });
+    if (r.status === 0) (r.stdout || "").split(/\r?\n/).filter(Boolean).forEach((l) => tracked.add(l.trim()));
+  }
+  for (const rel of existing) {
+    const src = path.join(root, rel), dst = path.join(res.dir, rel.replace(/^\.pipeline\//, "pipeline/"));
+    if (tracked.has(rel)) { fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(src, dst); res.copiados.push(rel); }
+    else if (moveFile(src, dst)) res.movidos.push(rel);
+    else res.noBorrados.push(rel);
+  }
+  writeJson(path.join(res.dir, "archivo.json"), Object.assign({ feature: slug, proyecto: path.resolve(root), archivado_at: nowIso(), archivos: existing }, extra.meta || {}));
+  return res;
+}
+// Devuelve al proyecto los documentos archivados de una feature (p. ej. el PR pide cambios después de cerrarla). No pisa
+// archivos que ya existan en el proyecto. Devuelve { restaurados, conservados } o null si no estaba archivada.
+function restoreFeatureDocs(root, slug) {
+  if (!isArchived(root, slug) || stateValueError("feature", slug)) return null;
+  const dir = archiveDir(root, slug), res = { restaurados: [], conservados: [] };
+  const walk = (d) => fs.readdirSync(d).flatMap((f) => { const p = path.join(d, f); return fs.statSync(p).isDirectory() ? walk(p) : [p]; });
+  for (const f of walk(dir)) {
+    const rel = path.relative(dir, f).replace(/\\/g, "/");
+    if (rel === "archivo.json") continue;
+    const dst = path.join(root, rel.replace(/^pipeline\//, ".pipeline/"));
+    if (fs.existsSync(dst)) { res.conservados.push(rel); continue; }
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    fs.copyFileSync(f, dst);
+    res.restaurados.push(rel.replace(/^pipeline\//, ".pipeline/"));
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+  return res;
+}
 const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, "");
 
 // --- Ejecución de comandos ---------------------------------------------------------------------
@@ -381,6 +441,7 @@ function parseArgs(argv) {
 
 module.exports = {
   IS_WIN, OS_NAME, PLUGIN_ROOT, FLAVOR, VERSION, CONTEXT_FILE, MANIFEST, DEFAULTS, STATE_KEYS,
+  WORK_DOCS, kitHome, projectKey, archiveRoot, archiveDir, isArchived, archiveFeatureDocs, restoreFeatureDocs,
   log, findProjectRoot, requireProjectRoot, loadConfig, stateFile, parseLegacyPs1, getState, setState, resetState, defaultState, stateValueError, withStateLock, writeFileAtomic, nowIso,
   run, runProjectCmd, currentBranch, protectedMatcher, which, httpStatus, waitHealthy, securityVerdict, textVerdict, reportVerdict, reportCommit, docLimits, supabaseDeploy,
   sha256, readJson, writeJson, parseArgs, homeDir: os.homedir, parseTicket, commitMatchesTicket, branchMatchesTicket, COMMIT_TYPES, TEMPLATES, templatePath,

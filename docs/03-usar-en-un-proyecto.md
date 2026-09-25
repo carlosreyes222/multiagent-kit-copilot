@@ -19,7 +19,16 @@ Dentro de Copilot: `/kit-init` (o en la terminal, si ya tienes el comando global
 | `AGENTS.md` | Contexto del proyecto que leen todos los agentes. Si quieres compartirlo con el equipo, quítalo del exclude y versiónalo. |
 | `.pipeline/` | Estado del pipeline, manifiesto del kit, SDKs sincronizados, historial. |
 
-Lo que los agentes producen (`docs/specs`, `docs/adr`, `docs/reviews`, `docs/epicas`, `docs/ARQUITECTURA.md`) sí es del proyecto y se versiona como cualquier documento.
+**Documentos de los agentes: solo la arquitectura va en git.** `docs/ARQUITECTURA.md` (y su detalle en `docs/detalle/`) es la descripción viva del sistema: se versiona y viaja en cada PR. El resto son documentos de trabajo de una feature y **no entran en el repositorio** (`init` los pone en `.git/info/exclude`):
+
+| Documento | Mientras la feature está abierta | Al cerrarla (`kit state reset`) |
+|---|---|---|
+| `docs/specs/<slug>.md`, `docs/adr/<slug>.md` | en el proyecto, fuera de git; los leen los agentes | se mueven a `~/.multiagent-kit/archivo/<proyecto>/<slug>/` |
+| `docs/reviews/<slug>-{qa,codigo,seguridad,pr}.md` | igual; `kit pr` los valida y pega un **resumen** en la descripción del PR (veredictos con su commit, criterios, decisión, cómo probar) | igual |
+| `docs/epicas/<nombre>.md` | en el proyecto, fuera de git; las HU archivadas cuentan como terminadas | cuando todas sus HU terminan, a `archivo/<proyecto>/_epicas/` |
+| `docs/analisis/`, `docs/ideas/`, `docs/RETRO.md`, `docs/kit-feedback/` | en el proyecto, fuera de git (son tuyos) | se quedan |
+
+`kit archivo` lista lo archivado de este proyecto (`kit archivo <slug>` sus archivos); `kit state restaurar <slug>` devuelve los documentos si el PR pide cambios después de cerrar; `kit state archivar <slug>` archiva a mano features cerradas antes de la 2.2.0. En repositorios que ya versionaban estos documentos, `kit doctor` los señala y propone `git rm -r --cached …` (los deja en tu disco); el kit no lo hace solo porque es un cambio del historial del equipo.
 
 **Todo lo demás es global por máquina** y lo instala el propio `init` la primera vez (y refresca `kit update`):
 
@@ -101,15 +110,17 @@ Son scripts de Node.js: funcionan igual en PowerShell, cmd, Git Bash o zsh, y en
 | Comando | Qué hace |
 |---|---|
 | `kit check` | Verifica Node ≥ 18, Git, Copilot CLI, `gh`, toolchain Android/iOS (aviso) y la configuración |
-| `kit pr --feature <slug> --base <rama>` | Comprueba compuertas (veredicto único y aprobado, informes commiteados y del código actual), sube la rama y abre el pull request con `gh`. Lo ejecuta el release-manager. Sale con 0 si abrió el PR, 2 si solo subió la rama (o no pudo) con el motivo, 1 si está bloqueado. `--sin-push` solo comprueba |
+| `kit pr --feature <slug> --base <rama>` | Comprueba compuertas (veredicto único y aprobado, informes del código actual; no necesitan estar en git), pone un resumen de spec, ADR e informes en la descripción, sube la rama y abre el pull request con `gh`. Lo ejecuta el release-manager. Sale con 0 si abrió el PR, 2 si solo subió la rama (o no pudo) con el motivo, 1 si está bloqueado. `--sin-push` solo comprueba |
 | `kit init` | Re-ejecutar la inicialización (sin sobrescribir lo tuyo) |
 | `kit update` | Refrescar los archivos gestionados por el kit tras actualizar el plugin |
 | `kit migrate` | Convertir un `pipeline.config.ps1` antiguo en `pipeline.config.json` |
 | `kit version` | Versión del plugin y de los archivos del proyecto |
 | `kit epica list\|status\|next\|add\|set` | Épicas: progreso real de cada HU (leído de specs, informes, ramas y estado), siguiente HU y comando para retomarla |
-| `kit doctor [--fix]` | Diagnóstico del kit: plugin frente a GitHub, archivos y modo del proyecto, hooks (prueba real), permisos, copias `.kit`, locks de git; `--fix` aplica lo seguro |
+| `kit doctor [--fix]` | Diagnóstico del kit: plugin frente a GitHub, archivos y modo del proyecto, documentos de trabajo versionados o sin excluir, PR sin archivar, hooks (prueba real), permisos, copias `.kit`, locks de git; `--fix` aplica lo seguro |
 | `kit update --limpiar` / `--plugin` | Borra las copias `.kit` ya revisadas / actualiza el propio plugin (Copilot) si GitHub tiene versión nueva |
-| `kit state reset` | Cierra la feature actual (la archiva en `.pipeline/historial.jsonl`) y deja el estado limpio para la siguiente |
+| `kit state reset [--sin-archivar]` | Cierra la feature actual: estado a `.pipeline/historial.jsonl`, documentos de trabajo al archivo del perfil (y la épica si quedó completa); deja todo limpio para la siguiente |
+| `kit state restaurar <slug>` · `kit state archivar <slug>` | Devuelve al proyecto los documentos de una feature archivada (el PR pidió cambios) · archiva a mano una feature ya cerrada |
+| `kit archivo [slug]` | Features cerradas de este proyecto (fecha, PR) o los archivos de una |
 | `kit lecciones [add "…"]` | Lecciones reutilizables entre proyectos (`~/.multiagent-kit/lecciones.md`); las escribe `/retro-kit` y las leen los agentes |
 | `kit sdk api <nombre>` · `sdk publish <nombre> --version X.Y.Z` | Breaking changes de la API pública del SDK frente a la rama base · versión definitiva del SDK y dependencia del padre (paso humano). Ver [12](12-sdks-y-end-to-end.md) |
 | `kit sdk list\|sync\|pack\|status` | SDKs del equipo declarados en `SDKS`: sincronizar (ruta local o clon por rama), empaquetar versión de trabajo y enlazarla en el padre (ver [12](12-sdks-y-end-to-end.md)) |
@@ -118,7 +129,7 @@ Son scripts de Node.js: funcionan igual en PowerShell, cmd, Git Bash o zsh, y en
 
 ## 3.7 Nada del kit en el repositorio
 
-Este kit tiene un solo modo. En el proyecto quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/`, los tres en `.git/info/exclude`; agentes, skills, prompts y hooks viven en tu perfil (`~/.copilot/{agents,skills,hooks}` y `User/prompts` de VS Code) y valen para todos los repositorios del PC. **Lo único que se versiona es lo que producen los agentes**: `docs/specs`, `docs/adr`, `docs/reviews`, `docs/epicas` y `docs/ARQUITECTURA.md`, que forman parte de la entrega y el PR los enlaza. `--modo repo|local` no existe aquí (si lo pasas, se ignora con aviso).
+Este kit tiene un solo modo. En el proyecto quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/`, los tres en `.git/info/exclude`; agentes, skills, prompts y hooks viven en tu perfil (`~/.copilot/{agents,skills,hooks}` y `User/prompts` de VS Code) y valen para todos los repositorios del PC. **Lo único que se versiona es `docs/ARQUITECTURA.md`**; specs, ADR, informes y épicas también quedan fuera de git y se archivan en tu perfil al cerrar cada feature (ver §3.1). `--modo repo|local` no existe aquí (si lo pasas, se ignora con aviso).
 
 Consecuencia: el cloud agent de github.com no puede usar el kit (necesita los agentes dentro del repo). Los agentes se usan desde Copilot CLI y VS Code en tu máquina.
 

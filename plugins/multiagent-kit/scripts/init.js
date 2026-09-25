@@ -170,6 +170,9 @@ module.exports = async function init(opts, { mode }) {
   C.writeJson(manifestPath, { version: C.VERSION, mode: kitMode, updatedAt: C.nowIso(), files, templates });
   C.writeJson(kitJsonPath, { pluginRoot: C.PLUGIN_ROOT, version: C.VERSION, projectFilesVersion: C.VERSION, mode: kitMode, initializedAt: prevKit.initializedAt || C.nowIso(), updatedAt: C.nowIso() });
   excludeList.add(".pipeline/");
+  // Copilot: documentos de trabajo de los agentes fuera de git (solo docs/ARQUITECTURA.md se versiona); se archivan en el
+  // perfil al cerrar cada feature (kit state reset)
+  if (isCopilot) C.WORK_DOCS.forEach((w) => excludeList.add(w));
 
   // --- .git/info/exclude (modo local y usuario) ---
   if (excludeFromGit) {

@@ -41,17 +41,18 @@ Lanza **al mismo tiempo** al **revisor-codigo** y al **revisor-seguridad** sobre
 - Si alguno es RECHAZADO: vuelve a la Etapa 3 con los informes correspondientes y, tras corregir, repite Etapas 4 y 5. Máximo 2 iteraciones.
 - Si ambos APROBADOS: continúa.
 
-## Etapa 6 — Pull request
-Delega al **release-manager** con el slug y la **rama base** elegida en el Paso 0. Verifica compuertas, sube la rama y abre el PR con `kit pr`. Espera `PR: CREADO <url>`, `PR: RAMA SUBIDA (<motivo>)` o `PR: RAMA LOCAL (<motivo>)`. En los dos últimos casos, transmite al usuario el motivo y el paso manual que queda; no reintentes con fuerza ni cambies la base. Si el bloqueo es por informes o commits pendientes, vuelve a la etapa que corresponda.
+## Etapa 6 — Documentación de arquitectura (obligatoria)
+Delega al **arquitecto** indicándole `MODO: DOCUMENTAR` con el slug. Actualizará `docs/ARQUITECTURA.md` para reflejar el estado real tras la feature (módulos nuevos o cambiados, decisiones vigentes, deuda) y, si cambió alguna convención, `AGENTS.md`. Espera `ARQUITECTURA: ACTUALIZADA`. Después haz tú el commit de `docs/ARQUITECTURA.md` (y `docs/detalle/` si cambió) en la rama de la feature: `docs: <TICKET> actualiza arquitectura` — es el **único** documento que va en el repo, y así llega en el mismo PR. Esta etapa no se salta: es lo que permite que los siguientes pipelines no tengan que releer todo el proyecto.
 
-## Etapa 7 — Documentación de arquitectura (obligatoria)
-Delega al **arquitecto** indicándole `MODO: DOCUMENTAR` con el slug. Actualizará `docs/ARQUITECTURA.md` para reflejar el estado real tras la feature (módulos nuevos o cambiados, decisiones vigentes, deuda) y, si cambió alguna convención, `AGENTS.md`. Espera `ARQUITECTURA: ACTUALIZADA`. Esta etapa no se salta: es lo que permite que los siguientes pipelines no tengan que releer todo el proyecto.
+## Etapa 7 — Pull request
+Delega al **release-manager** con el slug y la **rama base** elegida en el Paso 0. Verifica compuertas, sube la rama y abre el PR con `kit pr`. Espera `PR: CREADO <url>`, `PR: RAMA SUBIDA (<motivo>)` o `PR: RAMA LOCAL (<motivo>)`. En los dos últimos casos, transmite al usuario el motivo y el paso manual que queda; no reintentes con fuerza ni cambies la base. Si el bloqueo es por informes o código sin commitear, vuelve a la etapa que corresponda. Spec, ADR e informes no se commitean nunca: el PR lleva un resumen de cada uno.
 
 ## Etapa 8 — Entrega al humano
 Presenta un resumen final con:
-- Rama, spec, ADR, `docs/ARQUITECTURA.md` y los informes (`docs/reviews/<slug>-{qa,codigo,seguridad,pr}.md`).
+- Rama, spec, ADR, `docs/ARQUITECTURA.md` y los informes (`docs/reviews/<slug>-{qa,codigo,seguridad,pr}.md`; fuera de git).
 - Estado del PR (URL, o rama subida/local con el motivo) y la rama base.
 - Lo que queda en manos del equipo: revisión del PR, merge y tren de release. **El kit no despliega ni fusiona.**
+- Cierre: cuando el usuario dé la feature por terminada (o antes de empezar otra), `kit state reset` archiva spec, ADR, informes y PR en `~/.multiagent-kit/archivo/<proyecto>/<slug>/` y deja el proyecto limpio. Si luego el PR pide cambios, `kit state restaurar <slug>` los devuelve y se sigue con `/pipeline continuar <slug>`.
 
 ## Épicas: una idea partida en varias HU
 - **Detección**: si el product-owner responde `EPICA: docs/epicas/<nombre>.md` en vez de `SPEC:` (la idea no cabe en una feature), muéstrale al usuario la lista de HU propuestas con su orden y dependencias. **COMPUERTA HUMANA**: aprueba la partición o pide cambios. Luego continúa con la primera HU: `kit state reset`, `kit state feature=<slug-hu> epica=<nombre> …` y el pipeline normal desde la Etapa 1 (spec de esa HU). Si había ticket, cada HU lleva el suyo si el usuario lo da; si no, hereda el de la épica.
@@ -87,4 +88,4 @@ Si el usuario solo dice "usa la versión nueva del SDK" sin feature en el SDK, b
 - Si el usuario interrumpe con cambios de alcance, actualiza la spec (Etapa 1) antes de seguir.
 - Al entrar en cada etapa ejecuta `kit state stage=<etapa>` con uno de estos nombres exactos: `spec`, `arquitectura`, `implementacion`, `qa`, `revisiones`, `pr`, `documentacion`, `entrega` (en `/bugfix` también `reproducir` y `corregir`). Al recibir veredictos, `kit state qa=APROBADO` / `codigo=…` / `seguridad=…` (`PENDIENTE`, `APROBADO` o `RECHAZADO`). `kit state` rechaza valores fuera del esquema y dice cuáles valen. Nunca edites `.pipeline/state.json` a mano. `/pipeline continuar <slug>` lee ese estado.
 - Si `**la petición del usuario** (el texto que acompaña a la invocación de la skill)` empieza por `continuar`, lee el estado y retoma desde la etapa guardada.
-- Al terminar una feature (entrega hecha) o antes de empezar otra distinta, `kit state reset` archiva el estado en `.pipeline/historial.jsonl` y limpia veredictos, `sdk` y `tamano` para que no contaminen el siguiente pipeline.
+- Al terminar una feature (entrega hecha) o antes de empezar otra distinta, `kit state reset` guarda el estado en `.pipeline/historial.jsonl`, limpia veredictos, `sdk` y `tamano` para que no contaminen el siguiente pipeline, y archiva los documentos de trabajo de la feature en el perfil (`kit archivo` los lista). `continuar <slug>` de una feature archivada: primero `kit state restaurar <slug>`.

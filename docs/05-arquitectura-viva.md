@@ -19,7 +19,7 @@ Sigue `docs/_PLANTILLA-ARQUITECTURA.md`:
 
 ## 5.3 Quién lo mantiene y cuándo
 
-- **Etapa 7 del pipeline (obligatoria):** al cerrar cada feature, el arquitecto en `MODO: DOCUMENTAR` compara el documento con lo realmente implementado y lo actualiza. También actualiza `AGENTS.md` si cambió alguna convención.
+- **Etapa 6 del pipeline (obligatoria), antes del PR:** el arquitecto en `MODO: DOCUMENTAR` compara el documento con lo realmente implementado y lo actualiza; el orquestador lo commitea en la rama y viaja en el mismo PR. Es el único documento de `docs/` que va en git: specs, ADR e informes son de trabajo y se archivan en tu perfil al cerrar la feature (ver [03 §3.1](03-usar-en-un-proyecto.md)). También actualiza `AGENTS.md` si cambió alguna convención.
 - **Primera feature en un proyecto con código:** si no existe, el arquitecto lo crea explorando el código antes de diseñar.
 - **Proyecto vacío:** se crea al aceptar el stack, con los módulos previstos.
 - **Si editas código por fuera del pipeline:** actualízalo tú, o pide `@arquitecto MODO: DOCUMENTAR`.

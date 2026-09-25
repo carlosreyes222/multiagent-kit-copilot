@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.2.0 — solo la arquitectura en git; specs, ADR e informes se archivan en tu perfil
+Después de actualizar: `copilot plugin update multiagent-kit@carlos-kits-copilot` y, en cada proyecto, `kit update` (añade las exclusiones) y `kit doctor`.
+- **Documentos de trabajo fuera de git.** Solo `docs/ARQUITECTURA.md` (y `docs/detalle/`) se versiona. `docs/specs/`, `docs/adr/`, `docs/reviews/`, `docs/epicas/`, `docs/analisis/`, `docs/ideas/`, `docs/kit-feedback/` y `docs/RETRO.md` van a `.git/info/exclude` (`kit init`/`update`, o `kit doctor --fix`). Ya no ensucian el historial ni el diff del PR con documentos que solo sirven mientras dura la feature.
+- **`kit pr`** ya no exige informes commiteados ni commitea la descripción del PR (no hace commits). Como el revisor del PR no ve los archivos, la descripción lleva un **resumen**: veredicto de cada compuerta con el commit revisado, criterios de aceptación de la spec, sección *Decisión* del ADR, observaciones de seguridad, commits y *Cómo probar* del informe de QA. Los cambios en documentos de trabajo no cuentan como "rama sucia" (tampoco en repos que aún los versionan, donde además avisa).
+- **Archivo en el perfil.** `kit state reset` mueve spec, ADR, informes, descripción y estado del PR de la feature a `~/.multiagent-kit/archivo/<proyecto>/<slug>/` (con `archivo.json`: ticket, épica, URL del PR). Los que sigan versionados se copian, no se mueven. `--sin-archivar` lo evita. Nuevos: `kit archivo [slug]` (lista), `kit state restaurar <slug>` (el PR pidió cambios tras cerrar) y `kit state archivar <slug>` (features cerradas antes de esta versión).
+- **Épicas**: una HU archivada cuenta como terminada; cuando todas terminan, la épica se archiva en `archivo/<proyecto>/_epicas/`.
+- **`kit doctor`**: sección "Documentos de trabajo" — exclusiones que faltan (`--fix` las añade), documentos versionados (propone `git rm -r --cached …`; no lo hace solo) y features con PR entregado sin archivar.
+- **Pipeline**: la documentación de arquitectura pasa a la Etapa 6, **antes** del PR, y el orquestador commitea `docs/ARQUITECTURA.md` en la rama: llega en el mismo PR (antes quedaba sin commitear después de abrirlo). El PR es la Etapa 7.
+- Agentes y skills (`release-manager`, `metodo-pr`, `pipeline`, `bugfix`, instrucciones del kit, `retro-kit`) y guías 03, 04, 05 y 09 actualizados a la nueva política.
+- Pruebas: 297 casos; `KIT_HOME` temporal y `KIT_NO_PATH` para que `npm test` nunca toque tu perfil ni tu PATH.
+
 ## 2.1.0 — hooks que no se saltan, PR ligado al código revisado y pruebas del kit
 Después de actualizar: `copilot plugin update multiagent-kit@carlos-kits-copilot` y `kit update` (regenera el lanzador de hooks y el comando `kit`), y recarga VS Code.
 - **Hooks reescritos con un parser de shell** (sh, cmd y PowerShell) en lugar de expresiones sobre el texto crudo. La versión 2.0.0 dejaba pasar 62 de los 90 comandos peligrosos de la nueva batería de pruebas. Ahora se bloquean:

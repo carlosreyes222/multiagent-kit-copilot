@@ -1,6 +1,6 @@
 # Arquitectura de <nombre del proyecto>
 
-> Documento VIVO. Lo mantiene el agente `arquitecto` al cierre de cada feature (Etapa 7 del pipeline).
+> Documento VIVO. Lo mantiene el agente `arquitecto` al cierre de cada feature (Etapa 6 del pipeline). Es el único documento de `docs/` que se versiona.
 > Es la primera lectura obligatoria de cualquier agente antes de tocar el proyecto. Si editas código por fuera del pipeline, actualízalo tú.
 > Máximo 300 líneas. Es un MAPA, no una referencia de API: nada de firmas, opciones con valores por defecto ni esquemas completos.
 

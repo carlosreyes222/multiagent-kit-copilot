@@ -12,7 +12,9 @@ const SCRIPTS = path.join(PLUGIN, "scripts");
 // Entorno limpio y determinista para git y para los scripts del kit
 const ENV = Object.assign({}, process.env, {
   GIT_AUTHOR_NAME: "kit-test", GIT_AUTHOR_EMAIL: "kit@test", GIT_COMMITTER_NAME: "kit-test", GIT_COMMITTER_EMAIL: "kit@test",
-  GIT_CONFIG_NOSYSTEM: "1", KIT_NO_UPDATE_CHECK: "1", NO_COLOR: "1",
+  GIT_CONFIG_NOSYSTEM: "1", KIT_NO_UPDATE_CHECK: "1", KIT_NO_PATH: "1", NO_COLOR: "1",
+  // perfil del kit (archivo de features, lecciones, comando global) en una carpeta temporal: nunca el ~ real
+  KIT_HOME: fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "kit-home-"))),
 });
 delete ENV.KIT_PROJECT_DIR;
 delete ENV.CLAUDE_PROJECT_DIR;
@@ -26,10 +28,13 @@ function git(cwd, ...args) {
   return (r.stdout || "").trim();
 }
 // Proyecto del kit: repo git en `main` con pipeline.config.json y un commit inicial.
-function makeProject(config = {}, { branch } = {}) {
+// Como `kit init`, los documentos de trabajo de los agentes quedan fuera de git (salvo versionedDocs: repos anteriores a 2.2.0).
+const WORK_DOCS = ["docs/specs/", "docs/adr/", "docs/reviews/", "docs/epicas/", "docs/analisis/", "docs/ideas/", "docs/kit-feedback/", "docs/RETRO.md"];
+function makeProject(config = {}, { branch, versionedDocs } = {}) {
   const dir = tmpDir("kit-test-");
   git(dir, "init", "-q", "-b", "main");
   git(dir, "config", "core.autocrlf", "false");
+  if (!versionedDocs) fs.appendFileSync(path.join(dir, ".git", "info", "exclude"), "\n" + WORK_DOCS.map((w) => "/" + w).join("\n") + "\n");
   const cfg = Object.assign({ PROTECTED_BRANCHES: ["main", "develop", "release_*"], LINT_CMD: "", TEST_CMD: "", GATE_TESTS_ON_COMMIT: true }, config);
   fs.writeFileSync(path.join(dir, "pipeline.config.json"), JSON.stringify(cfg, null, 2));
   fs.writeFileSync(path.join(dir, "AGENTS.md"), "# proyecto\n");
@@ -62,6 +67,7 @@ function runKit(dir, args, { env } = {}) {
   const r = spawnSync(process.execPath, [path.join(SCRIPTS, "cli.js"), ...args], { cwd: dir, encoding: "utf8", env: Object.assign({}, ENV, env || {}) });
   return { code: r.status, out: (r.stdout || "") + (r.stderr || "") };
 }
+process.on("exit", () => { try { fs.rmSync(ENV.KIT_HOME, { recursive: true, force: true }); } catch { /* sin permiso */ } });
 function rm(dir) { try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5 }); } catch { /* Windows: archivo aún abierto */ } }
 
-module.exports = { PLUGIN, SCRIPTS, ENV, tmpDir, git, makeProject, writeState, vscodeBash, cliBash, cliPowershell, vscodeTool, cliTool, runHook, runKit, rm };
+module.exports = { WORK_DOCS, PLUGIN, SCRIPTS, ENV, tmpDir, git, makeProject, writeState, vscodeBash, cliBash, cliPowershell, vscodeTool, cliTool, runHook, runKit, rm };

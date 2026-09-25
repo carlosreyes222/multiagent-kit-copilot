@@ -69,6 +69,19 @@ function create(root, name, titulo, extra = {}) {
   save(root, name, p);
   return load(root, name);
 }
+// Épica completa (todas las HU terminadas o descartadas): se copia al archivo del perfil y, si no está versionada, sale del
+// proyecto (kit de Copilot: documentos de trabajo fuera de git). Devuelve la ruta del archivo o "".
+function archiveIfComplete(root, name) {
+  if (!load(root, name)) return "";
+  const { p } = status(root, name, { quiet: true });
+  if (!p.hus.length || p.hus.some((h) => !["terminada", "descartada"].includes(h.estado))) return "";
+  const src = file(root, name), dst = path.join(C.archiveRoot(root), "_epicas", `${name}.md`);
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.copyFileSync(src, dst);
+  const tracked = spawnSync("git", ["ls-files", "--error-unmatch", "--", path.relative(root, src)], { cwd: root, encoding: "utf8" }).status === 0;
+  if (!tracked) { try { fs.unlinkSync(src); } catch { /* bloqueado: queda también en el proyecto */ } }
+  return dst;
+}
 
 // --- Estado real desde disco ----------------------------------------------------------------------------
 function verdict(root, slug, kind) {
@@ -82,6 +95,8 @@ function verdict(root, slug, kind) {
 }
 function gitOk(root, args) { const r = spawnSync("git", ["-C", root].concat(args), { encoding: "utf8" }); return r.status === 0 ? (r.stdout || "").trim() : null; }
 function diskState(root, slug, state) {
+  // cerrada con `kit state reset`: sus documentos ya están en el archivo del perfil
+  if (C.FLAVOR === "copilot" && C.isArchived(root, slug)) return { estado: "terminada", detalle: "archivada", pendientes: [], branch: "", merged: false };
   const has = (p) => fs.existsSync(path.join(root, p));
   const branchList = gitOk(root, ["branch", "--list", `feature/${slug}`, `fix/${slug}`]) || "";
   const branch = branchList.replace(/^\*?\s*/gm, "").split(/\r?\n/).filter(Boolean)[0] || "";
@@ -208,3 +223,4 @@ module.exports = async function epica(opts) {
 module.exports.listNames = listNames;
 module.exports.status = status;
 module.exports.load = load;
+module.exports.archiveIfComplete = archiveIfComplete;

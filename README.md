@@ -2,13 +2,13 @@
 
 Un equipo de agentes de GitHub Copilot para apps **React Native bare** (CLI, TypeScript, sin Expo) que lleva una idea desde la especificación hasta un **pull request** listo para revisar: spec aprobada por ti, ADR, código en rama con el ticket de Jira, QA, revisión de código y de seguridad, y el PR abierto contra la rama base que indiques. El merge, el tren de release y el despliegue siguen siendo del equipo. Es el hermano del kit [`multiagent-kit`](https://github.com/carlosreyes222/multiagent-kit) de Claude Code, recortado para el trabajo: mismos agentes y compuertas, sin staging ni producción.
 
-Funciona en **Copilot CLI** (terminal) y **VS Code** (agent mode, `@agentes`, `/prompts`). Se distribuye como **plugin de Copilot** con marketplace propio. **Nada del kit queda en el repositorio**: agentes, skills, prompts y hooks se instalan en tu perfil de usuario; en el proyecto solo quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/` (fuera de git) y los documentos que producen los agentes, que sí se versionan y van en el PR.
+Funciona en **Copilot CLI** (terminal) y **VS Code** (agent mode, `@agentes`, `/prompts`). Se distribuye como **plugin de Copilot** con marketplace propio. **Nada del kit queda en el repositorio**: agentes, skills, prompts y hooks se instalan en tu perfil de usuario; en el proyecto solo quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/` (fuera de git) y los documentos que producen los agentes: solo `docs/ARQUITECTURA.md` se versiona; specs, ADR e informes quedan fuera de git, el PR lleva su resumen y al cerrar la feature se archivan en tu perfil (`~/.multiagent-kit/archivo/`).
 
 ```
 idea ──► product-owner ──► arquitecto ──► implementador ──► tester ──► revisor-codigo ┐
-          (spec)  ▲          (ADR)      (feature/TICKET-…)    (QA)    revisor-seguridad ┴─► release-manager ──► PULL REQUEST ──► arquitecto (documenta)
-       compuerta humana                                                (VEREDICTO)                                    │
-                                                                                                            el equipo: revisión, merge, release
+          (spec)  ▲          (ADR)      (feature/TICKET-…)    (QA)    revisor-seguridad ┴─► arquitecto (documenta) ──► release-manager ──► PULL REQUEST
+       compuerta humana                                                (VEREDICTO)          (ARQUITECTURA.md)                               │
+                                                                                                                         el equipo: revisión, merge, release
 ```
 
 ## Guías

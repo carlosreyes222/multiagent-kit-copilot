@@ -39,6 +39,28 @@ async function main(cmd, argv) {
       }
       console.log(`${p}\n`); console.log(fs.readFileSync(p, "utf8")); return 0;
     }
+    case "archivo": {
+      // Documentos de features cerradas de este proyecto (kit de Copilot): kit archivo [slug]
+      if (C.FLAVOR !== "copilot") { console.error("'archivo' es del kit de Copilot."); return 1; }
+      const fs = require("fs");
+      const root = C.requireProjectRoot();
+      const base = C.archiveRoot(root);
+      const slug = opts._[0];
+      if (slug) {
+        const d = C.archiveDir(root, slug);
+        if (!C.isArchived(root, slug)) { console.error(`${slug} no está archivada (${base})`); return 1; }
+        const walk = (dir) => fs.readdirSync(dir).flatMap((f) => { const p = path.join(dir, f); return fs.statSync(p).isDirectory() ? walk(p) : [p]; });
+        console.log(d); walk(d).forEach((f) => console.log("  " + path.relative(d, f).replace(/\\/g, "/")));
+        return 0;
+      }
+      const list = fs.existsSync(base) ? fs.readdirSync(base).filter((f) => C.isArchived(root, f)) : [];
+      console.log(base);
+      if (!list.length) { C.log.plain("(vacío: las features se archivan al cerrarlas con kit state reset)"); return 0; }
+      list.map((f) => C.readJson(path.join(C.archiveDir(root, f), "archivo.json"), { feature: f }))
+        .sort((a, b) => String(b.archivado_at).localeCompare(String(a.archivado_at)))
+        .forEach((a) => console.log(`  ${String(a.archivado_at || "").slice(0, 10)}  ${a.feature.padEnd(40)} ${a.pr_url || a.pr_estado || ""}`));
+      return 0;
+    }
     case "version": {
       const root = C.findProjectRoot();
       const m = root ? (C.readJson(path.join(root, ".github", "kit-manifest.json"), null) || C.readJson(path.join(root, ".pipeline", "kit-manifest.json"), null)) : null;
@@ -47,7 +69,7 @@ async function main(cmd, argv) {
       return 0;
     }
     default:
-      console.error(`Comando desconocido: ${cmd}. Usa: check | ${C.FLAVOR === "claude" ? "staging | smoke | prod" : "pr"} | status | state | init | update | migrate | sdk | epica | plantilla | doctor | lecciones | version`);
+      console.error(`Comando desconocido: ${cmd}. Usa: check | ${C.FLAVOR === "claude" ? "staging | smoke | prod" : "pr"} | status | state | init | update | migrate | sdk | epica | plantilla | doctor | lecciones${C.FLAVOR === "copilot" ? " | archivo" : ""} | version`);
       return 1;
   }
 }

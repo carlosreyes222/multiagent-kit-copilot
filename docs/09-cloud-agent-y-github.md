@@ -8,11 +8,11 @@ Protege `develop`, `main` y las ramas `release_*` con un ruleset: pull request o
 
 ## 9.2 El PR que abre el kit
 
-`kit pr` sube la rama `feature/TICKET-…` y abre el PR contra la base que indicaste al empezar, con título `<tipo>: TICKET <título de la spec>` y una descripción que enlaza spec, ADR e informes de QA, código y seguridad, lista los commits y explica cómo probar (`docs/reviews/<slug>-pr.md`, versionado en la rama). Si el repositorio tiene plantilla de PR, `gh` la respeta y el cuerpo del kit se añade; si tiene CODEOWNERS, las revisiones se asignan solas.
+`kit pr` sube la rama `feature/TICKET-…` y abre el PR contra la base que indicaste al empezar, con título `<tipo>: TICKET <título de la spec>` y una descripción que resume spec (criterios de aceptación), ADR (decisión) e informes de QA, código y seguridad (veredicto y commit revisado), lista los commits y explica cómo probar. Spec, ADR e informes no están en el repo (solo `docs/ARQUITECTURA.md`): por eso el PR lleva el resumen y no enlaces. La descripción queda también en `docs/reviews/<slug>-pr.md`, local. Si el repositorio tiene plantilla de PR, `gh` la respeta y el cuerpo del kit se añade; si tiene CODEOWNERS, las revisiones se asignan solas.
 
 ## 9.3 Cuando la revisión pide cambios
 
-`/pipeline continuar <slug>` desde la Etapa 3: el implementador añade commits a la misma rama (misma nomenclatura), pasan de nuevo QA y revisiones y el PR se actualiza solo. No se abre otro PR.
+`/pipeline continuar <slug>` desde la Etapa 3 (si ya cerraste la feature, antes `kit state restaurar <slug>`): el implementador añade commits a la misma rama (misma nomenclatura), pasan de nuevo QA y revisiones y el PR se actualiza solo. No se abre otro PR.
 
 ## 9.4 Cloud agent de github.com
 

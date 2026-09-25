@@ -34,8 +34,8 @@ El tester ejecuta la prueba roja (debe pasar ahora), toda la suite, y añade pru
 **release-manager** con la rama base que el usuario indicó al empezar (pregúntala si no está en `pr_base`): `kit pr --feature fix-<slug> --base <rama>`. Espera `PR: …`.
 
 ## Paso 6 — Entrega y aprendizaje
-1. Resumen: causa raíz en una frase, archivos tocados, prueba de regresión, estado del PR (URL o motivo).
-2. Añade una entrada en `docs/RETRO.md` (créalo si no existe): fecha, bug, causa raíz, cómo se detectó, qué lo habría evitado (una regla concreta). Si esa regla es general, propón al usuario añadirla a `AGENTS.md` o a la skill de stack.
+1. Resumen: causa raíz en una frase, archivos tocados, prueba de regresión, estado del PR (URL o motivo). Los informes (`docs/reviews/fix-<slug>-*.md`) no se commitean; `kit state reset` los archiva en el perfil al cerrar.
+2. Añade una entrada en `docs/RETRO.md` (créalo si no existe; es local, fuera de git): fecha, bug, causa raíz, cómo se detectó, qué lo habría evitado (una regla concreta). Si esa regla es general, propón al usuario añadirla a `AGENTS.md` o a la skill de stack.
 3. Si la causa raíz revela un problema de diseño, propón `/analisis "<módulo>"`.
 
 ## Modo urgente (`--urgente`)

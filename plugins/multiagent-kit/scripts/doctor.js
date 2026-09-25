@@ -1,6 +1,7 @@
 // Diagnóstico completo del kit en este PC y este proyecto, con el arreglo de cada cosa. Uso:
 //   node kit.js doctor          -> revisa y propone
-//   node kit.js doctor --fix    -> aplica los arreglos seguros (permisos, kit.js, .kit idénticos, locks de git antiguos)
+//   node kit.js doctor --fix    -> aplica los arreglos seguros (permisos, kit.js, .kit idénticos, locks de git antiguos,
+//                                  exclusión de git de los documentos de trabajo en el kit de Copilot)
 // Complementa a `check` (herramientas) : doctor mira el kit en sí — versiones, modo, hooks vivos, permisos, restos.
 "use strict";
 const fs = require("fs");
@@ -80,6 +81,32 @@ module.exports = async function doctor(opts) {
   if (mode !== "repo" && fs.existsSync(path.join(root, ".git"))) {
     const t = spawnSync("git", ["-C", root, "ls-files", "--error-unmatch", "kit.js", "pipeline.config.json"], { encoding: "utf8" });
     if (t.status === 0) bad("kit.js / pipeline.config.json están versionados en git aunque el modo es " + mode + ".", "git rm --cached kit.js pipeline.config.json (quedan en disco, excluidos)");
+  }
+
+  // 2b. Documentos de trabajo (Copilot): solo docs/ARQUITECTURA.md se versiona; el resto, fuera de git y archivado al cerrar
+  if (isCopilot && fs.existsSync(path.join(root, ".git"))) {
+    C.log.step("Documentos de trabajo (specs, ADR, informes, épicas…)");
+    const ex = path.join(root, ".git", "info", "exclude");
+    const exTxt = fs.existsSync(ex) ? fs.readFileSync(ex, "utf8").split(/\r?\n/) : [];
+    const missEx = C.WORK_DOCS.map((w) => "/" + w).filter((w) => !exTxt.includes(w));
+    if (!missEx.length) good("excluidos de git en este clon (.git/info/exclude)");
+    else if (fix) {
+      fs.mkdirSync(path.dirname(ex), { recursive: true });
+      fs.appendFileSync(ex, `\n# --- multiagent-kit: documentos de trabajo de los agentes (solo docs/ARQUITECTURA.md va en git) ---\n${missEx.join("\n")}\n`);
+      fixed.push(`${missEx.length} rutas de documentos de trabajo excluidas de git`); good("documentos de trabajo excluidos de git");
+    } else bad(`Documentos de trabajo sin excluir de git: ${missEx.join(", ")}`, "kit doctor --fix (o kit update)");
+    const lf = spawnSync("git", ["-C", root, "ls-files", "--", ...C.WORK_DOCS.map((w) => w.replace(/\/$/, ""))], { encoding: "utf8" });
+    const tracked = (lf.stdout || "").split(/\r?\n/).filter((l) => l.trim() && !/(^|\/)_PLANTILLA/.test(l));
+    if (tracked.length) {
+      const dirs = [...new Set(tracked.map((f) => (f.includes("/", 5) ? f.slice(0, f.indexOf("/", 5)) : f)))];
+      bad(`${tracked.length} documento(s) de trabajo versionados en git (${tracked.slice(0, 3).join(", ")}${tracked.length > 3 ? "…" : ""})`,
+        `si ya no deben ir en el repo: git rm -r --cached ${dirs.join(" ")}  y commit (quedan en tu disco, fuera de git; el kit no lo hace solo porque cambia el historial del equipo)`);
+    } else good("ninguno versionado (solo docs/ARQUITECTURA.md va en git)");
+    const cur = C.getState(root).feature;
+    const prDir = path.join(root, ".pipeline", "pr");
+    const pend = fs.existsSync(prDir) ? fs.readdirSync(prDir).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5)).filter((sl) => sl !== cur && !C.isArchived(root, sl)) : [];
+    if (pend.length) C.log.warn(`Features con PR ya entregado y sin archivar: ${pend.join(", ")} → kit state archivar <slug>`);
+    C.log.plain(`Archivo de este proyecto: ${C.archiveRoot(root)}`);
   }
 
   // 3. Hooks vivos: se lanza un evento real y se espera que bloquee

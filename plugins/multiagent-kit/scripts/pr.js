@@ -2,6 +2,8 @@
 // de release y el despliegue son del equipo. Uso:
 //   kit pr --feature <slug> --base <rama>              -> comprueba compuertas, push de la rama actual y PR con gh (si está)
 //   kit pr --feature <slug> --base <rama> --sin-push   -> solo comprueba y escribe la descripción del PR
+// Los informes (spec, ADR, QA, código, seguridad) son documentos de trabajo fuera de git: el PR lleva un resumen de cada
+// uno (veredicto, commit revisado, criterios, decisión, cómo probar) y al cerrar la feature se archivan en el perfil.
 // Resultado (última línea): PR: CREADO <url> · PR: RAMA SUBIDA (<motivo>) · PR: RAMA LOCAL (<motivo>)
 // Código de salida: 0 = PR creado (o --sin-push) · 2 = entrega parcial (rama subida o local, con el motivo) · 1 = bloqueado.
 // git y gh se invocan sin shell: títulos, ramas y rutas nunca se interpretan como comandos.
@@ -49,7 +51,7 @@ module.exports = async function pr(opts) {
     if (mt.code === 1) C.log.warn(`y habrá CONFLICTOS al integrar ${baseRef}:\n${mt.out.trim().split(/\r?\n/).slice(1, 9).map((l) => "      " + l).join("\n")}`);
   } else C.log.ok(`al día con ${baseRef}`);
 
-  // 2. Compuertas: informes aprobados, commiteados y del código actual
+  // 2. Compuertas: informes aprobados y del código actual (no se versionan: viven fuera de git)
   C.log.step(`Compuertas de ${feature}`);
   const bloqueos = [], avisos = [];
   const rep = (k) => path.join(root, "docs", "reviews", `${feature}-${k}.md`);
@@ -59,7 +61,6 @@ module.exports = async function pr(opts) {
     const v = C.reportVerdict(f, key);
     if (v === "CONTRADICTORIO") bloqueos.push(`${rel} tiene veredictos contradictorios (APROBADO y RECHAZADO): deja una sola línea de veredicto`);
     else if (v !== "APROBADO") bloqueos.push(`${label} no está APROBADO en ${rel} (${v})`);
-    if (git(root, ["status", "--porcelain", "--", rel]).out.trim()) bloqueos.push(`${rel} tiene cambios sin commit`);
     const sha = C.reportCommit(f);
     if (!sha) { avisos.push(`${rel} no indica 'COMMIT: <sha>' del código revisado; no puedo comprobar que la revisión sea de la versión actual`); return; }
     if (!refExists(root, sha)) { bloqueos.push(`${rel} dice COMMIT: ${sha}, que no existe en este repositorio`); return; }
@@ -69,11 +70,15 @@ module.exports = async function pr(opts) {
   check("qa", "QA", "QA");
   if (s.compuertas !== "reducidas") check("codigo", "C[OÓ]DIGO", "la revisión de código");
   check("seguridad", "VEREDICTO", "la revisión de seguridad");
-  const dirty = git(root, ["status", "--porcelain"]).out.split(/\r?\n/).filter((l) => l.trim() && !l.endsWith(`docs/reviews/${feature}-pr.md`));
+  // Rama limpia, sin contar los documentos de trabajo (si un equipo aún los versiona, sus cambios no bloquean el PR)
+  const isWorkDoc = (f) => C.WORK_DOCS.some((w) => (w.endsWith("/") ? f.startsWith(w) : f === w));
+  const dirty = git(root, ["status", "--porcelain", "--untracked-files=all"]).out.split(/\r?\n/).filter((l) => l.trim() && !isWorkDoc(l.slice(3).replace(/^"|"$/g, "").split(" -> ").pop()));
   if (dirty.length) bloqueos.push(`hay cambios sin commit en la rama:\n${dirty.slice(0, 8).map((l) => "      " + l).join("\n")}`);
   avisos.forEach((a) => C.log.warn(a));
   if (bloqueos.length) { C.log.red("PR BLOQUEADO:"); bloqueos.forEach((b) => C.log.fail(b)); return 1; }
-  C.log.ok("QA, seguridad" + (s.compuertas !== "reducidas" ? " y revisión de código" : "") + " aprobados y commiteados; rama limpia");
+  C.log.ok("QA, seguridad" + (s.compuertas !== "reducidas" ? " y revisión de código" : "") + " aprobados sobre el código actual; rama limpia");
+  const versionados = git(root, ["ls-files", "--", ...C.WORK_DOCS.map((w) => w.replace(/\/$/, ""))]).out.split(/\r?\n/).filter((l) => l.trim() && !/(^|\/)_PLANTILLA/.test(l));
+  if (versionados.length) C.log.warn(`hay ${versionados.length} documento(s) de trabajo versionados (${versionados.slice(0, 3).join(", ")}${versionados.length > 3 ? "…" : ""}); desde la 2.2.0 solo docs/ARQUITECTURA.md va en git: kit doctor explica cómo sacarlos`);
 
   const ticket = String(s.ticket || "").toUpperCase();
   const spec = path.join(root, "docs", "specs", `${feature}.md`);
@@ -84,29 +89,39 @@ module.exports = async function pr(opts) {
     return `${tipo}: ${ticket && !t.includes(ticket) ? ticket + " " : ""}${t}`.replace(/[\r\n]+/g, " ").slice(0, 120);
   })();
 
-  // 3. Descripción del PR
-  const rel = (p) => path.relative(root, p).replace(/\\/g, "/");
-  const docs = [["Spec", spec], ["ADR", path.join(root, "docs", "adr", `${feature}.md`)], ["QA", rep("qa")], ["Revisión de código", rep("codigo")], ["Seguridad", rep("seguridad")]].filter(([, p]) => fs.existsSync(p));
+  // 3. Descripción del PR: resumen de cada documento (los archivos no están en git; un enlace no le serviría al revisor)
+  const read = (p) => (fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "");
+  const specTxt = read(spec), adrTxt = read(path.join(root, "docs", "adr", `${feature}.md`));
+  const gate = (k, key, label) => {
+    const f = rep(k);
+    if (!fs.existsSync(f)) return null;
+    const sha = C.reportCommit(f);
+    return `- ${label}: **${C.reportVerdict(f, key)}**${sha ? ` (commit \`${sha.slice(0, 10)}\`)` : ""}`;
+  };
+  const gates = [gate("qa", "QA", "QA"), s.compuertas === "reducidas" ? "- Revisión de código: omitida (modo rápido)" : gate("codigo", "C[OÓ]DIGO", "Revisión de código"), gate("seguridad", "VEREDICTO", "Seguridad")].filter(Boolean);
+  const criterios = section(specTxt, /criterios de aceptaci[oó]n/i, 20).filter((l) => /^\s*[-*]|\bCA-\d/.test(l));
+  const decision = section(adrTxt, /^decisi[oó]n/i, 10);
+  const probar = section(read(rep("qa")), /c[oó]mo probar|pasos? (de|para) (prueba|probar)|pruebas manuales|evidencia/i, 15);
+  const hallazgos = section(read(rep("seguridad")), /hallazgos|riesgos|observaciones/i, 8).filter((l) => /^\s*[-*|]/.test(l) && !/^\s*\|\s*-/.test(l));
   const log = git(root, ["log", "--oneline", `${baseRef}..HEAD`]).out.trim();
+  const block = (h, lines) => (lines.length ? [`### ${h}`, ...lines].join("\n") : "");
   const body = [
-    `## ${title}`, "",
-    ticket ? `Ticket: ${ticket}` : "", `Rama: \`${branch}\` → \`${base}\``, `Compuertas: QA APROBADO · Seguridad APROBADO${s.compuertas === "reducidas" ? " · modo rápido (sin revisión de código)" : " · Revisión de código APROBADO"}`, "",
-    "### Documentos", ...docs.map(([n, p]) => `- ${n}: \`${rel(p)}\``), "",
-    "### Commits", "```", log || "(sin commits propios respecto a la base)", "```", "",
-    "### Cómo probar", fs.existsSync(rep("qa")) ? "Ver la sección de pruebas de `" + rel(rep("qa")) + "`." : "(ver informe de QA)", "",
-    "Generado por multiagent-kit.",
-  ].filter((l) => l !== "").join("\n") + "\n";
-  // La descripción se versiona (va en la rama); el estado del PR es local de esta máquina (.pipeline/pr/<slug>.json)
+    `## ${title}`,
+    [ticket ? `Ticket: ${ticket}` : "", `Rama: \`${branch}\` → \`${base}\``].filter(Boolean).join("\n"),
+    block("Compuertas del kit", gates),
+    block("Criterios de aceptación (spec)", criterios),
+    block("Decisión técnica (ADR)", decision),
+    block("Seguridad: observaciones", hallazgos),
+    block("Commits", ["```", log || "(sin commits propios respecto a la base)", "```"]),
+    block("Cómo probar", probar.length ? probar : ["(ver el informe de QA de la feature)"]),
+    "Generado por multiagent-kit (los informes completos quedan en el archivo local del autor).",
+  ].filter(Boolean).join("\n\n") + "\n";
+  // La descripción queda en docs/reviews/<slug>-pr.md (fuera de git, se archiva con los informes); el estado del PR en
+  // .pipeline/pr/<slug>.json (lo leen kit epica y kit status)
   const prDoc = rep("pr");
   fs.mkdirSync(path.dirname(prDoc), { recursive: true });
-  const docTxt = `# PR — ${feature}\n\nTítulo: ${title}\nBase: ${base}\nFecha: ${C.nowIso()}\n\n---\n\n${body}`;
-  if (!fs.existsSync(prDoc) || fs.readFileSync(prDoc, "utf8").split("\n").slice(6).join("\n") !== docTxt.split("\n").slice(6).join("\n")) {
-    fs.writeFileSync(prDoc, docTxt, "utf8");
-    git(root, ["add", "--", rel(prDoc)]);
-    const cm = git(root, ["commit", "-m", `docs: ${ticket ? ticket + " " : ""}descripción del PR de ${feature}`, "--", rel(prDoc)]);
-    if (cm.code === 0) C.log.ok(`docs/reviews/${feature}-pr.md commiteado`);
-    else C.log.warn(`no pude commitear docs/reviews/${feature}-pr.md (${lastLine(cm.out)})`);
-  }
+  fs.writeFileSync(prDoc, `# PR — ${feature}\n\nTítulo: ${title}\nBase: ${base}\nFecha: ${C.nowIso()}\n\n---\n\n${body}`, "utf8");
+  C.log.ok(`descripción en docs/reviews/${feature}-pr.md`);
   const finish = (estado, detalle, url, code) => {
     const line = estado === "CREADO" ? `PR: CREADO ${url}` : `PR: ${estado} (${detalle})`;
     C.writeJson(path.join(root, ".pipeline", "pr", `${feature}.json`), { feature, branch, base, estado, detalle: detalle || "", url: url || "", title, at: C.nowIso() });
@@ -147,4 +162,18 @@ module.exports = async function pr(opts) {
   return finish("RAMA SUBIDA", `gh pr create falló: ${lastLine(r.out)}; abre el PR a mano con docs/reviews/${feature}-pr.md`, "", 2);
 };
 
+// Líneas de la sección cuyo título (##/###) casa con `re`, sin líneas vacías ni comentarios de plantilla; como mucho `max`.
+function section(txt, re, max) {
+  const lines = String(txt || "").split(/\r?\n/);
+  const i = lines.findIndex((l) => /^#{2,4}\s+/.test(l) && re.test(l.replace(/^#{2,4}\s+/, "").replace(/^\d+[.)]\s*/, "")));
+  if (i < 0) return [];
+  const out = [];
+  for (const l of lines.slice(i + 1)) {
+    if (/^#{1,4}\s+/.test(l)) break;
+    if (!l.trim() || /^\s*>/.test(l) || /^\s*<!--/.test(l)) continue;
+    out.push(l.replace(/\s+$/, "").slice(0, 300));
+    if (out.length >= max) { out.push("- …"); break; }
+  }
+  return out;
+}
 function lastLine(out) { return String(out || "").trim().split(/\r?\n/).pop() || "sin detalle"; }

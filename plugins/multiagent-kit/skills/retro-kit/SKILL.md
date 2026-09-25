@@ -9,7 +9,7 @@ Eres el revisor del kit, no del proyecto. Tu objetivo es mejorar el plugin `mult
 ## Paso 1 — Reúne evidencia (sin leer código de producto)
 1. `pipeline.config.json`: comandos, sub-repos, SDKs, límites.
 2. `.pipeline/state.json` y salida de `kit status`.
-3. Todos los `docs/reviews/*.md`, `docs/adr/*.md`, `docs/specs/*.md`, `docs/ARQUITECTURA.md` (o `arquitectura.md`), `docs/RETRO.md`, `docs/analisis/*`, `docs/ideas/*`. Para cada uno anota tamaño en líneas.
+3. Todos los `docs/reviews/*.md`, `docs/adr/*.md`, `docs/specs/*.md`, `docs/ARQUITECTURA.md` (o `arquitectura.md`), `docs/RETRO.md`, `docs/analisis/*`, `docs/ideas/*`, **y los de las features ya cerradas**: `kit archivo` da la carpeta del archivo del proyecto en tu perfil (`~/.multiagent-kit/archivo/<proyecto>/<slug>/docs/…`). Para cada uno anota tamaño en líneas.
 4. `git log --oneline -50` y ramas `feature/*`, `fix/*`; en `SUB_REPOS` también.
 5. `AGENTS.md` (líneas) y si existe `docs/TROUBLESHOOTING.md`.
 6. La versión del kit (`.pipeline/kit.json`).
@@ -20,13 +20,14 @@ Para cada pipeline/bugfix ejecutado (uno por slug), rellena esta tabla y explica
 | Comprobación | Esperado | Encontrado |
 |---|---|---|
 | Líneas de veredicto | `QA:`, `CODIGO:`, `VEREDICTO:`, `PR:` exactas | |
-| Descripción del PR | ticket, base, compuertas, documentos enlazados, commits, cómo probar | |
+| Descripción del PR | ticket, base, compuertas con commit revisado, criterios, decisión, commits, cómo probar | |
 | Tamaño de informes | ≤ `MAX_LINES_INFORME` | |
 | ADR | 2 alternativas, tabla de trade-offs, riesgos, plan por pasos, ≤ `MAX_LINES_ADR` | |
 | ARQUITECTURA | ≤ `MAX_LINES_ARQUITECTURA`, sin firmas ni opciones, actualizada tras la última feature (sin referencias obsoletas) | |
 | Entrega | `docs/reviews/<slug>-pr.md` con `PR: CREADO` y rama desde la base acordada; sin push forzado ni merges por agentes |
 | Estado | escrito solo por scripts; esquema v2; sin ediciones manuales mencionadas en informes | |
-| Compuertas | informes commiteados antes de desplegar; ramas protegidas respetadas | |
+| Compuertas | informes aprobados sobre el código actual; ramas protegidas respetadas | |
+| Documentos | solo `docs/ARQUITECTURA.md` en git; specs/ADR/informes fuera de git y archivados al cerrar | |
 | Agentes fuera de rol | tester levantando infraestructura, release-manager editando código o estado, revisores modificando archivos | |
 | Errores del kit citados en informes | mensajes de scripts, hooks, `kit.js` | |
 

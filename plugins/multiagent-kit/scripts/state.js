@@ -11,7 +11,10 @@
 //   epica (nombre de docs/epicas/<nombre>.md cuando la HU forma parte de una idea partida en varias)
 //   tamano (S|M|L, lo estima el product-owner) · compuertas (completas|reducidas: modo --rapido o --urgente, queda registrado)
 //   staging_ok / smoke_ok / staging_at / promoted_at / promoted_tag — solo kit de Claude (staging y producción)
-//   kit state reset                     -> empieza de cero (conserva un histórico en .pipeline/historial.jsonl)
+//   kit state reset [--sin-archivar]    -> cierra la feature y empieza de cero (histórico en .pipeline/historial.jsonl).
+//                                          Copilot: archiva spec, ADR, informes y PR en ~/.multiagent-kit/archivo/<proyecto>/<slug>/
+//   kit state archivar <slug>           -> archiva a mano los documentos de una feature ya cerrada
+//   kit state restaurar <slug>          -> los devuelve al proyecto (el PR pidió cambios después de cerrarla)
 "use strict";
 const path = require("path");
 const C = require("./common");
@@ -23,7 +26,30 @@ module.exports = async function state(opts, { show }) {
   if (sets[0] === "reset") {
     const prev = C.resetState(root);
     if (prev.feature) C.log.plain(`Estado anterior (${prev.feature}) archivado en .pipeline/historial.jsonl`);
+    if (prev.feature && C.FLAVOR === "copilot" && !opts["sin-archivar"]) archive(root, prev.feature, prev);
     C.log.ok("Estado reiniciado.");
+    return 0;
+  }
+  if (sets[0] === "archivar") {
+    // Archiva a mano una feature ya cerrada (p. ej. HU terminadas antes de la 2.2.0): kit state archivar <slug>
+    if (C.FLAVOR !== "copilot") { C.log.fail("El archivo de documentos es del kit de Copilot."); return 1; }
+    const slug = sets[1];
+    const bad = slug ? C.stateValueError("feature", slug) : "falta el slug";
+    if (bad) { C.log.fail(`Uso: kit state archivar <slug> (${bad})`); return 1; }
+    if (C.getState(root).feature === slug) { C.log.fail(`${slug} es la feature en curso: ciérrala con kit state reset`); return 1; }
+    return archive(root, slug, { feature: slug }, true) ? 0 : 1;
+  }
+  if (sets[0] === "restaurar") {
+    // Reabre una feature archivada (el PR pide cambios): devuelve spec, ADR e informes al proyecto
+    if (C.FLAVOR !== "copilot") { C.log.fail("El archivo de documentos es del kit de Copilot."); return 1; }
+    const slug = sets[1];
+    const bad = slug ? C.stateValueError("feature", slug) : "falta el slug";
+    if (bad) { C.log.fail(`Uso: kit state restaurar <slug> (${bad})`); return 1; }
+    const r = C.restoreFeatureDocs(root, slug);
+    if (!r) { C.log.fail(`${slug} no está en el archivo (${C.archiveRoot(root)})`); return 1; }
+    C.log.ok(`${slug}: ${r.restaurados.length} documento(s) devueltos al proyecto`);
+    r.restaurados.forEach((f) => C.log.plain("  <- " + f));
+    r.conservados.forEach((f) => C.log.warn(`  ${f} ya existía en el proyecto: se conserva el del proyecto`));
     return 0;
   }
   if (sets.length) {
@@ -67,3 +93,21 @@ module.exports = async function state(opts, { show }) {
   }
   return 0;
 };
+
+// Mueve los documentos de trabajo de la feature al archivo del perfil y, si su épica quedó completa, también la épica.
+function archive(root, slug, prev, explicit) {
+  const r = C.archiveFeatureDocs(root, slug, { meta: { ticket: prev.ticket || "", epica: prev.epica || "", pr_url: prev.pr_url || "", pr_estado: prev.pr_estado || "" } });
+  const n = r.movidos.length + r.copiados.length + r.noBorrados.length;
+  if (!n) { (explicit ? C.log.warn : C.log.plain)(`${slug}: no hay documentos de trabajo que archivar`); return false; }
+  C.log.ok(`Documentos de ${slug} archivados en ${r.dir}`);
+  r.movidos.forEach((f) => C.log.plain("  -> " + f));
+  r.copiados.forEach((f) => C.log.warn(`  ${f} está versionado en git: copiado, no movido (sácalo del repo con git rm --cached si ya no debe estar)`));
+  r.noBorrados.forEach((f) => C.log.warn(`  ${f} copiado pero no se pudo quitar del proyecto (¿abierto en el editor?)`));
+  if (prev.epica) {
+    try {
+      const dst = require("./epica").archiveIfComplete(root, prev.epica);
+      if (dst) C.log.ok(`Épica ${prev.epica} completa: archivada en ${dst}`);
+    } catch { /* épica mal formada: se queda donde está */ }
+  }
+  return true;
+}

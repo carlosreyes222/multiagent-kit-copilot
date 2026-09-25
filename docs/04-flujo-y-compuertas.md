@@ -11,9 +11,8 @@
            dices la rama base)                              └───┤                      ├──► release-manager ──► PULL REQUEST
                                                       correcciones   revisor-seguridad ─┘   (kit pr: push + gh)      │
                                                                      (VEREDICTO: APROBADO)                          ▼
-                                                                                          arquitecto (MODO: DOCUMENTAR) actualiza docs/ARQUITECTURA.md
-                                                                                                                     │
-                                                                                     EL EQUIPO: revisión del PR, merge, tren de release
+                                                  antes del PR: arquitecto (MODO: DOCUMENTAR) actualiza   EL EQUIPO: revisión del PR,
+                                                  docs/ARQUITECTURA.md y se commitea en la rama           merge, tren de release
 ```
 
 | Etapa | Agente | Produce | Compuerta |
@@ -23,9 +22,11 @@
 | 3 Implementación | `implementador` | rama `feature/TICKET-<slug>` desde la rama base (ver §4.5) | Hook `commit-gate`: lint + tests en cada commit |
 | 4 QA | `tester` | `docs/reviews/<slug>-qa.md` | `QA: APROBADO` o vuelve a 3 (máx. 2 veces) |
 | 5 Revisiones (paralelo) | `revisor-codigo`, `revisor-seguridad` | `<slug>-codigo.md`, `<slug>-seguridad.md` | Ambos APROBADOS o vuelve a 3 |
-| 6 Pull request | `release-manager` | `<slug>-pr.md`, rama subida, PR abierto (`kit pr`) | Compuertas aprobadas y commiteadas; sin `gh` o sin permisos: rama subida o local con el motivo |
-| 7 Documentación | `arquitecto` | `docs/ARQUITECTURA.md` actualizado | Obligatoria |
-| 8 Entrega | `director` (orquestador) | resumen + estado del PR | **Equipo**: revisión, merge y release fuera del kit |
+| 6 Documentación | `arquitecto` | `docs/ARQUITECTURA.md` actualizado y commiteado en la rama | Obligatoria |
+| 7 Pull request | `release-manager` | `<slug>-pr.md`, rama subida, PR abierto (`kit pr`) | Compuertas aprobadas sobre el código actual; sin `gh` o sin permisos: rama subida o local con el motivo |
+| 8 Entrega | `director` (orquestador) | resumen + estado del PR; `kit state reset` archiva los documentos al cerrar | **Equipo**: revisión, merge y release fuera del kit |
+
+Solo `docs/ARQUITECTURA.md` entra en git. Spec, ADR e informes (`docs/specs`, `docs/adr`, `docs/reviews`, `docs/epicas`) son documentos de trabajo: fuera de git mientras dura la feature y archivados en `~/.multiagent-kit/archivo/<proyecto>/<slug>/` al cerrarla (ver [03 §3.1](03-usar-en-un-proyecto.md)).
 
 ## 4.1b Los otros tres flujos
 
@@ -57,7 +58,7 @@ Cada agente lee al empezar su skill de método (`metodo-spec`, `metodo-adr`, `me
 2. **Humana, al elegir stack** (solo proyecto vacío). Es la decisión más cara de deshacer.
 3. **Commit.** El hook `commit-gate` (`~/.copilot/hooks/multiagent-kit.json` → lanzador → `scripts/hook.js commit-gate`) ejecuta `LINT_CMD` y `TEST_CMD` antes de cada `git commit` del agente, también si lo lanza como `git -C <carpeta> commit`, `cd <carpeta> && git commit` o dentro de `pwsh -Command "…"`. Los commits en un sub-repositorio del proyecto (`SUB_REPOS`) pasan por los comandos del padre; los de un SDK declarado, por su `lint`/`test`. Si fallan, el commit se bloquea y el agente recibe las últimas líneas del error. Se desactiva con `GATE_TESTS_ON_COMMIT = false` en `pipeline.config.json`.
 4. **Ramas protegidas, destructivos y secretos.** El hook `protect-main` analiza cada comando con un parser de shell que entiende sh, cmd y PowerShell (el terminal de VS Code en Windows), así que evalúa igual `git push origin main`, `git -C . push origin main`, `bash -c "…"`, `pwsh -Command "…"`, `cmd /c "…"` o `$(…)`. Ver la tabla de abajo.
-5. **Revisiones.** QA, código y seguridad deben estar APROBADOS, con **un solo veredicto** por informe, y commiteados. Cada informe declara `COMMIT: <sha>` del código que revisó; si después de ese commit cambió algo fuera de `docs/`, `kit pr` bloquea y hay que repetir esa revisión.
+5. **Revisiones.** QA, código y seguridad deben estar APROBADOS, con **un solo veredicto** por informe (los informes no se commitean). Cada informe declara `COMMIT: <sha>` del código que revisó; si después de ese commit cambió algo fuera de `docs/`, `kit pr` bloquea y hay que repetir esa revisión.
 6. **Pull request.** `kit pr` sube la rama y abre el PR contra la rama base acordada; nunca fusiona. El merge, el tren de release y el despliegue son del equipo, con las reglas del repositorio en GitHub como barrera final.
 
 **Qué bloquea `protect-main`** (a los agentes; tú, desde tu terminal, no pasas por el hook):
@@ -83,8 +84,8 @@ El estado del pipeline (`.pipeline/state.json`, esquema v2) lo escriben solo los
 Al iniciar cada `/pipeline` o `/bugfix` el orquestador te pregunta contra qué rama irá el PR (`develop`, `release_xx`, `main`…) y la guarda en el estado (`pr_base`). La rama `feature/*` se crea desde esa base actualizada. Al cerrar, `kit pr --feature <slug> --base <rama>`:
 
 1. Actualiza `origin/<base>` y compara contra ella: si la base no existe (ni en origin ni en local) bloquea sin hacer push; si la rama va por detrás o habrá conflictos, avisa.
-2. Comprueba que QA, código (salvo modo rápido) y seguridad están aprobados con un solo veredicto, commiteados, y que el código no cambió después del `COMMIT:` de cada informe; y que la rama está limpia.
-3. Escribe `docs/reviews/<slug>-pr.md` (título `<tipo>: TICKET …`, documentos enlazados, commits propios frente a la base, cómo probar) y lo commitea.
+2. Comprueba que QA, código (salvo modo rápido) y seguridad están aprobados con un solo veredicto y que el código no cambió después del `COMMIT:` de cada informe; y que la rama no tiene código sin commitear (los documentos de trabajo no cuentan).
+3. Escribe `docs/reviews/<slug>-pr.md` (local, fuera de git): título `<tipo>: TICKET …`, compuertas con su commit revisado, criterios de aceptación de la spec, decisión del ADR, observaciones de seguridad, commits propios frente a la base y cómo probar (sección *Cómo probar* del informe de QA). No hace commits.
 4. Hace `git push -u origin <rama>` y abre el PR con `gh pr create`; si ya hay un PR **abierto** para la rama, lo reutiliza (uno cerrado o fusionado no cuenta).
 
 Resultado en la última línea y en el código de salida: `PR: CREADO <url>` (0); `PR: RAMA SUBIDA (motivo)` si `gh` no está o falló (2: abres el PR con la descripción); `PR: RAMA LOCAL (motivo)` si el push no fue posible (2: sin remoto, permisos, rama remota con commits nuevos); `PR BLOQUEADO` con la lista de motivos (1). `git` y `gh` se invocan sin shell: un título de spec con `$(…)`, comillas invertidas o `&` nunca se ejecuta. Nunca `--force`, nunca cambio de base, nunca merge.

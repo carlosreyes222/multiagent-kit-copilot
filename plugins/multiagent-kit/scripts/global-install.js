@@ -41,6 +41,7 @@ function onPath(dir) {
 // Añade ~/.multiagent-kit/bin al PATH del usuario (Windows: variable de usuario; mac/linux: línea en el rc del shell).
 function ensurePath(dir) {
   if (onPath(dir)) return { ok: true, already: true };
+  if (process.env.KIT_NO_PATH) return { ok: true, already: true }; // pruebas: nunca tocar el PATH real del usuario
   if (C.IS_WIN) {
     const ps = `$d='${dir.replace(/'/g, "''")}'; $u=[Environment]::GetEnvironmentVariable('Path','User'); if(($u -split ';') -notcontains $d){ [Environment]::SetEnvironmentVariable('Path', (($u.TrimEnd(';')) + ';' + $d), 'User'); 'added' } else { 'present' }`;
     const r = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", ps], { encoding: "utf8" });
