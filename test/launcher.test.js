@@ -9,12 +9,12 @@ const { spawnSync } = require("child_process");
 const H = require("./_helpers");
 const L = require(path.join(H.SCRIPTS, "launcher-src.js"));
 
-function fakePlugin(dir, flavor, version, mtimeOffsetSec = 0) {
+function fakePlugin(dir, flavor, version, mtimeOffsetSec = 0, name = "multiagent-kit") {
   fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
   fs.writeFileSync(path.join(dir, "scripts", "common.js"), "");
   const manifest = flavor === "copilot" ? path.join(dir, "plugin.json") : path.join(dir, ".claude-plugin", "plugin.json");
   fs.mkdirSync(path.dirname(manifest), { recursive: true });
-  fs.writeFileSync(manifest, JSON.stringify({ name: "multiagent-kit", version }));
+  fs.writeFileSync(manifest, JSON.stringify({ name, version }));
   const t = new Date(Date.now() + mtimeOffsetSec * 1000);
   fs.utimesSync(dir, t, t);
   return dir;
@@ -89,11 +89,46 @@ describe("resolución del plugin", () => {
       assert.strictEqual(resolve(hookSrc(), HOOK_MARK, { home: h2, cwd: h2 }), "");
     } finally { H.rm(h2); }
   });
+  test("el plugin renombrado (bkit) se reconoce y gana a la instalación antigua multiagent-kit", () => {
+    const h3 = H.tmpDir("kit-home3-");
+    try {
+      const viejo = fakePlugin(path.join(h3, ".copilot", "installed-plugins", "carlos-kits-copilot", "multiagent-kit"), "copilot", "2.3.0", 600);
+      const nuevo = fakePlugin(path.join(h3, ".copilot", "installed-plugins", "bkit", "bkit"), "copilot", "3.0.0", -60, "bkit");
+      assert.notStrictEqual(viejo, nuevo);
+      assert.strictEqual(resolve(hookSrc(), HOOK_MARK, { home: h3, cwd: h3 }), nuevo);
+      fakePlugin(path.join(h3, "otro"), "copilot", "9.9.9", 0, "otro-plugin");
+      assert.strictEqual(resolve(hookSrc(), HOOK_MARK, { home: h3, cwd: h3 }), nuevo, "un plugin con otro nombre no cuenta");
+    } finally { H.rm(h3); }
+  });
   test("los lanzadores generados son JavaScript válido", () => {
     for (const src of [hookSrc(), globalSrc()]) {
       const f = path.join(home, `chk-${Math.random().toString(36).slice(2)}.js`);
       fs.writeFileSync(f, src);
       assert.strictEqual(spawnSync(process.execPath, ["--check", f]).status, 0);
     }
+  });
+});
+
+// Kit de Copilot: al pasar de multiagent-kit a bkit, init retira los hooks y el lanzador antiguos de ~/.copilot (si no, los
+// hooks se ejecutarían dos veces) y conserva lo que el usuario editó.
+describe("cambio de nombre a bkit en el perfil de usuario", { skip: H.FLAVOR !== "copilot" }, () => {
+  test("init --modo usuario retira multiagent-kit.json y su lanzador e instala bkit.json", () => {
+    const dir = H.makeProject({}, { branch: "feature/x" });
+    const copilotHome = H.tmpDir("kit-copilot-home-"), vs = H.tmpDir("kit-vscode-");
+    try {
+      fs.mkdirSync(path.join(copilotHome, "hooks"), { recursive: true });
+      fs.writeFileSync(path.join(copilotHome, "hooks", "multiagent-kit.json"), "{}");
+      fs.writeFileSync(path.join(copilotHome, "multiagent-kit-hook.js"), "// viejo");
+      fs.mkdirSync(path.join(copilotHome, "agents"), { recursive: true });
+      fs.writeFileSync(path.join(copilotHome, "agents", "director.agent.md"), "editado por mí\n");
+      fs.writeFileSync(path.join(copilotHome, "multiagent-kit-manifest.json"), JSON.stringify({ version: "2.3.0", files: {} }));
+      const r = H.runKit(dir, ["init", "--modo", "usuario"], { env: { COPILOT_HOME: copilotHome, KIT_VSCODE_PROMPTS_DIR: vs } });
+      assert.strictEqual(r.code, 0, r.out);
+      assert.match(r.out, /Retirados de tu perfil/);
+      for (const f of ["hooks/multiagent-kit.json", "multiagent-kit-hook.js", "multiagent-kit-manifest.json"]) assert.ok(!fs.existsSync(path.join(copilotHome, f)), `sigue ${f}`);
+      for (const f of ["hooks/bkit.json", "bkit-hook.js", "bkit-manifest.json"]) assert.ok(fs.existsSync(path.join(copilotHome, f)), `falta ${f}`);
+      assert.match(fs.readFileSync(path.join(copilotHome, "hooks", "bkit.json"), "utf8"), /bkit-hook\.js/);
+      assert.strictEqual(fs.readFileSync(path.join(copilotHome, "agents", "director.agent.md"), "utf8"), "editado por mí\n", "no pisa lo editado");
+    } finally { H.rm(dir); H.rm(copilotHome); H.rm(vs); }
   });
 });

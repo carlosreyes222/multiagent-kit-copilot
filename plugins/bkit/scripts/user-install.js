@@ -1,8 +1,8 @@
 // Instalación del kit a nivel de USUARIO (modo "usuario"): agentes, skills, prompts y hooks en tu perfil,
 // válidos para todos los proyectos del PC, sin dejar nada en los repositorios.
-//   Copilot CLI y VS Code:  ~/.copilot/agents/*.agent.md · ~/.copilot/skills/<nombre>/SKILL.md · ~/.copilot/hooks/multiagent-kit.json
+//   Copilot CLI y VS Code:  ~/.copilot/agents/*.agent.md · ~/.copilot/skills/<nombre>/SKILL.md · ~/.copilot/hooks/bkit.json
 //   VS Code (prompts y agentes de perfil): <User Data>/prompts/*.prompt.md, *.agent.md, kit.instructions.md
-// Los hooks de usuario se lanzan con node "<home>/.copilot/multiagent-kit-hook.js" <nombre>, un lanzador que localiza el
+// Los hooks de usuario se lanzan con node "<home>/.copilot/bkit-hook.js" <nombre>, un lanzador que localiza el
 // plugin instalado y NO hace nada (exit 0) en proyectos sin pipeline.config.json, así no interfiere en otros repos.
 "use strict";
 const fs = require("fs");
@@ -22,12 +22,38 @@ function vscodePromptsDir() {
 // Lanzador de hooks: siempre el plugin de Copilot, empezando por la ruta de este plugin (ver launcher-src.js).
 const LAUNCHER = require("./launcher-src").hookLauncher({ preferred: C.PLUGIN_ROOT });
 
-function installUser({ update }) {
+// Archivos del kit en ~/.copilot, con el nombre del plugin (bkit; hasta la 2.x, multiagent-kit)
+function userPaths(name = C.PLUGIN_NAME) {
   const home = copilotHome();
-  const manifestPath = path.join(home, "multiagent-kit-manifest.json");
+  return { home, manifest: path.join(home, `${name}-manifest.json`), launcher: path.join(home, `${name}-hook.js`), hooks: path.join(home, "hooks", `${name}.json`) };
+}
+// Cambio de nombre multiagent-kit -> bkit: retira el lanzador y la definición de hooks antiguos (si no, los hooks se
+// ejecutarían dos veces) y hereda el manifiesto para seguir detectando los archivos que editaste. Devuelve lo retirado.
+function retireOldNames(manifest) {
+  const cur = userPaths();
+  const retirados = [];
+  for (const old of C.PLUGIN_NAMES.filter((n) => n !== C.PLUGIN_NAME)) {
+    const o = userPaths(old);
+    const om = C.readJson(o.manifest, null);
+    if (om && om.files) for (const [k, v] of Object.entries(om.files)) if (!manifest.files[k]) manifest.files[k] = v;
+    for (const f of [o.hooks, o.launcher, o.manifest]) {
+      if (!fs.existsSync(f)) continue;
+      try { fs.unlinkSync(f); } catch { try { fs.renameSync(f, f + ".retirado"); } catch { continue; } }
+      retirados.push(f.replace(cur.home, "~/.copilot").replace(/\\/g, "/"));
+      delete manifest.files[f.replace(/\\/g, "/")];
+    }
+  }
+  return retirados;
+}
+
+function installUser({ update }) {
+  const paths = userPaths();
+  const home = paths.home;
+  const manifestPath = paths.manifest;
   const manifest = C.readJson(manifestPath, { version: "", files: {} });
   if (!manifest.files) manifest.files = {};
   const creados = [], actualizados = [], modificados = [], avisos = [];
+  const retirados = retireOldNames(manifest);
 
   const put = (srcAbsOrText, dstAbs, label) => {
     fs.mkdirSync(path.dirname(dstAbs), { recursive: true });
@@ -51,12 +77,12 @@ function installUser({ update }) {
     if (fs.existsSync(sk)) put(sk, path.join(home, "skills", d, "SKILL.md"), `~/.copilot/skills/${d}/SKILL.md`);
   }
   // Lanzador y hooks de usuario
-  const launcher = path.join(home, "multiagent-kit-hook.js");
-  put(LAUNCHER, launcher, "~/.copilot/multiagent-kit-hook.js");
+  const launcher = paths.launcher;
+  put(LAUNCHER, launcher, `~/.copilot/${path.basename(launcher)}`);
   const cmd = (name) => `node "${launcher.replace(/\\/g, "/")}" ${name}`;
   const entry = (name, t) => ({ type: "command", command: cmd(name), bash: cmd(name), powershell: cmd(name), timeoutSec: t });
   const hooks = { version: 1, hooks: { SessionStart: [entry("session-start", 20)], PreToolUse: [entry("protect-main", 20), entry("commit-gate", 600)] } };
-  put(JSON.stringify(hooks, null, 2) + "\n", path.join(home, "hooks", "multiagent-kit.json"), "~/.copilot/hooks/multiagent-kit.json");
+  put(JSON.stringify(hooks, null, 2) + "\n", paths.hooks, `~/.copilot/hooks/${path.basename(paths.hooks)}`);
 
   // VS Code: prompts, agentes e instrucciones de perfil de usuario
   const vs = vscodePromptsDir();
@@ -72,7 +98,7 @@ function installUser({ update }) {
 
   const files = {}; for (const k of Object.keys(manifest.files).sort()) files[k] = manifest.files[k];
   C.writeJson(manifestPath, { version: C.VERSION, updatedAt: C.nowIso(), files });
-  return { creados, actualizados, modificados, avisos, home, vscodeDir: vs };
+  return { creados, actualizados, modificados, avisos, retirados, home, vscodeDir: vs };
 }
 
-module.exports = { installUser, copilotHome, vscodePromptsDir };
+module.exports = { installUser, copilotHome, vscodePromptsDir, userPaths };

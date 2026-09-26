@@ -26,7 +26,7 @@ Los comandos de instalar / build / test / lint están en `pipeline.config.json`.
 ## Sistema operativo
 Los comandos del kit son **idénticos** en Windows y macOS: `kit <check|pr|status|state|epica|sdk|update>` (Node ≥ 18). Para lo demás detecta el sistema (`node -p process.platform`): `.\gradlew` / `winget` / `\` en Windows, `./gradlew` / `brew` / `/` en macOS; iOS (`pod install`, Xcode) solo en macOS. Cuando muestres un comando al usuario, en la forma de su sistema.
 
-## Flujo multiagente (kit `multiagent-kit` para Copilot)
+## Flujo de agentes (bkit)
 - `/pipeline "idea"` — spec → ADR → código → QA → revisiones → **PR** → arquitectura viva. `--rapido` (tamaño S), `--epica` (idea grande en HU), `--sdk <nombre>` (feature que nace en un SDK), `continuar <slug|epica>`.
 - `/analisis "alcance o pregunta"` — entender/auditar sin tocar código. `/bugfix "descripción o traza"` — reproducir, corregir y validar (`--solo-diagnostico`, `--urgente`). `/ideas ["dirección"]` — mejoras priorizadas. `/retro-kit` — retrospectiva del kit.
 - Orquestador: agente `director` (`@director` en VS Code, `copilot --agent director` en la CLI). Agentes: `product-owner`, `arquitecto`, `implementador`, `tester`, `revisor-codigo`, `revisor-seguridad`, `release-manager`, `investigador`.

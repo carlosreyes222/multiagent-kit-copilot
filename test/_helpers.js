@@ -6,7 +6,9 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 
 // KIT_TEST_PLUGIN: probar otra copia del plugin (p. ej. una versión anterior, para comparar)
-const PLUGIN = process.env.KIT_TEST_PLUGIN ? path.resolve(process.env.KIT_TEST_PLUGIN) : path.resolve(__dirname, "..", "plugins", "multiagent-kit");
+// El repositorio tiene un único plugin (plugins/multiagent-kit en Claude, plugins/bkit en Copilot)
+const PLUGIN = process.env.KIT_TEST_PLUGIN ? path.resolve(process.env.KIT_TEST_PLUGIN)
+  : path.join(path.resolve(__dirname, "..", "plugins"), fs.readdirSync(path.resolve(__dirname, "..", "plugins")).find((d) => ["multiagent-kit", "bkit"].includes(d)));
 const SCRIPTS = path.join(PLUGIN, "scripts");
 // Estas pruebas son las mismas en los dos kits: FLAVOR ("claude" | "copilot") marca lo que cambia entre ellos.
 const FLAVOR = fs.existsSync(path.join(PLUGIN, "plugin.json")) ? "copilot" : "claude";

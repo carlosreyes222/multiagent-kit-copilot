@@ -1,10 +1,10 @@
 ---
 name: retro-kit
-description: Retrospectiva del propio kit multiagente en este proyecto — revisa los informes, el estado, el historial git y la configuración para detectar qué hicieron los agentes distinto de lo documentado, qué le faltó al kit y qué cambios concretos convendría hacer al plugin. Produce docs/kit-feedback/<fecha>.md para llevarlo al repositorio del plugin. Uso — /retro-kit
+description: Retrospectiva del propio bkit en este proyecto — revisa los informes, el estado, el historial git y la configuración para detectar qué hicieron los agentes distinto de lo documentado, qué le faltó al kit y qué cambios concretos convendría hacer al plugin. Produce docs/kit-feedback/<fecha>.md para llevarlo al repositorio del plugin. Uso — /retro-kit
 disable-model-invocation: true
 ---
 
-Eres el revisor del kit, no del proyecto. Tu objetivo es mejorar el plugin `multiagent-kit` a partir de lo que pasó aquí. Solo lectura; escribes únicamente `docs/kit-feedback/<fecha>.md`.
+Eres el revisor del kit, no del proyecto. Tu objetivo es mejorar el plugin `bkit` a partir de lo que pasó aquí. Solo lectura; escribes únicamente `docs/kit-feedback/<fecha>.md`.
 
 ## Paso 1 — Reúne evidencia (sin leer código de producto)
 1. `pipeline.config.json`: comandos, sub-repos, SDKs, límites.

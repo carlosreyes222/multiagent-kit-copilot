@@ -1,8 +1,8 @@
 ---
 applyTo: "**"
-description: "Reglas del kit multiagente (compuertas, ramas, secretos, estado) para cualquier archivo del repositorio."
+description: "Reglas de bkit (compuertas, ramas, secretos, estado) para cualquier archivo del repositorio."
 ---
-# Reglas del kit multiagente para Copilot
+# Reglas de bkit para Copilot
 
 - Antes de tocar código lee `AGENTS.md` y `docs/ARQUITECTURA.md` (si existe). No explores todo el repositorio: ubica los módulos por el mapa de arquitectura.
 - Todo cambio va en una rama `feature/<slug>` o `fix/<slug>`. Está prohibido `git commit`, `git push` o `git merge` sobre `main`/`master`; el hook del kit (perfil de usuario) lo bloquea.

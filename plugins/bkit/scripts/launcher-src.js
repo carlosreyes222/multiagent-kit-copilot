@@ -1,7 +1,7 @@
 // Código fuente de los lanzadores que se instalan fuera del plugin (comando global `kit` y lanzador de hooks de usuario).
 // Ambos necesitan localizar el plugin instalado sin depender de él, así que el resolvedor se genera como texto.
 //
-// Con los dos kits instalados (Claude Code y Copilot) hay dos plugins llamados "multiagent-kit"; elegir "el más reciente"
+// Con los dos kits instalados (Claude Code "multiagent-kit" y Copilot "bkit", antes también "multiagent-kit"); elegir "el más reciente"
 // mezclaba los sabores. Orden de resolución:
 //   1. KIT_PLUGIN_ROOT (si es un plugin del sabor buscado)
 //   2. pluginRoot de .pipeline/kit.json del proyecto (desde el cwd hacia arriba), si es del sabor buscado
@@ -20,7 +20,7 @@ function manifest(d) {
   if (!d || !fs.existsSync(path.join(d, "scripts", "common.js"))) return null;
   for (const [rel, sabor] of [["plugin.json", "copilot"], [".claude-plugin/plugin.json", "claude"]]) {
     const m = path.join(d, rel);
-    if (fs.existsSync(m)) { try { const j = JSON.parse(fs.readFileSync(m, "utf8")); return j.name === "multiagent-kit" ? { sabor, version: String(j.version || "0") } : null; } catch { return null; } }
+    if (fs.existsSync(m)) { try { const j = JSON.parse(fs.readFileSync(m, "utf8")); return ["multiagent-kit", "bkit"].includes(j.name) ? { sabor, version: String(j.version || "0") } : null; } catch { return null; } }
   }
   return null;
 }
@@ -63,7 +63,7 @@ function findPlugin() {
 `;
 }
 
-// Lanzador de hooks de usuario (~/.copilot/multiagent-kit-hook.js): siempre el plugin de Copilot.
+// Lanzador de hooks de usuario (~/.copilot/bkit-hook.js): siempre el plugin de Copilot.
 function hookLauncher({ preferred }) {
   return `#!/usr/bin/env node
 // Lanzador de hooks del kit multiagente instalado a nivel de usuario. Generado por 'kit init' / 'kit update'; no editar.
@@ -91,9 +91,9 @@ if (cmd === "hook") {
   process.exit(r.status == null ? 0 : r.status);
 }
 if (!plugin) {
-  console.error("No encuentro el plugin multiagent-kit (" + saborBuscado(proyecto()) + ") instalado en este PC.");
-  console.error("  Claude Code:  /plugin marketplace add carlosreyes222/multiagent-kit  ->  /plugin install multiagent-kit@carlos-kits");
-  console.error("  Copilot CLI:  copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot  ->  copilot plugin install multiagent-kit@carlos-kits-copilot");
+  console.error("No encuentro el plugin del kit (" + saborBuscado(proyecto()) + ") instalado en este PC.");
+  if (saborBuscado(proyecto()) === "claude") console.error("  Claude Code:  /plugin marketplace add carlosreyes222/multiagent-kit  ->  /plugin install multiagent-kit@carlos-kits");
+  else console.error("  Copilot CLI:  copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot  ->  copilot plugin install bkit@bkit");
   console.error("(o define KIT_PLUGIN_ROOT con la ruta de una copia local del plugin)");
   process.exit(1);
 }

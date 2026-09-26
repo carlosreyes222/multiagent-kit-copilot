@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "bkit",
+  "version": "3.0.0",
+  "description": "bkit: equipo de agentes para GitHub Copilot (CLI y VS Code) y apps React Native bare: ideación → spec → arquitectura → implementación → QA → revisión de código y seguridad → pull request. Incluye /pipeline, /analisis, /bugfix, /ideas, skills de método y de stack, hooks de ramas protegidas, secretos y compuerta de commit.",
+  "author": {
+    "name": "Shell"
+  },
+  "license": "MIT",
+  "keywords": [
+    "pipeline",
+    "copilot",
+    "react-native",
+    "pull-request",
+    "security-review",
+    "jira",
+    "bkit"
+  ]
+}

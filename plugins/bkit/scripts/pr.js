@@ -114,7 +114,7 @@ module.exports = async function pr(opts) {
     block("Seguridad: observaciones", hallazgos),
     block("Commits", ["```", log || "(sin commits propios respecto a la base)", "```"]),
     block("Cómo probar", probar.length ? probar : ["(ver el informe de QA de la feature)"]),
-    "Generado por multiagent-kit (los informes completos quedan en el archivo local del autor).",
+    `Generado por ${C.PLUGIN_NAME} (los informes completos quedan en el archivo local del autor).`,
   ].filter(Boolean).join("\n\n") + "\n";
   // La descripción queda en docs/reviews/<slug>-pr.md (fuera de git, se archiva con los informes); el estado del PR en
   // .pipeline/pr/<slug>.json (lo leen kit epica y kit status)

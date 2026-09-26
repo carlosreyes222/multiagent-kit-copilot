@@ -38,7 +38,7 @@ module.exports = async function init(opts, { mode }) {
   const manifestPath = copyGithub ? path.join(dest, ".github", "kit-manifest.json") : path.join(dest, ".pipeline", "kit-manifest.json");
 
   if (!fs.existsSync(path.join(dest, ".git"))) C.log.yellow(`AVISO: '${dest}' no es un repositorio git. Los hooks de ramas protegidas necesitan git.`);
-  C.log.cyan(`${mode === "update" ? "Actualizando" : "Inicializando"} kit multiagente (${C.FLAVOR}) v${C.VERSION} en ${dest} — modo ${kitMode}`);
+  C.log.cyan(`${mode === "update" ? "Actualizando" : "Inicializando"} ${C.DISPLAY_NAME} (${C.FLAVOR}) v${C.VERSION} en ${dest} — modo ${kitMode}`);
 
   const creados = [], conservados = [], fusionados = [], actualizados = [], modificados = [], excluidos = [], retirados = [];
   // Cambio a modo usuario desde repo/local: retira de .github/ lo que el kit copió antes (solo si sigue idéntico a lo copiado)
@@ -97,7 +97,7 @@ module.exports = async function init(opts, { mode }) {
     const existing = fs.readFileSync(dst, "utf8").split(/\r?\n/);
     const missing = fs.readFileSync(src, "utf8").split(/\r?\n/).filter((l) => l.trim() && !/^\s*#/.test(l) && !existing.includes(l));
     if (missing.length) {
-      fs.appendFileSync(dst, `\n# --- añadido por multiagent-kit ---\n${missing.join("\n")}\n`);
+      fs.appendFileSync(dst, `\n# --- añadido por ${C.PLUGIN_NAME} ---\n${missing.join("\n")}\n`);
       fusionados.push(`${rel}  (+${missing.length} líneas)`);
     }
   };
@@ -184,7 +184,7 @@ module.exports = async function init(opts, { mode }) {
       const existing = fs.existsSync(exPath) ? fs.readFileSync(exPath, "utf8").split(/\r?\n/) : [];
       const toAdd = [...excludeList].map((p) => "/" + p.replace(/\\/g, "/")).filter((p) => !existing.includes(p));
       if (toAdd.length) {
-        fs.appendFileSync(exPath, `\n# --- multiagent-kit (modo ${kitMode}): archivos del kit solo en este clon ---\n${toAdd.join("\n")}\n`);
+        fs.appendFileSync(exPath, `\n# --- ${C.PLUGIN_NAME} (modo ${kitMode}): archivos del kit solo en este clon ---\n${toAdd.join("\n")}\n`);
         excluidos.push(...toAdd);
       }
     } else C.log.warn("No hay .git en el proyecto: no se pudo escribir .git/info/exclude.");
@@ -202,6 +202,7 @@ module.exports = async function init(opts, { mode }) {
   if (userResult) {
     show("Instalados en tu perfil de usuario:", userResult.creados.concat(userResult.actualizados), "green", "*");
     show("En tu perfil, modificados por ti (NO se tocaron):", userResult.modificados, "yellow", "!");
+    show("Retirados de tu perfil (nombre anterior del kit):", userResult.retirados || [], "cyan", "x");
     if (userResult.avisos.length) userResult.avisos.forEach((a) => C.log.warn(a));
   }
   if (![creados, actualizados, fusionados, conservados, modificados, excluidos, retirados].some((l) => l.length) && !(userResult && (userResult.creados.length || userResult.actualizados.length))) C.log.green(`\nTodo al día (v${C.VERSION}).`);

@@ -1,5 +1,5 @@
 {
-  "name": "multiagent-kit-copilot-dev",
+  "name": "bkit-dev",
   "private": true,
   "description": "Pruebas del kit (no forma parte del plugin). Ejecuta: npm test",
   "scripts": {

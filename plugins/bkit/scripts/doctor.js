@@ -69,7 +69,7 @@ module.exports = async function doctor(opts) {
   }
   if (mode !== "repo") {
     const ex = path.join(root, ".git", "info", "exclude");
-    if (fs.existsSync(ex) && /multiagent-kit/.test(fs.readFileSync(ex, "utf8"))) good(".git/info/exclude con el bloque del kit");
+    if (fs.existsSync(ex) && /multiagent-kit|bkit/.test(fs.readFileSync(ex, "utf8"))) good(".git/info/exclude con el bloque del kit");
     else bad(`Modo ${mode} pero .git/info/exclude no tiene el bloque del kit.`, "node kit.js update");
     // archivos del kit que siguen en el repo en modo usuario
     if (mode === "usuario" && isCopilot) {
@@ -92,7 +92,7 @@ module.exports = async function doctor(opts) {
     if (!missEx.length) good("excluidos de git en este clon (.git/info/exclude)");
     else if (fix) {
       fs.mkdirSync(path.dirname(ex), { recursive: true });
-      fs.appendFileSync(ex, `\n# --- multiagent-kit: documentos de trabajo de los agentes (solo docs/ARQUITECTURA.md va en git) ---\n${missEx.join("\n")}\n`);
+      fs.appendFileSync(ex, `\n# --- ${C.PLUGIN_NAME}: documentos de trabajo de los agentes (solo docs/ARQUITECTURA.md va en git) ---\n${missEx.join("\n")}\n`);
       fixed.push(`${missEx.length} rutas de documentos de trabajo excluidas de git`); good("documentos de trabajo excluidos de git");
     } else bad(`Documentos de trabajo sin excluir de git: ${missEx.join(", ")}`, "kit doctor --fix (o kit update)");
     const lf = spawnSync("git", ["-C", root, "ls-files", "--", ...C.WORK_DOCS.map((w) => w.replace(/\/$/, ""))], { encoding: "utf8" });
@@ -111,7 +111,7 @@ module.exports = async function doctor(opts) {
 
   // 3. Hooks vivos: se lanza un evento real y se espera que bloquee
   C.log.step("Hooks");
-  const hookFile = isCopilot ? (mode === "usuario" ? path.join(require("./user-install").copilotHome(), "hooks", "multiagent-kit.json") : path.join(root, ".github", "hooks", "kit.json")) : path.join(C.PLUGIN_ROOT, "hooks", "hooks.json");
+  const hookFile = isCopilot ? (mode === "usuario" ? require("./user-install").userPaths().hooks : path.join(root, ".github", "hooks", "kit.json")) : path.join(C.PLUGIN_ROOT, "hooks", "hooks.json");
   if (!fs.existsSync(hookFile)) bad(`No existe la definición de hooks: ${hookFile}`, isCopilot ? "node kit.js update" : "reinstala el plugin");
   else good(`Definición de hooks: ${hookFile}`);
   const evt = JSON.stringify({ tool_name: "Bash", tool_input: { command: "git push origin main" }, cwd: root });
@@ -119,8 +119,8 @@ module.exports = async function doctor(opts) {
   if (hr.status === 2) good("protect-main responde (bloqueó un push a main de prueba)");
   else bad(`protect-main no bloqueó un push a main de prueba (exit ${hr.status}). ${(hr.stderr || "").trim().split("\n").pop() || ""}`, "revisa que el proyecto sea un repo git y que PROTECTED_BRANCHES incluya la rama principal");
   if (mode === "usuario" && isCopilot) {
-    const launcher = path.join(require("./user-install").copilotHome(), "multiagent-kit-hook.js");
-    if (!fs.existsSync(launcher)) bad("Falta el lanzador de hooks de usuario ~/.copilot/multiagent-kit-hook.js", "node kit.js update");
+    const launcher = require("./user-install").userPaths().launcher;
+    if (!fs.existsSync(launcher)) bad(`Falta el lanzador de hooks de usuario ${launcher}`, "kit update");
   }
 
   // 4. Permisos: globales (~/.claude/settings.json) en modo usuario; por proyecto en repo/local

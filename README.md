@@ -1,6 +1,6 @@
-# multiagent-kit para GitHub Copilot
+# bkit — kit de agentes para GitHub Copilot
 
-Un equipo de agentes de GitHub Copilot para apps **React Native bare** (CLI, TypeScript, sin Expo) que lleva una idea desde la especificación hasta un **pull request** listo para revisar: spec aprobada por ti, ADR, código en rama con el ticket de Jira, QA, revisión de código y de seguridad, y el PR abierto contra la rama base que indiques. El merge, el tren de release y el despliegue siguen siendo del equipo. Es el hermano del kit [`multiagent-kit`](https://github.com/carlosreyes222/multiagent-kit) de Claude Code, recortado para el trabajo: mismos agentes y compuertas, sin staging ni producción.
+Un equipo de agentes de GitHub Copilot para apps **React Native bare** (CLI, TypeScript, sin Expo) que lleva una idea desde la especificación hasta un **pull request** listo para revisar: spec aprobada por ti, ADR, código en rama con el ticket de Jira, QA, revisión de código y de seguridad, y el PR abierto contra la rama base que indiques. El merge, el tren de release y el despliegue siguen siendo del equipo. Es el hermano del kit `multiagent-kit` de Claude Code, recortado para el trabajo: mismos agentes y compuertas, sin staging ni producción.
 
 Funciona en **Copilot CLI** (terminal) y **VS Code** (agent mode, `@agentes`, `/prompts`). Se distribuye como **plugin de Copilot** con marketplace propio. **Nada del kit queda en el repositorio**: agentes, skills, prompts y hooks se instalan en tu perfil de usuario; en el proyecto solo quedan `pipeline.config.json`, `AGENTS.md` y `.pipeline/` (fuera de git) y los documentos que producen los agentes: solo `docs/ARQUITECTURA.md` se versiona; specs, ADR e informes quedan fuera de git, el PR lleva su resumen y al cerrar la feature se archivan en tu perfil (`~/.multiagent-kit/archivo/`).
 
@@ -33,7 +33,7 @@ idea ──► product-owner ──► arquitecto ──► implementador ──
 ```bash
 # 1. Una vez por PC (cualquier terminal, Windows o macOS)
 copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot
-copilot plugin install multiagent-kit@carlos-kits-copilot
+copilot plugin install bkit@bkit
 
 # 2. En cada proyecto (dentro de `copilot`, o con el prompt /kit-init en VS Code)
 /kit-init              # deja solo pipeline.config.json, el contexto y .pipeline/ (fuera de git); instala el comando global `kit`
@@ -75,8 +75,8 @@ GitHub Actions repite las pruebas en Windows, macOS y Linux en cada push y PR (`
 
 ```
 multiagent-kit-copilot/
-├── marketplace.json                    ← marketplace "carlos-kits-copilot"
-├── plugins/multiagent-kit/
+├── marketplace.json                    ← marketplace "bkit"
+├── plugins/bkit/
 │   ├── plugin.json                     ← manifiesto Agent Plugins 1.0 (versión)
 │   ├── skills/                         ← /pipeline, /analisis, /bugfix, /ideas, /retro-kit, /kit-init, metodo-*, stack-react-native
 │   ├── com.github.copilot/agents/      ← director + 8 agentes (*.agent.md)

@@ -8,7 +8,7 @@ const C = require("./common");
 
 const REPOS = {
   claude: { repo: "carlosreyes222/multiagent-kit", file: ".claude-plugin/marketplace.json", update: "/plugin update multiagent-kit@carlos-kits  (dentro de claude)", cli: null },
-  copilot: { repo: "carlosreyes222/multiagent-kit-copilot", file: "marketplace.json", update: "copilot plugin update multiagent-kit", cli: "copilot plugin update multiagent-kit" },
+  copilot: { repo: "carlosreyes222/multiagent-kit-copilot", file: "marketplace.json", update: "copilot plugin update bkit", cli: "copilot plugin update bkit" },
 };
 function kitHome() { return process.env.KIT_HOME || path.join(os.homedir(), ".multiagent-kit"); }
 function cachePath() { return path.join(kitHome(), `version-${C.FLAVOR}.json`); }
@@ -16,7 +16,7 @@ const TTL_MS = 24 * 3600 * 1000;
 
 function httpGet(url, timeoutMs) {
   return new Promise((resolve) => {
-    const req = require("https").get(url, { timeout: timeoutMs, headers: { "User-Agent": "multiagent-kit" } }, (res) => {
+    const req = require("https").get(url, { timeout: timeoutMs, headers: { "User-Agent": C.PLUGIN_NAME } }, (res) => {
       if (res.statusCode !== 200) { res.resume(); return resolve(null); }
       let data = ""; res.setEncoding("utf8"); res.on("data", (c) => (data += c)); res.on("end", () => resolve(data));
     });
@@ -25,7 +25,7 @@ function httpGet(url, timeoutMs) {
   });
 }
 function versionFromMarketplace(txt) {
-  try { const m = JSON.parse(txt); const p = (m.plugins || []).find((x) => x.name === "multiagent-kit") || (m.plugins || [])[0]; return p && p.version; } catch { return null; }
+  try { const m = JSON.parse(txt); const p = (m.plugins || []).find((x) => x.name === C.PLUGIN_NAME) || (m.plugins || []).find((x) => C.PLUGIN_NAMES.includes(x.name)) || (m.plugins || [])[0]; return p && p.version; } catch { return null; }
 }
 // Versión publicada en GitHub. Repos públicos por raw.githubusercontent.com; privados a través de `gh api` si está autenticado.
 async function fetchRemoteVersion(timeoutMs = 4000) {
@@ -61,7 +61,7 @@ function ensureLessons() {
   const p = lessonsPath();
   if (!fs.existsSync(p)) {
     fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, "# Lecciones del kit multiagente (todos los proyectos de este PC)\n\nLas añade /retro-kit y las leen los agentes al empezar. Una por línea: `- [fecha] [stack] lección concreta y reutilizable`.\n\n", "utf8");
+    fs.writeFileSync(p, "# Lecciones de los kits de agentes (todos los proyectos de este PC)\n\nLas añade /retro-kit y las leen los agentes al empezar. Una por línea: `- [fecha] [stack] lección concreta y reutilizable`.\n\n", "utf8");
   }
   return p;
 }

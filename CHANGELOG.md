@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.0.0 — ahora se llama bkit
+El plugin pasa de `multiagent-kit@carlos-kits-copilot` a **`bkit@bkit`** (marketplace `bkit`, autor `Shell`). El comando `kit` y los flujos no cambian. Como Copilot trata el nombre nuevo como otro plugin, hay que reinstalarlo una vez en cada PC:
+
+```
+copilot plugin uninstall multiagent-kit
+copilot plugin marketplace remove carlos-kits-copilot
+copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot
+copilot plugin install bkit@bkit
+kit update          # en cada proyecto; retira ~/.copilot/hooks/multiagent-kit.json y su lanzador
+```
+
+- `kit init`/`kit update` instalan `~/.copilot/hooks/bkit.json` y `~/.copilot/bkit-hook.js`, y retiran los del nombre anterior (si no, los hooks se ejecutarían dos veces). El manifiesto de tu perfil se hereda: lo que editaste en `~/.copilot/agents` o `skills` se sigue respetando.
+- Los lanzadores (`kit` global y hooks) reconocen los dos nombres y, entre instalaciones, eligen la versión más alta: la 3.x de `bkit` gana a una 2.x de `multiagent-kit` que siga instalada.
+- Sin datos personales en el plugin: autor `Shell`, sin `homepage`/`repository` en `plugin.json`, licencia a nombre de Shell, mensajes de instalación solo del kit de Copilot. El repositorio de GitHub sigue siendo `carlosreyes222/multiagent-kit-copilot` hasta que lo muevas (ver guía 02 §2.2).
+- `~/.multiagent-kit/` (comando `kit`, lecciones, archivo de features) no cambia: la comparten los dos kits.
+
 ## 2.3.0 — SDKs una vez por semana, rama validada y detección del proyecto
 Después de actualizar el plugin: `kit update`.
 - **SDKs: actualización semanal.** Al empezar un flujo el orquestador usa `kit sdk sync --auto`: clona el SDK si falta y, si ya está, solo va a la red cuando pasaron `SDK_SYNC_DIAS` días (7 por defecto, en `pipeline.config.json`) o cambió la `rama`. `kit sdk sync [nombre]` sigue actualizando siempre, y `SDK_SYNC_DIAS: 0` vuelve a actualizar en cada flujo.

@@ -1,6 +1,6 @@
 ---
 name: kit-init
-description: "Inicializa o actualiza este proyecto para el kit multiagente (pipeline.config.json, AGENTS.md, .pipeline/; agentes y skills en tu perfil de usuario)."
+description: "Inicializa o actualiza este proyecto para bkit (pipeline.config.json, AGENTS.md, .pipeline/; agentes y skills en tu perfil de usuario)."
 agent: director
 argument-hint: "(sin argumentos)"
 ---

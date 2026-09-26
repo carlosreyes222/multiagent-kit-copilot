@@ -22,6 +22,10 @@ const MANIFEST = pluginManifest();
 const FLAVOR = MANIFEST.flavor; // "claude" | "copilot"
 const VERSION = MANIFEST.data.version;
 const CONTEXT_FILE = FLAVOR === "claude" ? "CLAUDE.md" : "AGENTS.md";
+// Nombre del plugin: "multiagent-kit" (Claude Code) o "bkit" (Copilot, desde la 3.0.0). Los lanzadores aceptan los dos.
+const PLUGIN_NAME = MANIFEST.data.name;
+const PLUGIN_NAMES = ["multiagent-kit", "bkit"];
+const DISPLAY_NAME = FLAVOR === "copilot" ? "bkit" : "Kit multiagente";
 
 // --- Salida ----------------------------------------------------------------------------------
 const useColor = process.stdout.isTTY && !process.env.NO_COLOR;
@@ -440,7 +444,7 @@ function parseArgs(argv) {
 }
 
 module.exports = {
-  IS_WIN, OS_NAME, PLUGIN_ROOT, FLAVOR, VERSION, CONTEXT_FILE, MANIFEST, DEFAULTS, STATE_KEYS,
+  IS_WIN, OS_NAME, PLUGIN_ROOT, FLAVOR, VERSION, CONTEXT_FILE, MANIFEST, PLUGIN_NAME, PLUGIN_NAMES, DISPLAY_NAME, DEFAULTS, STATE_KEYS,
   WORK_DOCS, kitHome, projectKey, archiveRoot, archiveDir, isArchived, archiveFeatureDocs, restoreFeatureDocs,
   log, findProjectRoot, requireProjectRoot, loadConfig, stateFile, parseLegacyPs1, getState, setState, resetState, defaultState, stateValueError, withStateLock, writeFileAtomic, nowIso,
   run, runProjectCmd, currentBranch, protectedMatcher, which, httpStatus, waitHealthy, securityVerdict, textVerdict, reportVerdict, reportCommit, docLimits, supabaseDeploy,

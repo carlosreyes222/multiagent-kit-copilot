@@ -39,18 +39,18 @@ Instala VS Code y la extensión **GitHub Copilot Chat**. Es donde usarás el kit
 
 ```bash
 copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot
-copilot plugin install multiagent-kit@carlos-kits-copilot
+copilot plugin install bkit@bkit
 copilot plugin list
 ```
 
-`carlosreyes222` es el usuario de GitHub donde está publicado el repositorio (ver [02-publicar-en-github.md](02-publicar-en-github.md)). Si el repositorio es privado, `copilot` usa la sesión de `/login`, así que cada PC debe tener acceso.
+`carlosreyes222/multiagent-kit-copilot` es el repositorio de GitHub donde está publicado el kit (ver [02-publicar-en-github.md](02-publicar-en-github.md)). Si el repositorio es privado, `copilot` usa la sesión de `/login`, así que cada PC debe tener acceso.
 
 **Sin GitHub todavía:** registra el marketplace desde la carpeta local (los plugins con origen local se cargan "en vivo": cada cambio se ve al reiniciar la sesión):
 
 ```bash
 copilot plugin marketplace add C:\Users\carr9\Documents\multiagent-kit-copilot     # Windows
 copilot plugin marketplace add ~/Documents/multiagent-kit-copilot                 # macOS
-copilot plugin install multiagent-kit@carlos-kits-copilot
+copilot plugin install bkit@bkit
 ```
 
 ## 1.6 Comprobar

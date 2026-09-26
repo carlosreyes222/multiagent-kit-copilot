@@ -1,25 +1,25 @@
 {
-  "name": "carlos-kits-copilot",
+  "name": "bkit",
   "owner": {
-    "name": "Carlos Reyes"
+    "name": "Shell"
   },
   "metadata": {
-    "description": "Kits de Carlos para GitHub Copilot",
-    "version": "2.3.0"
+    "description": "bkit, el kit de agentes del equipo Shell para GitHub Copilot",
+    "version": "3.0.0"
   },
   "plugins": [
     {
-      "name": "multiagent-kit",
+      "name": "bkit",
       "description": "Equipo de agentes con compuertas para React Native bare: spec → arquitectura → código → QA → revisiones de código y seguridad → pull request. Comandos /pipeline, /analisis, /bugfix, /ideas.",
-      "version": "2.3.0",
-      "source": "./plugins/multiagent-kit",
+      "version": "3.0.0",
+      "source": "./plugins/bkit",
       "license": "MIT",
       "keywords": [
-        "multiagent",
         "pipeline",
         "react-native",
         "pull-request",
-        "security"
+        "security",
+        "bkit"
       ]
     }
   ]

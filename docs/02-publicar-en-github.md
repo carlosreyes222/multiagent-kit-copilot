@@ -8,12 +8,13 @@ Crea en GitHub un repositorio vacío llamado `multiagent-kit-copilot`. Puede ser
 
 ## 2.2 Poner tu usuario
 
-El kit ya trae el usuario `carlosreyes222`. Si publicas bajo otro usuario u organización, reemplázalo en:
+El kit ya trae la ubicación `carlosreyes222/multiagent-kit-copilot`. Si lo publicas en otra cuenta, en una organización o con otro nombre de repositorio (p. ej. `shell/bkit`), reemplázala en:
 
-- `plugins/multiagent-kit/plugin.json` (`homepage`, `repository`, `author.url`)
-- `plugins/multiagent-kit/templates/github/copilot/settings.json` (`extraKnownMarketplaces`)
-- `plugins/multiagent-kit/templates/kit.js` (mensaje de instalación)
+- `plugins/bkit/scripts/remote.js` (`REPOS.copilot.repo`: el aviso de versión nueva la consulta)
+- `plugins/bkit/scripts/launcher-src.js` y `plugins/bkit/templates/kit.js` (mensaje de instalación)
 - `docs/*.md` y `README.md` (comandos de ejemplo)
+
+El autor que se muestra es el del campo `author` de `plugins/bkit/plugin.json` y `owner` de `marketplace.json` (`Shell`).
 
 Desde la carpeta del repositorio (Windows, en PowerShell):
 
@@ -29,7 +30,7 @@ Get-ChildItem -Recurse -Include *.json,*.md,*.js | ForEach-Object {
 cd "$HOME\Documents\multiagent-kit-copilot"
 git init -b main
 git add .
-git commit -m "multiagent-kit para Copilot 1.0.0"
+git commit -m "bkit 1.0.0"
 git remote add origin https://github.com/carlosreyes222/multiagent-kit-copilot.git
 git push -u origin main
 ```
@@ -38,10 +39,10 @@ git push -u origin main
 
 ```powershell
 copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot
-copilot plugin install multiagent-kit@carlos-kits-copilot
+copilot plugin install bkit@bkit
 ```
 
-Copilot busca `marketplace.json` en la raíz del repositorio (también aceptaría `.claude-plugin/`). El nombre del marketplace es el `name` del archivo (`carlos-kits-copilot`), no se puede cambiar al registrarlo.
+Copilot busca `marketplace.json` en la raíz del repositorio (también aceptaría `.claude-plugin/`). El nombre del marketplace es el `name` del archivo (`bkit`), no se puede cambiar al registrarlo.
 
 ## 2.5 Para la organización (opcional)
 

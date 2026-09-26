@@ -20,8 +20,8 @@ Los agentes también ejecutan comandos `kit …` (`kit state`, `kit pr`, `kit pl
 | Skills (`metodo-*`, `stack-react-native`…) | `~/.copilot/skills/` (se activan por descripción, o `#nombre`) | `~/.copilot/skills/` y las del plugin (`/nombre`) |
 | Prompts `/pipeline`, `/bugfix`… | `User/prompts/*.prompt.md` | ✘ (usa las skills) |
 | Instrucciones del kit | `User/prompts/kit.instructions.md` + `AGENTS.md` del proyecto | `AGENTS.md` del proyecto |
-| Hooks (`protect-main`, `commit-gate`, `session-start`) | `~/.copilot/hooks/multiagent-kit.json` → `~/.copilot/multiagent-kit-hook.js` | igual |
-| Plugin `multiagent-kit@carlos-kits-copilot` | no se instala en VS Code; los hooks y `kit` usan el que instaló la CLI | ✔ |
+| Hooks (`protect-main`, `commit-gate`, `session-start`) | `~/.copilot/hooks/bkit.json` → `~/.copilot/bkit-hook.js` | igual |
+| Plugin `bkit@bkit` | no se instala en VS Code; los hooks y `kit` usan el que instaló la CLI | ✔ |
 | Herramientas `web` del investigador | ✔ | ✔ |
 | Subagentes (delegación) | `runSubagent` con los agentes de `agents:` | herramienta `task` / `agent` |
 
@@ -48,7 +48,7 @@ Requisitos: extensión GitHub Copilot Chat, chat en **modo agente**, y haber rec
 
 - **Prompts**: escribe `/` en el chat y elige `pipeline`, `analisis`, `bugfix`, `ideas`, `retro-kit` o `kit-init`. Cada prompt pide el argumento (idea, alcance, bug…) y lanza al agente `director`, que sigue la skill correspondiente y delega en los demás agentes (`runSubagent`).
 - **Agentes sueltos**: `@arquitecto MODO: DOCUMENTAR`, `@revisor-seguridad revisa la rama actual`, `@investigador benchmark de apps de hábitos`.
-- **Hooks**: VS Code lee `~/.copilot/hooks/multiagent-kit.json`, con los mismos scripts que la CLI. Reconocen las herramientas de VS Code: `run_in_terminal` (comandos), `read_file` (lecturas) y `create_file`, `replace_string_in_file`, `multi_replace_string_in_file`, `insert_edit_into_file` y `apply_patch` (ediciones). Los comandos se analizan con un parser que entiende PowerShell, que es el terminal por defecto de VS Code en Windows: `Remove-Item -Recurse`, `Get-Content .env`, `pwsh -Command "…"` o `-EncodedCommand` se tratan igual que sus equivalentes de sh (tabla completa en [04 §4.3](04-flujo-y-compuertas.md)). Cuando el hook bloquea, el agente ve el motivo en el chat y suele proponer la alternativa permitida.
+- **Hooks**: VS Code lee `~/.copilot/hooks/bkit.json`, con los mismos scripts que la CLI. Reconocen las herramientas de VS Code: `run_in_terminal` (comandos), `read_file` (lecturas) y `create_file`, `replace_string_in_file`, `multi_replace_string_in_file`, `insert_edit_into_file` y `apply_patch` (ediciones). Los comandos se analizan con un parser que entiende PowerShell, que es el terminal por defecto de VS Code en Windows: `Remove-Item -Recurse`, `Get-Content .env`, `pwsh -Command "…"` o `-EncodedCommand` se tratan igual que sus equivalentes de sh (tabla completa en [04 §4.3](04-flujo-y-compuertas.md)). Cuando el hook bloquea, el agente ve el motivo en el chat y suele proponer la alternativa permitida.
 - **Skills**: se activan solas cuando su descripción encaja; para forzar una, menciónala (`usa la skill metodo-qa`).
 - **Android Studio / JetBrains**: los agentes personalizados y las skills están en vista previa en los IDEs de JetBrains; los prompt files no. El kit debería funcionar allí con `@director pipeline "idea"`, pero no está probado.
 

@@ -27,7 +27,7 @@ function isPlugin(dir) {
   if (!dir || !fs.existsSync(path.join(dir, "scripts", "common.js"))) return false;
   // Solo el plugin de Copilot (plugin.json en la raíz); el de Claude Code se llama igual pero usa .claude-plugin/
   const m = path.join(dir, "plugin.json");
-  try { return JSON.parse(fs.readFileSync(m, "utf8")).name === "multiagent-kit"; } catch { return false; }
+  try { return ["multiagent-kit", "bkit"].includes(JSON.parse(fs.readFileSync(m, "utf8")).name); } catch { return false; }
 }
 function* walk(dir, depth) {
   if (depth < 0 || !fs.existsSync(dir)) return;
@@ -66,7 +66,7 @@ const plugin = findPluginRoot();
 if (cmd === "hook") {
   // Los hooks nunca deben romper la sesión si el plugin no está: avisan y permiten.
   const name = rest[0] || "";
-  if (!plugin) { process.stderr.write(`kit.js: plugin multiagent-kit no instalado; hook '${name}' omitido.\n`); process.exit(0); }
+  if (!plugin) { process.stderr.write(`kit.js: plugin del kit no instalado; hook '${name}' omitido.\n`); process.exit(0); }
   const r = spawnSync(process.execPath, [path.join(plugin, "scripts", "hook.js"), name], { stdio: "inherit", env: process.env });
   process.exit(r.status == null ? 0 : r.status);
 }
@@ -76,9 +76,8 @@ if (cmd === "help" || cmd === "--help" || cmd === "-h") {
   process.exit(0);
 }
 if (!plugin) {
-  console.error("No encuentro el plugin multiagent-kit. Instálalo:");
-  console.error("  Claude Code:  /plugin marketplace add carlosreyes222/multiagent-kit  ->  /plugin install multiagent-kit@carlos-kits");
-  console.error("  Copilot CLI:  copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot  ->  copilot plugin install multiagent-kit@carlos-kits-copilot");
+  console.error("No encuentro el plugin del kit. Instálalo:");
+  console.error("  Copilot CLI:  copilot plugin marketplace add carlosreyes222/multiagent-kit-copilot  ->  copilot plugin install bkit@bkit");
   console.error("(o define KIT_PLUGIN_ROOT con la ruta de una copia local del plugin)");
   process.exit(1);
 }

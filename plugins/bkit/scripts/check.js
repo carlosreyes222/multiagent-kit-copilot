@@ -75,14 +75,14 @@ module.exports = async function check() {
   if (C.FLAVOR === "copilot" && kitMode === "usuario") {
     const U = require("./user-install");
     const home = U.copilotHome();
-    for (const f of ["agents/director.agent.md", "skills/pipeline/SKILL.md", "hooks/multiagent-kit.json", "multiagent-kit-hook.js"])
+    for (const f of ["agents/director.agent.md", "skills/pipeline/SKILL.md", `hooks/${C.PLUGIN_NAME}.json`, `${C.PLUGIN_NAME}-hook.js`])
       if (fs.existsSync(path.join(home, f))) C.log.ok(`~/.copilot/${f}`); else C.log.warn(`Falta ~/.copilot/${f} (node kit.js update)`);
     const vs = U.vscodePromptsDir();
     if (fs.existsSync(path.join(vs, "pipeline.prompt.md"))) C.log.ok(`VS Code: ${vs}`); else C.log.warn(`VS Code: no hay prompts del kit en ${vs} (solo importa si usas VS Code)`);
   }
   if (kitMode !== "repo") {
     const ex = path.join(root, ".git", "info", "exclude");
-    if (fs.existsSync(ex) && /multiagent-kit/.test(fs.readFileSync(ex, "utf8"))) C.log.ok(".git/info/exclude contiene los archivos del kit (nada del kit va a git)");
+    if (fs.existsSync(ex) && /multiagent-kit|bkit/.test(fs.readFileSync(ex, "utf8"))) C.log.ok(".git/info/exclude contiene los archivos del kit (nada del kit va a git)");
     else C.log.warn("No encuentro las exclusiones del kit en .git/info/exclude: ejecuta node kit.js update");
   }
 

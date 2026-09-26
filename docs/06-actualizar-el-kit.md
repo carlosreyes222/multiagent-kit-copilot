@@ -4,17 +4,17 @@
 
 | En el plugin (se actualiza con `copilot plugin update`) | En tu perfil (lo refresca `kit update`) | En el proyecto |
 |---|---|---|
-| `com.github.copilot/agents/*.agent.md`, `skills/*/SKILL.md`, `scripts/*.js`, `templates/` | `~/.copilot/agents`, `~/.copilot/skills`, `~/.copilot/hooks/multiagent-kit.json`, lanzador de hooks; prompts, agentes y `kit.instructions.md` en `User/prompts` de VS Code; comando `kit` en `~/.multiagent-kit/bin` | `pipeline.config.json`, `AGENTS.md`, `.pipeline/` (fuera de git) y los documentos que producen los agentes (versionados) |
+| `com.github.copilot/agents/*.agent.md`, `skills/*/SKILL.md`, `scripts/*.js`, `templates/` | `~/.copilot/agents`, `~/.copilot/skills`, `~/.copilot/hooks/bkit.json`, lanzador de hooks; prompts, agentes y `kit.instructions.md` en `User/prompts` de VS Code; comando `kit` en `~/.multiagent-kit/bin` | `pipeline.config.json`, `AGENTS.md`, `.pipeline/` (fuera de git) y los documentos que producen los agentes (versionados) |
 
 ## 6.2 Publicar una versión nueva (tú, en el repositorio del kit)
 
-1. Haz los cambios en `plugins/multiagent-kit/`.
+1. Haz los cambios en `plugins/bkit/`.
 2. Ejecuta las pruebas en la raíz del repositorio del kit: `npm test` (Node ≥ 18; no instala nada). Cubren los hooks (unos 150 comandos de sh, cmd y PowerShell que deben bloquearse o permitirse, en el formato de VS Code y de la CLI), la compuerta de commit, el estado con escrituras simultáneas, `kit pr` contra un origin local y la resolución del plugin con los dos kits instalados. Si cambias una regla del hook, añade su caso a `test/hook-protect.test.js`. GitHub Actions (`.github/workflows/test.yml`) las repite en Windows, macOS y Linux en cada push y PR.
 3. Sube la versión en **dos** sitios, con la misma cifra (p. ej. `2.1.0`):
-   - `plugins/multiagent-kit/plugin.json` → `"version"`
+   - `plugins/bkit/plugin.json` → `"version"`
    - `marketplace.json` (raíz del repositorio) → `"version"` de la entrada del plugin y de `metadata`
 4. Anota el cambio en `CHANGELOG.md` e indica si hace falta `kit update` en los proyectos.
-5. `git add . ; git commit -m "multiagent-kit 2.1.0" ; git push`
+5. `git add . ; git commit -m "bkit 3.0.1" ; git push`
 
 `test/` y `package.json` son del repositorio del kit, no del plugin: no se instalan en ningún proyecto. Para comparar el comportamiento con otra copia del plugin (p. ej. la versión publicada): `KIT_TEST_PLUGIN=<ruta>/plugins/multiagent-kit npm test`.
 
@@ -23,11 +23,11 @@
 En cada PC:
 
 ```powershell
-copilot plugin marketplace update carlos-kits-copilot
-copilot plugin update multiagent-kit@carlos-kits-copilot
+copilot plugin marketplace update bkit
+copilot plugin update bkit
 ```
 
-o dentro de `copilot`: `/plugin` marca los plugins con versión nueva y ofrece **Update**. Para que se actualice solo al iniciar sesión, añade `"autoUpdate": true` a la entrada `carlos-kits-copilot` de `extraKnownMarketplaces` en `~/.copilot/settings.json` (solo se honra en la configuración de usuario, no en la del repositorio).
+o dentro de `copilot`: `/plugin` marca los plugins con versión nueva y ofrece **Update**. Para que se actualice solo al iniciar sesión, añade `"autoUpdate": true` a la entrada `bkit` de `extraKnownMarketplaces` en `~/.copilot/settings.json` (solo se honra en la configuración de usuario, no en la del repositorio).
 
 En cada proyecto:
 
@@ -48,10 +48,10 @@ Registra el marketplace desde la carpeta local: los plugins con origen local se 
 
 ```powershell
 copilot plugin marketplace add C:\Users\carr9\Documents\multiagent-kit-copilot
-copilot plugin install multiagent-kit@carlos-kits-copilot
+copilot plugin install bkit@bkit
 ```
 
-En un proyecto de prueba, la variable de entorno `KIT_PLUGIN_ROOT` con la ruta `…\multiagent-kit-copilot\plugins\multiagent-kit` hace que `kit` y los hooks usen esa copia directamente (`$env:KIT_PLUGIN_ROOT="…"` en PowerShell, `export KIT_PLUGIN_ROOT=…` en macOS). Al terminar, `copilot plugin marketplace remove carlos-kits-copilot --force` y vuelve a añadir el de GitHub.
+En un proyecto de prueba, la variable de entorno `KIT_PLUGIN_ROOT` con la ruta `…\multiagent-kit-copilot\plugins\bkit` hace que `kit` y los hooks usen esa copia directamente (`$env:KIT_PLUGIN_ROOT="…"` en PowerShell, `export KIT_PLUGIN_ROOT=…` en macOS). Al terminar, `copilot plugin marketplace remove carlos-kits-copilot --force` y vuelve a añadir el de GitHub.
 
 ## 6.6 Aviso automático de versión nueva
 

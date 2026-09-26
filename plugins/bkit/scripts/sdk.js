@@ -179,7 +179,7 @@ function ensureNotIgnored(root, relFile) {
   if (r.code !== 0) return;
   const gi = path.join(root, ".gitignore");
   const line = `!${relFile.replace(/[^/]+$/, "*.tgz")}`;
-  fs.appendFileSync(gi, `\n# multiagent-kit: los paquetes locales de SDKs se versionan\n${line}\n`, "utf8");
+  fs.appendFileSync(gi, `\n# ${C.PLUGIN_NAME}: los paquetes locales de SDKs se versionan\n${line}\n`, "utf8");
   C.log.warn(`${relFile} estaba ignorado por .gitignore; añadí '${line}' para que se versione.`);
 }
 

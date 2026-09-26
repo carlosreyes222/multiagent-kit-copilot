@@ -433,7 +433,7 @@ function commitGate(a, root, cfg) {
 async function sessionStart(root, a) {
   let msg;
   if (!root) {
-    msg = `Kit multiagente (${C.FLAVOR}) v${C.VERSION} instalado, pero no encontré pipeline.config.json desde ${a && a.cwd ? a.cwd : process.cwd()} hacia arriba. Antes de concluir que el proyecto no está inicializado, ejecuta 'kit version' en la terminal de la carpeta del repositorio (los archivos del kit están fuera de git y la búsqueda del editor no los muestra). Si de verdad no lo está: ${C.FLAVOR === "claude" ? "/multiagent-kit:init" : "/kit-init"}.`;
+    msg = `${C.DISPLAY_NAME} (${C.FLAVOR}) v${C.VERSION} instalado, pero no encontré pipeline.config.json desde ${a && a.cwd ? a.cwd : process.cwd()} hacia arriba. Antes de concluir que el proyecto no está inicializado, ejecuta 'kit version' en la terminal de la carpeta del repositorio (los archivos del kit están fuera de git y la búsqueda del editor no los muestra). Si de verdad no lo está: ${C.FLAVOR === "claude" ? "/multiagent-kit:init" : "/kit-init"}.`;
   } else {
     const kitJson = path.join(root, ".pipeline", "kit.json");
     const prev = C.readJson(kitJson, {});
@@ -443,7 +443,7 @@ async function sessionStart(root, a) {
     const kitCmd = fs.existsSync(path.join(root, "kit.js")) ? "node kit.js" : "kit";
     msg = C.FLAVOR === "claude"
       ? `Kit multiagente (claude) v${C.VERSION} activo. Staging: ${cfg.STAGING_PROVIDER}. Comandos del kit: ${kitCmd} <check|staging|smoke|status|state|epica|archivo|sdk|update> (iguales en Windows, macOS y Linux). Plantillas de documentos: ${kitCmd} plantilla <spec|adr|seguridad|arquitectura> (o ${path.join(C.PLUGIN_ROOT, "templates", "docs")}). Flujos: /pipeline, /analisis, /bugfix, /ideas, /deploy-staging, /promote-prod. Solo docs/ARQUITECTURA.md se commitea: specs, ADR e informes quedan fuera de git y ${kitCmd} state reset los archiva en el perfil (${kitCmd} archivo).`
-      : `Kit multiagente (copilot, React Native bare) v${C.VERSION} activo. El flujo termina en el PR (${kitCmd} pr). Comandos: ${kitCmd} <check|pr|status|state|epica|archivo|sdk|update> (iguales en Windows y macOS). Plantillas: ${kitCmd} plantilla <spec|adr|seguridad|arquitectura>. Flujos: /pipeline, /analisis, /bugfix, /ideas, /retro-kit. Solo docs/ARQUITECTURA.md se commitea: specs, ADR e informes quedan fuera de git.`;
+      : `bkit (kit de agentes para React Native bare) v${C.VERSION} activo. El flujo termina en el PR (${kitCmd} pr). Comandos: ${kitCmd} <check|pr|status|state|epica|archivo|sdk|update> (iguales en Windows y macOS). Plantillas: ${kitCmd} plantilla <spec|adr|seguridad|arquitectura>. Flujos: /pipeline, /analisis, /bugfix, /ideas, /retro-kit. Solo docs/ARQUITECTURA.md se commitea: specs, ADR e informes quedan fuera de git.`;
     if (cfgError) msg += ` AVISO: pipeline.config.json no es JSON válido (${cfgError}); los agentes no podrán ejecutar comandos hasta corregirlo (kit doctor).`;
     if (Array.isArray(cfg.SDKS) && cfg.SDKS.length) msg += ` SDKs declarados: ${cfg.SDKS.map((s) => s && s.nombre).filter(Boolean).join(", ")} (${kitCmd} sdk list; flujo end-to-end: /pipeline --sdk <nombre> "idea").`;
     if (cfg._source === "ps1") msg += ` AVISO: pipeline.config.ps1 es el formato antiguo; ejecuta '${kitCmd} migrate'.`;
